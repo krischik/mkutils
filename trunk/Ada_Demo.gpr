@@ -1,0 +1,200 @@
+------------------------------------------------------------- {{{1 ----------
+--  Description: Demo of an 4NT/TakeCommand Plugin written in Ada
+--          $Id: ada_options.vim 774 2007-09-17 09:11:59Z krischik $
+--    Copyright: Copyright (C) 2007 Martin Krischik
+--      Licence: GNU General Public License
+--   Maintainer: Martin Krischik
+--      $Author: krischik $
+--        $Date: 2007-09-17 11:11:59 +0200 (Mo, 17 Sep 2007) $
+--      Version: 4.5
+--    $Revision: 774 $
+--     $HeadURL: https://gnuada.svn.sourceforge.net/svnroot/gnuada/trunk/tools/vim/ada_options.vim $
+--      History: 25.10.2007 MK
+----------------------------------------------------------------------------
+--  Copyright (C) 2007  Martin Krischik
+--
+--  This file is part of Ada_Demo.
+--
+--  Ada_Demo is free software: you can redistribute it and/or modify
+--  it under the terms of the GNU General Public License as published by
+--  the Free Software Foundation, either version 3 of the License, or
+--  (at your option) any later version.
+--
+--  Ada_Demo is distributed in the hope that it will be useful,
+--  but WITHOUT ANY WARRANTY; without even the implied warranty of
+--  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+--  GNU General Public License for more details.
+--
+--  You should have received a copy of the GNU General Public License
+--  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
+------------------------------------------------------------- }}}1 ----------
+--
+-- This file is not to be edited thrue the project poroperties in GPS.
+--
+
+with "win32ada.gpr";
+
+project Ada_Demo is
+
+   type Style_Type  is ("Debug"  , "Release");
+   type Target_Type is ("i686"   , "pentium4", "x86_64");
+
+   Base := ".";
+   Version := "0.0.0";
+
+   Style  : Style_Type  := external ("style" , "Release");
+   Target : Target_Type := external ("target", "pentium4");
+
+   for Exec_Dir            use  Base & "/" & Target & "-" & Style;
+   for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj";
+   for Source_Dirs         use (Base & "/Source",
+                                Base & "/Source/" & Target);
+   for Languages           use ("Ada", "C");
+   for Library_Name        use "ada_demo";
+   for Library_Dir         use  Base & "/" & Target & "-" & Style & "/lib";
+   for Library_Kind        use "dynamic";
+   for Library_Version     use "libada_demo.so." & Version;
+   for Library_Auto_Init   use "true";
+   for Library_Interface   use (
+      "ada_demo",
+      "takecmd",
+      "takecmd.plugin");
+   for Library_Options     use (
+         "-Wl,--kill-at");        -- Remove @nn from exported symbols
+
+   package Finder is
+      for Switches ("ada") use ("-a");
+   end Finder;
+
+   package Cross_Reference is
+      for Default_Switches ("ada") use ("-u");
+   end Cross_Reference;
+
+   package Builder is
+      for Default_Switches ("ada") use ("-shared");
+
+      case Style is
+         when "Release" =>
+         when "Debug" =>
+            for Default_Switches ("ada") use
+               Builder'Default_Switches ("ada") & (
+                  "-g");
+      end case;
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("C")  use (
+         "-fPIC",
+         "-Wall",
+         "-ansi");
+      for Default_Switches ("ada") use (
+         "-gnat05",               -- Use Ada 2005 extensions
+         "-gnatf",                -- Full errors. Verbose details, all undefined references
+         "-gnatU",                -- Enable unique tag for error messages
+         "-gnatawcfijklmopruvz",  -- All warings enabled
+         "-gnatq",                -- Don't quit, try semantics, even if parse errors
+         "-gnatQ",                -- Don't quit, write ali/tree file even if compile errors
+         "-gnati1",               -- Select character set in sources.
+         "-gnatT4");              -- Compiler tables sizes 4* default
+
+      case Target is
+         when "pentium4" =>
+            for Default_Switches ("c") use (
+               "-mtune=pentium4",
+               "-march=pentium4");
+            for Default_Switches ("ada") use (
+               "-mtune=pentium4",
+               "-march=pentium4");
+         when others =>
+      end case;
+
+      case Style is
+         when "Debug" =>
+            for Default_Switches ("C") use
+               Compiler'Default_Switches ("C") & (
+                  "-g");
+            for Default_Switches ("ada") use
+               Compiler'Default_Switches ("ada") & (
+                  "-gnata",          -- Enable Assersions.
+                  "-gnato",          -- Enable overflow checking
+                  "-gnatVcdfimorst", -- Enable selected validity checking mode
+                  "-g");             -- Debug info in binary.
+
+         when "Release" =>
+            for Default_Switches ("C") use
+               Compiler'Default_Switches ("C") & (
+                  "-O3");                        -- Optimisation "3"
+            for Default_Switches ("ada") use
+               Compiler'Default_Switches ("ada") & (
+                  "-O3",                         -- Optimisation "3"
+                  "-gnaty3abcefhiklnoprstM200"); -- Layout checks
+      end case;
+   end Compiler;
+
+   package Binder is
+      for Default_Switches ("ada") use ("-shared");
+
+      case Style is
+         when "Release" =>
+         when "Debug" =>
+            for Default_Switches ("ada") use
+               Binder'Default_Switches ("ada") & (
+                  "-E");            -- Tracebacks From Exception Occurrences
+      end case;
+   end Binder;
+
+   package Linker is
+      case Style is
+         when "Release" =>
+            for Default_Switches ("ada") use
+               Linker'Default_Switches ("ada") & (
+                  "--strip-all");   -- Strip all symbols
+         when "Debug" =>
+            for Default_Switches ("ada") use
+               Linker'Default_Switches ("ada") & (
+                  "-g");            -- Compile binder source file with debug information
+      end case;
+   end Linker;
+
+   package Naming is
+      for Specification_Suffix ("ada") use ".ads";
+      for Implementation_Suffix ("ada") use ".adb";
+      for Separate_Suffix use ".ada";
+   end Naming;
+
+   package Ide is
+      for Vcs_Kind               use "Subversion";
+      for Compiler_Command ("c") use "gcc";
+   end Ide;
+
+   package Pretty_Printer is
+      for Default_Switches ("ada") use (
+         "-Dadacl.case",
+         "-v",
+         "-dd",
+         "-cl3",
+         "-M78",
+         "-cl3",
+         "-rf",
+         "-pM",
+         "-c3",
+         "-c4",
+         "-A1",
+         "-A2",
+         "-A3",
+         "-A4",
+         "-A5",
+         "--eol=lf");
+   end Pretty_Printer;
+
+   Source_Files := (
+      "ada_demo.adb",
+      "ada_demo.ads",
+      "takecmd.ads",
+      "takecmd-plugin.ads");
+
+end Ada_Demo;
+
+------------------------------------------------------------------------
+--vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab :
+--vim: set textwidth=0 filetype=ada foldmethod=expr nospell :

@@ -1,0 +1,17 @@
+LIBRARY Ada_Demo
+DESCRIPTION Demostratin of a 4NT/TakeCommand Plugin written in Ada.
+
+EXPORTS
+        DIR
+        GetPluginInfo
+        InitializePlugin
+        KEY
+        REMARK
+        ShutdownPlugin
+        USEBUFFER
+        _HELLO
+        f_REVERSE
+
+;------------------------------------------------------------------------
+;vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=4 expandtab :
+;vim: set textwidth=0 filetype=def foldmethod=marker nospell :
