@@ -1,3 +1,4 @@
+#!/bin/zsh
 ############################################################# {{{1 ##########
 #   Description: Options setable by the Ada plugin
 #           $Id$
@@ -29,31 +30,31 @@
 #   along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################# }}}1 ##########
 
-.PHONY: pretty
+setopt No_X_Trace;
+setopt No_Verbose;
+setopt SH_Word_Split;
+setopt Err_Exit;
+setopt CSH_Null_Glob;
 
-Project_File 	:= Ada_Demo.gpr
-Source_Files 	:= $(wildcard Source/*.ad?)
-Library_Files 	:= SDK/libTakeCmd.a
+declare SVN_Server="https://mkutils.googlecode.com/svn";
+declare Module="Ada_Demo";
+declare Version="1.0.0";
 
-pretty:
-	gnat pretty -P Ada_Demo.gpr 
+svn copy											\
+	"${SVN_Server}/trunk"							\
+	"${SVN_Server}/tags/${Module}-${Version}"		\
+	-m"tag release ${Module} ${Version}"			;
 
-SDK/libTakeCmd.a: SDK/TakeCmd.def
-	cd SDK && gnatdll -k -e TakeCmd.def -d TakeCmd.dll
+pushd /tmp
+	svn export										\
+		"${SVN_Server}/tags/${Module}-${Version}"	\
+		"${Module}-${Config_Version}"				;
+	tar --create --bzip2							\
+	--file="${Module}-${Version}.tar.bz2"			\
+	"${Module}-${Config_Version}"					;
+	rm --recursive --force "${Module}-${Version}"	;
+popd
 
-pentium4-Release\lib\ada_demo.dll:		\
-    	${Project_File}				\
-	${Source_Files}				\
-	${Library_Files}
-	gnat make -P Ada_Demo.gpr -XStyle=Release -XTarget=pentium4
-
-pentium4-Debug\lib\ada_demo.dll:		\
-    	${Project_File}				\
-	${Source_Files}				\
-	${Library_Files}
-	echo ${Source_Files}
-	gnat make -P Ada_Demo.gpr -XStyle=Debug -XTarget=pentium4
-
-#------------------------------------------------------------ {{{1 ----------
-#vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=0 noexpandtab :
-#vim: set textwidth=0 filetype=make foldmethod=marker nospell :
+############################################################# {{{1 ##########
+# vim: textwidth=0 nowrap tabstop=4 shiftwidth=4 softtabstop=4 noexpandtab
+# vim: filetype=zsh encoding=utf-8 fileformat=unix
