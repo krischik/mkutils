@@ -1,4 +1,4 @@
-::----------------------------------------------------------- {{{1 ----------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
 ::  Description: Options setable by the Ada plugin
 ::          $Id$
 ::    Copyright: Copyright (C) 2007 Martin Krischik
@@ -10,7 +10,7 @@
 ::    $Revision$
 ::     $HeadURL$
 ::      History: 25.10.2007 MK 
-::--------------------------------------------------------------------------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::  Copyright (C) 2007  Martin Krischik
 ::
 ::  This file is part of Ada_Demo.
@@ -27,7 +27,7 @@
 ::
 ::  You should have received a copy of the GNU General Public License
 ::  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
-::----------------------------------------------------------- }}}1 ----------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: }}}1 ::::::::::
 
 SETLOCAL
     SET             HOME=%[HOMEDRIVE]%[HOMEPATH]
@@ -40,6 +40,6 @@ SETLOCAL
     gnumake-3.79.1-nt pretty  
 ENDLOCAL
 
-::----------------------------------------------------------- {{{1 ----------
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
 ::vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=4 expandtab :
 ::vim: set textwidth=0 filetype=btm foldmethod=marker nospell :
