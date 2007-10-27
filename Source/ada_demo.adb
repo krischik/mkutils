@@ -56,7 +56,7 @@ package body Ada_Demo is
    Author_Email   : aliased constant Win32.WCHAR_Array :=
       "krischik@users.sourceforge.net" & Win32.Wide_Nul;
    Author_WebSite : aliased constant Win32.WCHAR_Array :=
-      "http://ada.krischik.com" & Win32.Wide_Nul;
+      "http://mkutils.googlecode.com" & Win32.Wide_Nul;
    Description    : aliased constant Win32.WCHAR_Array :=
       "A demonstration Plugin for 4NT/TC, written with Ada." &
       Win32.Wide_Nul;
@@ -210,7 +210,7 @@ package body Ada_Demo is
             AuthorWebSite => Win32.Addr (Author_WebSite),
             Description   => Win32.Addr (Description),
             Implements    => Win32.Addr (Implements),
-            MajorVer      => 0,
+            MajorVer      => 1,
             MinorVer      => 0,
             BuildNum      => 0,
             ModuleHandle  => 0,

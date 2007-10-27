@@ -40,7 +40,7 @@ project Ada_Demo is
    type Target_Type is ("i686"   , "pentium4", "x86_64");
 
    Base := ".";
-   Version := "0.0.0";
+   Version := "1.0.0";
 
    Style  : Style_Type  := external ("style" , "Release");
    Target : Target_Type := external ("target", "pentium4");
