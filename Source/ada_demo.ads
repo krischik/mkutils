@@ -1,17 +1,19 @@
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id: ada_options.vim 774 2007-09-17 09:11:59Z krischik $
+--          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
---      $Author: krischik $
---        $Date: 2007-09-17 11:11:59 +0200 (Mo, 17 Sep 2007) $
+--      $Author$
+--        $Date$
 --      Version: 4.5
---    $Revision: 774 $
---     $HeadURL: https://gnuada.svn.sourceforge.net/svnroot/gnuada/trunk/tools/vim/ada_options.vim $
+--    $Revision$
+--     $HeadURL:
+--  https://gnuada.svn.sourceforge.net/svnroot/gnuada/trunk/tools/vim/ada_opti
+--  ons.vim $
 --      History: 25.10.2007 MK
 ----------------------------------------------------------------------------
---  Copyright (C) 2007  Martin Krischik
+--  Copyright (C) 2007 Martin Krischik
 --
 --  This file is part of Ada_Demo.
 --
@@ -20,17 +22,17 @@
 --  Software Foundation, either version 3 of the License, or (at your option)
 --  any later version.
 --
---  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY
---  WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
---  FOR A PARTICULAR PURPOSE.  See the GNU General Public License for more
---  details.
+--  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT
+--  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
+--  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
+--  more details.
 --
 --  You should have received a copy of the GNU General Public License along
---  with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
+--  with Ada_Demo. If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------- }}}1 ----------
 
 ------------------------------------------------------------------------------
---  A demonstration Plugin for 4NT and Take Command 8.0 written with Ada  {{{1
+--  A demonstration Plugin for 4NT and Take Command 8.0 written with Ada {{{1
 --  ==========================================================================
 --
 ------------------------------------------------------------------------------
@@ -46,13 +48,13 @@
 --  Introduction                                                        {{{2
 --  ----------------
 --
---  This file demonstrates how to produce a 4NT/TC plugin with Ada. Most of the
---  information in these notes on the 4NT/TC API is based on the plugin.h and
---  plugin.cpp files contained in the 4NT/TC SDK.
+--  This file demonstrates how to produce a 4NT/TC plugin with Ada. Most of
+--  the information in these notes on the 4NT/TC API is based on the plugin.h
+--  and plugin.cpp files contained in the 4NT/TC SDK.
 --
 --  The code in this file shows how to produce an Internal Command, a Variable
---  Function and an Internal Variable, how to modify an existing 4NT/TC command
---  and how to call functions in Takecmd.dll. It also shows how to use
+--  Function and an Internal Variable, how to modify an existing 4NT/TC
+--  command and how to call functions in Takecmd.dll. It also shows how to use
 --  keystroke monitoring/modification from within a plugin.
 --
 --  These notes also cover some specifics of using Ada to produce a DLL to run
@@ -161,7 +163,8 @@
 --
 --      (d) There is a special return value ($FEDCBA98) that tells the parser
 --          to assume that the plugin decided not to handle the
---          variable/function/ command. The parser then continues looking for a
+--          variable/function/ command. The parser then continues looking for
+--  a
 --          matching internal, then external.  Note that you can use this
 --          return value to have your plugin modify the command line and then
 --          pass it on to an existing internal variable/function/command.  An
@@ -214,7 +217,7 @@
 --  This Demo writes some debugging output - which you should not do in a real
 --  plugin.
 --
-------------------------------------------------------------- }}}1 ------------
+----------------------------------------------------------- }}}1--------------
 
 pragma License (Gpl);
 
@@ -223,14 +226,14 @@ with Win32;
 with TakeCmd.Plugin;
 
 package Ada_Demo is
-   ------------------------------------------------------------------------
+   ---------------------------------------------------------------------------
    --  Called by 4NT/TC after loading the plugin. The API requires a return of
    --  0, but as the function is declared as a boolean we must, somewhat
    --  counter-intuitively, return "false".
    --
    function Initialize_Plugin return  Win32.BOOL;
 
-   ------------------------------------------------------------------------
+   ---------------------------------------------------------------------------
    --  Called by 4NT/TC when shutting down, if EndProcess = 0, only the plugin
    --  is being closed; if EndProcess = 1, then 4NT/TC is shutting down. The
    --  API requires a return of 0, but as the function is declared as a
@@ -240,7 +243,7 @@ package Ada_Demo is
      (End_Process : in Win32.BOOL)
       return        Win32.BOOL;
 
-   ------------------------------------------------------------------------
+   ---------------------------------------------------------------------------
    --  Called by 4NT/TC (after the call to "InitializePlugin") to get
    --  information from the plugin, primarily for the names of functions,
    --  variables & commands. All that is necessary is to return a pointer to
@@ -248,24 +251,26 @@ package Ada_Demo is
    --
    function Get_Plugin_Info return  TakeCmd.Plugin.LP_Plugin_Info;
 
-   ------------------------------------------------------------------------
+   ---------------------------------------------------------------------------
    --  This is a Variable Function called from 4NT/TC
    --
    function F_Reverse
-     (Arguments : in Win32.PCWSTR)
+     (Arguments : access TakeCmd.Plugin.Buffer)
       return      Interfaces.C.int;
 
-   ------------------------------------------------------------------------
+   ---------------------------------------------------------------------------
    --  This is an Internal Variable called from 4NT/TC
    --
-   function V_Hello (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
+   function V_Hello
+     (Arguments : access TakeCmd.Plugin.Buffer)
+      return      Interfaces.C.int;
 
-   ------------------------------------------------------------------------
+   ---------------------------------------------------------------------------
    --  This is an Internal Command called from 4NT/TC
    --
    function C_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
 
-   ------------------------------------------------------------------------
+   ---------------------------------------------------------------------------
    --  This function shows how you can modify the behaviour of a 4NT/TC
    --  command. If you use the DIR command this function will be called, and a
    --  check is made of the current time. If the value of the "Minutes" is
@@ -273,9 +278,9 @@ package Ada_Demo is
    --  DIR at the moment. If the value is odd the "DID_NOT_PROCESS" value is
    --  returned and 4NT/TC will execute the DIR command as normal.
 
-   function C_Dir (Arguments : Win32.PCWSTR) return Interfaces.C.int;
+   function C_Dir (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
 
-   ------------------------------------------------------------------------
+   ---------------------------------------------------------------------------
    --  This function illustrates how to use keystroke monitoring and
    --  modification. This function is prefixed with a "*" in the "Implements"
    --  field of the PLUGININFO record, and so 4NT/TC calls it every time a
@@ -283,10 +288,10 @@ package Ada_Demo is
    --  letter "a" with an upper case letter "A".
    --
    function K_Key
-     (arguments : in TakeCmd.Plugin.LP_Key_Info)
+     (Arguments : access TakeCmd.Plugin.Key_Info)
       return      Interfaces.C.int;
 
-   ------------------------------------------------------------------------
+   ---------------------------------------------------------------------------
    --  This function illustrates how to call TakeCmd.dll functions which
    --  require a buffer in which to manipualte the supplied string. A number
    --  is supplied as a parameter to this function and it uses "Addcommas" to
@@ -297,7 +302,7 @@ package Ada_Demo is
    --    123,456,789
    --
    function C_Use_Buffer
-     (Arguments : Win32.PCWSTR)
+     (Arguments : in Win32.PCWSTR)
       return      Interfaces.C.int;
 
 private

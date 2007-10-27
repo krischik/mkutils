@@ -1,14 +1,14 @@
 #------------------------------------------------------------ {{{1 ----------
 #   Description: Options setable by the Ada plugin
-#           $Id: ada_options.vim 774 2007-09-17 09:11:59Z krischik $
+#           $Id$
 #     Copyright: Copyright (C) 2007 Martin Krischik
 #       Licence: GNU General Public License
 #    Maintainer: Martin Krischik
-#       $Author: krischik $
-#         $Date: 2007-09-17 11:11:59 +0200 (Mo, 17 Sep 2007) $
+#       $Author$
+#         $Date$
 #       Version: 4.5
-#     $Revision: 774 $
-#      $HeadURL: https://gnuada.svn.sourceforge.net/svnroot/gnuada/trunk/tools/vim/ada_options.vim $
+#     $Revision$
+#      $HeadURL$
 #       History: 25.10.2007 MK 
 #---------------------------------------------------------------------------
 #   Copyright (C) 2007  Martin Krischik
@@ -29,9 +29,14 @@
 #   along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
 #------------------------------------------------------------ }}}1 ----------
 
+.PHONY: pretty
+
 Project_File 	:= Ada_Demo.gpr
 Source_Files 	:= $(wildcard Source/*.ad?)
 Library_Files 	:= SDK/libTakeCmd.a
+
+pretty:
+	gnat pretty -P Ada_Demo.gpr 
 
 SDK/libTakeCmd.a: SDK/TakeCmd.def
 	cd SDK && gnatdll -k -e TakeCmd.def -d TakeCmd.dll

@@ -1,14 +1,14 @@
 ::----------------------------------------------------------- {{{1 ----------
 ::  Description: Options setable by the Ada plugin
-::          $Id: ada_options.vim 774 2007-09-17 09:11:59Z krischik $
+::          $Id$
 ::    Copyright: Copyright (C) 2007 Martin Krischik
 ::      Licence: GNU General Public License
 ::   Maintainer: Martin Krischik
-::      $Author: krischik $
-::        $Date: 2007-09-17 11:11:59 +0200 (Mo, 17 Sep 2007) $
+::      $Author$
+::        $Date$
 ::      Version: 4.5
-::    $Revision: 774 $
-::     $HeadURL: https://gnuada.svn.sourceforge.net/svnroot/gnuada/trunk/tools/vim/ada_options.vim $
+::    $Revision$
+::     $HeadURL$
 ::      History: 25.10.2007 MK 
 ::--------------------------------------------------------------------------
 ::  Copyright (C) 2007  Martin Krischik
@@ -32,13 +32,16 @@
 SETLOCAL
     SET             HOME=%[HOMEDRIVE]%[HOMEPATH]
     SET     Project_Home=%@PATH[%_batchname]
-    SET ADA_INCLUDE_PATH=%[ADA_INCLUDE_PATH];%[GNAT_HOME]\lib\gcc\pentium-mingw32msv\4.1.3\adainclude
-    SET ADA_PROJECT_PATH=%[ADA_PROJECT_PATH];%[GNAT_HOME]lib\gnat
+    :: SET ADA_INCLUDE_PATH=%[ADA_INCLUDE_PATH];%[GNAT_GPL_HOME]\lib\gcc\pentium-mingw32msv\4.1.3\adainclude
+    SET ADA_PROJECT_PATH=%[ADA_PROJECT_PATH];%[GNAT_GPL_HOME]lib\gnat
     SET     LIBRARY_PATH=%[LIBRARY_PATH];%[Project_Home]SDK
     SET   C_INCLUDE_PATH=%[C_INCLUDE_PATH];%[Project_Home]SDK
-
-    START %[GNAT_HOME]\bin\gps.exe -P Ada_Demo.gpr
+    PUSHD %[Project_Home] 
+        START %[GNAT_GPL_HOME]\bin\gps.exe -P Ada_Demo.gpr
+    POPD
 ENDLOCAL
+
+EXIT
 
 ::----------------------------------------------------------- {{{1 ----------
 ::vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=4 expandtab :
