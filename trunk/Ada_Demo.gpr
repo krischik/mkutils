@@ -91,7 +91,7 @@ project Ada_Demo is
          "-gnat05",               -- Use Ada 2005 extensions
          "-gnatf",                -- Full errors. Verbose details, all undefined references
          "-gnatU",                -- Enable unique tag for error messages
-         "-gnatawcfijklmopruvz",  -- All warings enabled
+         "-gnatwcdefijklmopruvz",  -- All warings enabled
          "-gnatq",                -- Don't quit, try semantics, even if parse errors
          "-gnatQ",                -- Don't quit, write ali/tree file even if compile errors
          "-gnati1",               -- Select character set in sources.
@@ -99,10 +99,12 @@ project Ada_Demo is
 
       case Target is
          when "pentium4" =>
-            for Default_Switches ("c") use (
+            for Default_Switches ("c") use
+               Compiler'Default_Switches ("c") & (
                "-mtune=pentium4",
                "-march=pentium4");
-            for Default_Switches ("ada") use (
+            for Default_Switches ("ada") use
+               Compiler'Default_Switches ("ada") & (
                "-mtune=pentium4",
                "-march=pentium4");
          when others =>
@@ -169,21 +171,20 @@ project Ada_Demo is
 
    package Pretty_Printer is
       for Default_Switches ("ada") use (
-         "-Dadacl.case",
-         "-v",
-         "-dd",
-         "-cl3",
-         "-M78",
-         "-cl3",
-         "-rf",
-         "-pM",
-         "-c3",
-         "-c4",
-         "-A1",
-         "-A2",
-         "-A3",
-         "-A4",
-         "-A5",
+         "-A1",      -- align colons in declarations
+         "-A2",      -- align assignments in declarations
+         "-A3",      -- align assignments in assignment statements
+         "-A4",      -- align arrow delimiters in associations
+         "-A5",      -- align 'AT' keywords in component clauses
+         "-c3",      -- GNAT style comment beginning
+         "-c4",      -- reformat comment blocks
+         "-cl3",     -- indentation level for continuation lines, nnn from 1 .. 9
+         "-dd",      -- progress indicator verbose mode
+         "-M78",     -- set maximum line length,
+         "-pM",      -- set pragma casing mixed case
+         "-rf",      -- replace the argument source with the pretty-printed source
+         "-v",       -- verbose mode
+         "-W8",      -- sets the wide character encoding of the result file UTF-8 encoding
          "--eol=lf");
    end Pretty_Printer;
 
@@ -191,6 +192,7 @@ project Ada_Demo is
       "ada_demo.adb",
       "ada_demo.ads",
       "takecmd.ads",
+      "takecmd.adb",
       "takecmd-plugin.ads");
 
 end Ada_Demo;

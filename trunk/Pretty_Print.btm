@@ -37,8 +37,7 @@ SETLOCAL
     SET     LIBRARY_PATH=%[LIBRARY_PATH];%[Project_Home]SDK
     SET   C_INCLUDE_PATH=%[C_INCLUDE_PATH];%[Project_Home]SDK
 
-    gnumake-3.79.1-nt pentium4-Debug\lib\ada_demo.dll
-    gnumake-3.79.1-nt pentium4-Release\lib\ada_demo.dll
+    gnumake-3.79.1-nt pretty  
 ENDLOCAL
 
 ::----------------------------------------------------------- {{{1 ----------
