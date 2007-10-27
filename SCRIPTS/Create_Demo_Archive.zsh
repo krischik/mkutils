@@ -30,7 +30,7 @@
 #   along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
 ############################################################# }}}1 ##########
 
-setopt No_X_Trace;
+setopt X_Trace;
 setopt No_Verbose;
 setopt SH_Word_Split;
 setopt Err_Exit;
@@ -48,10 +48,16 @@ svn copy											\
 pushd /tmp
 	svn export										\
 		"${SVN_Server}/tags/${Module}-${Version}"	\
-		"${Module}-${Config_Version}"				;
+		"${Module}-${Version}"						;
 	tar --create --bzip2							\
-	--file="${Module}-${Version}.tar.bz2"			\
-	"${Module}-${Config_Version}"					;
+		--file="${Module}-${Version}.tar.bz2"		\
+		"${Module}-${Version}"						;
+	7z a -t7z										\
+		"${Module}-${Version}.7z"					\
+		"${Module}-${Version}"						;
+	7z a -tzip										\
+		"${Module}-${Version}.zip"					\
+		"${Module}-${Version}"						;
 	rm --recursive --force "${Module}-${Version}"	;
 popd
 
