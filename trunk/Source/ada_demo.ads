@@ -271,6 +271,11 @@ package Ada_Demo is
    function C_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
 
    ---------------------------------------------------------------------------
+   --  This is an Internal Command called from 4NT/TC
+   --
+   function C_Task_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
+
+   ---------------------------------------------------------------------------
    --  This function shows how you can modify the behaviour of a 4NT/TC
    --  command. If you use the DIR command this function will be called, and a
    --  check is made of the current time. If the value of the "Minutes" is
@@ -337,6 +342,10 @@ private
      (Convention => Stdcall,
       Entity => C_Remark,
       External_Name => "REMARK");
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Task_Remark,
+      External_Name => "TASKREMARK");
    pragma Export
      (Convention => Stdcall,
       Entity => C_Dir,

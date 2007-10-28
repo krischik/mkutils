@@ -1,6 +1,7 @@
 -------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: ada_demo.adb 4 2007-10-27 15:54:13Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -61,7 +62,31 @@ package body Ada_Demo is
       "A demonstration Plugin for 4NT/TC, written with Ada." &
       Win32.Wide_Nul;
    Implements     : aliased constant Win32.WCHAR_Array :=
-      "@REVERSE,_HELLO,REMARK,DIR,*KEY,USEBUFFER" & Win32.Wide_Nul;
+      "@REVERSE,_HELLO,REMARK,TASKREMARK,DIR,*KEY,USEBUFFER" & Win32.Wide_Nul;
+
+   task Remark_Task is
+      entry Say_Hello;
+      entry Shutdown;
+   end Remark_Task;
+
+   task body Remark_Task is
+   begin
+      loop
+         select
+            accept Say_Hello do
+               delay 5.0;
+               TakeCmd.Q_Put_String
+                 (Win32.WCHAR_Array'(
+"What a not so trivial Ada generated Plugin!"));
+               TakeCmd.CrLf;
+            end Say_Hello;
+         or
+            accept Shutdown do
+               abort Remark_Task;
+            end Shutdown;
+         end select;
+      end loop;
+   end Remark_Task;
 
    ---------------------------------------------------------------------------
    --  This function shows how you can modify the behaviour of a 4NT/TC
@@ -112,6 +137,25 @@ package body Ada_Demo is
          TakeCmd.CrLf;
          return -2;
    end C_Remark;
+
+   ---------------------------------------------------------------------------
+   --  This is an Internal Command called from 4NT/TC
+   --
+   function C_Task_Remark
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int
+   is
+      pragma Unreferenced (Arguments);
+   begin
+      Remark_Task.Say_Hello;
+      return 0;
+   exception
+      when An_Exception : others =>
+         TakeCmd.Q_Put_String
+           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.CrLf;
+         return -2;
+   end C_Task_Remark;
 
    ---------------------------------------------------------------------------
    --  This function illustrates how to call TakeCmd.dll functions which
@@ -281,13 +325,13 @@ package body Ada_Demo is
    --  is being closed; if EndProcess = 1, then 4NT/TC is shutting down. The
    --  API requires a return of 0, but as the function is declared as a
    --  boolean we must, somewhat counter-intuitively, return "false".
-   --
    function Shutdown_Plugin
      (End_Process : in Win32.BOOL)
       return        Win32.BOOL
    is
       pragma Unreferenced (End_Process);
    begin
+      Remark_Task.Shutdown;
       TakeCmd.Q_Put_String
         (Win32.WCHAR_Array'("Ada_Demo: DLL shut down OK!"));
       TakeCmd.CrLf;
