@@ -40,6 +40,7 @@ with Ada.Calendar;
 with Ada.Calendar.Formatting;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Fixed;
+with Ada.Unchecked_Deallocation;
 
 pragma Elaborate_All (TakeCmd);
 
@@ -48,7 +49,12 @@ package body Ada_Demo is
    use type Win32.WCHAR_Array;
    use type Interfaces.C.int;
 
-   Plugin_Info : TakeCmd.Plugin.LP_Plugin_Info := null;
+   task type Remark_Task is
+      entry Say_Hello;
+      entry Shutdown;
+   end Remark_Task;
+
+   type Remark_Access is access Remark_Task;
 
    DLL_Name       : aliased constant Win32.WCHAR_Array :=
       "Ada_Demo" & Win32.Wide_Nul;
@@ -62,23 +68,18 @@ package body Ada_Demo is
       "A demonstration Plugin for 4NT/TC, written with Ada." &
       Win32.Wide_Nul;
    Implements     : aliased constant Win32.WCHAR_Array :=
-      "@REVERSE,_HELLO,REMARK,TASKREMARK,DIR,*KEY,USEBUFFER" & Win32.Wide_Nul;
+      "@REVERSE,_HELLO,REMARK,TASKREMARK,DIR,*KEY,USEBUFFER" &
+      Win32.Wide_Nul;
 
-   task Remark_Task is
-      entry Say_Hello;
-      entry Shutdown;
-   end Remark_Task;
+   Plugin_Info : TakeCmd.Plugin.LP_Plugin_Info := null;
+   My_Remark   : Remark_Access                 := null;
 
    task body Remark_Task is
    begin
       loop
          select
             accept Say_Hello do
-               delay 5.0;
-               TakeCmd.Q_Put_String
-                 (Win32.WCHAR_Array'(
-"What a not so trivial Ada generated Plugin!"));
-               TakeCmd.CrLf;
+               null;
             end Say_Hello;
          or
             accept Shutdown do
@@ -147,7 +148,10 @@ package body Ada_Demo is
    is
       pragma Unreferenced (Arguments);
    begin
-      Remark_Task.Say_Hello;
+      if My_Remark = null then
+         My_Remark := new Remark_Task;
+      end if;
+      My_Remark.all.Say_Hello;
       return 0;
    exception
       when An_Exception : others =>
@@ -329,9 +333,23 @@ package body Ada_Demo is
      (End_Process : in Win32.BOOL)
       return        Win32.BOOL
    is
+      procedure Deallocate is new Ada.Unchecked_Deallocation (
+         Object => TakeCmd.Plugin.Plugin_Info,
+         Name => TakeCmd.Plugin.LP_Plugin_Info);
+      procedure Deallocate is new Ada.Unchecked_Deallocation (
+         Object => Remark_Task,
+         Name => Remark_Access);
+
       pragma Unreferenced (End_Process);
+      use type TakeCmd.Plugin.LP_Plugin_Info;
    begin
-      Remark_Task.Shutdown;
+      if Plugin_Info /= null then
+         Deallocate (Plugin_Info);
+      end if;
+      if My_Remark /= null then
+         My_Remark.all.Shutdown;
+         Deallocate (My_Remark);
+      end if;
       TakeCmd.Q_Put_String
         (Win32.WCHAR_Array'("Ada_Demo: DLL shut down OK!"));
       TakeCmd.CrLf;

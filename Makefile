@@ -44,7 +44,7 @@ pretty:
 	gnat pretty -P Ada_Demo.gpr
 
 SDK/TakeCmd.def: %[JPPATH]/TakeCmd.dll
-    dll2def %[JPPATH]/TakeCmd.dll >SDK/TakeCmd.def
+	dll2def %[JPPATH]/TakeCmd.dll >SDK/TakeCmd.def
 
 SDK/libTakeCmd.a: SDK/TakeCmd.def
 	cd SDK && gnatdll -k -e TakeCmd.def -d TakeCmd.dll
@@ -59,7 +59,6 @@ pentium4-Debug\lib\ada_demo.dll:		\
 	${Project_File}				\
 	${Source_Files}				\
 	${Library_Files}
-	echo ${Source_Files}
 	gnat make -P Ada_Demo.gpr -XStyle=Debug -XTarget=pentium4
 
 #------------------------------------------------------------ {{{1 ----------

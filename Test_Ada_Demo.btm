@@ -37,7 +37,7 @@ SETLOCAL
 
     DIR
     REMARK
-    :: TASKREMARK
+    TASKREMARK
     USEBUFFER 123456789
     ECHO Reverse ABCDE is: %@Reverse[ABCDE]
     ECHO Hello is: %_Hello
