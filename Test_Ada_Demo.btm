@@ -29,7 +29,7 @@
 ::  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: }}}1 ::::::::::
 
-@ECHO OFF
+@ECHO ON
 
 SETLOCAL
     PLUGIN /L pentium4-Release\lib\ada_demo.dll
@@ -37,6 +37,7 @@ SETLOCAL
 
     DIR
     REMARK
+    :: TASKREMARK
     USEBUFFER 123456789
     ECHO Reverse ABCDE is: %@Reverse[ABCDE]
     ECHO Hello is: %_Hello

@@ -91,7 +91,7 @@ project Ada_Demo is
          "-gnat05",               -- Use Ada 2005 extensions
          "-gnatf",                -- Full errors. Verbose details, all undefined references
          "-gnatU",                -- Enable unique tag for error messages
-         "-gnatwcdefijklmopruvz",  -- All warings enabled
+         "-gnatwcdfijklmopruvz",  -- All warings enabled
          "-gnatq",                -- Don't quit, try semantics, even if parse errors
          "-gnatQ",                -- Don't quit, write ali/tree file even if compile errors
          "-gnati1",               -- Select character set in sources.
