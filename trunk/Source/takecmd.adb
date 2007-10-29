@@ -1,6 +1,7 @@
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: takecmd.adb 3 2007-10-27 15:48:43Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -111,5 +112,5 @@ package body TakeCmd is
 end TakeCmd;
 
 ------------------------------------------------------------- {{{1 ----------
---  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab     :
---  vim: set textwidth=0 filetype=ada foldmethod=expr nospell          :
+--  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
+--  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:

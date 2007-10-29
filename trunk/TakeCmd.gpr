@@ -32,19 +32,14 @@
 -- This file is not to be edited thrue the project poroperties in GPS.
 --
 
-project Win32Ada is
-
-   for Languages use ("c");
-
+project TakeCmd is
    Base := ".";
 
-   for Source_Dirs use ("Base & "/SDK");
-
-   for Library_Dir use ""Base & "/SDK";
-   for Library_Name use "win32ada";
+   for Languages use ("c");
+   for Library_Dir use Base & "/SDK";
+   for Library_Name use "TakeCmd";
    for Externally_Built use "true";
-
-end Win32Ada;
+end TakeCmd;
 
 ------------------------------------------------------------------------
 --vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab :

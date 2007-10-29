@@ -1,6 +1,7 @@
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: ada_demo.ads 11 2007-10-28 15:28:45Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -36,7 +37,7 @@
 --  ==========================================================================
 --
 ------------------------------------------------------------------------------
---  Plugin changes introduced with version 8.0 of 4NT and Take Command
+--  Plug-in changes introduced with version 8.0 of 4NT and Take Command
 ------------------------------------------------------------------------------
 --  In version 8.0 of 4NT and Take Command the PLUGININFO structure has
 --  changed; an extra pointer has been added to the end of the structure. If
@@ -164,8 +165,7 @@
 --      (d) There is a special return value ($FEDCBA98) that tells the parser
 --          to assume that the plugin decided not to handle the
 --          variable/function/ command. The parser then continues looking for
---  a
---          matching internal, then external.  Note that you can use this
+--          a matching internal, then external.  Note that you can use this
 --          return value to have your plugin modify the command line and then
 --          pass it on to an existing internal variable/function/command.  An
 --          example of using this return value can be found in the "DIR"
@@ -202,14 +202,14 @@
 --
 --  4NT Plugins use sdcall - but without the added "@nn" postfix. GNAT however
 --  will add "@nn" postfixes to all stdcall functions and you will need to
---  remove them at link time useing the "-Wl,--kill-at" option. The Demo
---  GNAT-Project-File allready containst the needed flag.
+--  remove them at link time using the "-Wl,--kill-at" option. The Demo
+--  GNAT-Project-File already contains the needed flag.
 --
---  As menioned all strings passed between 4NT/TC and the plugin are null
+--  As mentioned all strings passed between 4NT/TC and the plugin are null
 --  terminated and are UNICODE. Since Both Ada 95 and Ada 2005 have support
 --  for Wide_Characters you might be the better option.
 --
---  The Plugin catches all exeptions before returning to 4NT / TakeCommand.
+--  The Plugin catches all exceptions before returning to 4NT / TakeCommand.
 --
 --  Notes about this Demo                                               {{{2
 --  ------------------------
@@ -226,6 +226,24 @@ with Win32;
 with TakeCmd.Plugin;
 
 package Ada_Demo is
+   ---------------------------------------------------------------------------
+   --  You can use Ada tasking facilities inside a plug-in. Just be aware that
+   --  library level task won't work and that most - if not all - command from
+   --  the TakeCmd library can not be used.
+   --
+   task type Remark_Task is
+      entry Execute;
+   end Remark_Task;
+
+   protected Remark_Value is
+      function Get_Remark return Wide_String;
+      procedure Set_Remark (New_Remark : in Wide_String);
+   private
+      Remark : Wide_String (1 .. 80) := (others => ' ');
+   end Remark_Value;
+
+   type Remark_Access is access Remark_Task;
+
    ---------------------------------------------------------------------------
    --  Called by 4NT/TC after loading the plugin. The API requires a return of
    --  0, but as the function is declared as a boolean we must, somewhat
@@ -273,7 +291,13 @@ package Ada_Demo is
    ---------------------------------------------------------------------------
    --  This is an Internal Command called from 4NT/TC
    --
-   function C_Task_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
+   function C_Task_Remark
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int;
+
+   function V_Task_Remark
+     (Arguments : access TakeCmd.Plugin.Buffer)
+      return      Interfaces.C.int;
 
    ---------------------------------------------------------------------------
    --  This function shows how you can modify the behaviour of a 4NT/TC
@@ -348,6 +372,10 @@ private
       External_Name => "TASKREMARK");
    pragma Export
      (Convention => Stdcall,
+      Entity => V_Task_Remark,
+      External_Name => "_TASKREMARK");
+   pragma Export
+     (Convention => Stdcall,
       Entity => C_Dir,
       External_Name => "DIR");
    pragma Export
@@ -362,5 +390,5 @@ private
 end Ada_Demo;
 
 ------------------------------------------------------------- {{{1 ----------
---  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab     :
---  vim: set textwidth=78 filetype=ada foldmethod=expr nospell          :
+--  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
+--  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:

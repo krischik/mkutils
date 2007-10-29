@@ -33,14 +33,14 @@
 --
 
 with "win32ada.gpr";
+with "TakeCmd.gpr";
 
 project Ada_Demo is
-
    type Style_Type  is ("Debug"  , "Release");
    type Target_Type is ("i686"   , "pentium4", "x86_64");
 
    Base := ".";
-   Version := "1.0.0";
+   Version := "1.1.0";
 
    Style  : Style_Type  := external ("style" , "Release");
    Target : Target_Type := external ("target", "pentium4");
@@ -49,7 +49,7 @@ project Ada_Demo is
    for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj";
    for Source_Dirs         use (Base & "/Source",
                                 Base & "/Source/" & Target);
-   for Languages           use ("Ada", "C");
+   for Languages           use ("Ada");
    for Library_Name        use "ada_demo";
    for Library_Dir         use  Base & "/" & Target & "-" & Style & "/lib";
    for Library_Kind        use "dynamic";

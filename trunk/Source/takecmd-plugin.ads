@@ -1,6 +1,7 @@
 -------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: takecmd-plugin.ads 3 2007-10-27 15:48:43Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -41,41 +42,29 @@ package TakeCmd.Plugin is
    use type Interfaces.C.int;
 
    ---------------------------------------------------------------------------
-   --
-   --  If for whatever reason you decide not to handle the function, variable
-   --  or command when called from 4NT/TC, then return this special value and
-   --  4NT/TC will continue to look for a matching function, variable or
-   --  command as it normally would.
-   --
-   --  Ada strickly checks signed and unsigned integers - hence we have to use
-   --  the true (negative) error code.
-   --
-   Did_Not_Process : Interfaces.C.int := -16#1234568#;
-
-   ---------------------------------------------------------------------------
    --  PluginInfo structure - returned by plugin in response to
    --  GetPluginInfo() call from command processor Note that the strings
    --  should all be Unicode; if your PlugIn is compiled for ASCII you'll need
    --  to use the MultiByteToWideChar API to convert the strings before
-   --  passing them back to 4NT / TC
+   --  passing them back to 4NT / TC (Not the case in Ada)
    --
    type Plugin_Info is record
-      DLLName       : Win32.PCWSTR;          --  name of the DLL
-      Author        : Win32.PCWSTR;          --  author's name
-      AuthorEmail   : Win32.PCWSTR;          --  author's email
-      AuthorWebSite : Win32.PCWSTR;          --  author's web page
-      Description   : Win32.PCWSTR;          --  (brief) description of plugin
-      Implements    : Win32.PCWSTR;          --  comma-delimited list of
+      pszDll         : Win32.PCWSTR;         --  name of the DLL
+      pszAuthor      : Win32.PCWSTR;         --  author's name
+      pszEmail       : Win32.PCWSTR;         --  author's email
+      pszWWW         : Win32.PCWSTR;         --  author's web page
+      pszDescription : Win32.PCWSTR;         --  (brief) description of plugin
+      pszFunctions   : Win32.PCWSTR;         --  comma-delimited list of
                                              --  functions in the plugin
                                              --  (leading _ for internal vars,
                                              --  @ for var funcs, * for
                                              --  keystroke function, otherwise
                                              --  it's a command
-      MajorVer      : Interfaces.C.int;      --  plugin's major version #
-      MinorVer      : Interfaces.C.int;      --  plugin's minor version #
-      BuildNum      : Interfaces.C.int;      --  plugin's build #
-      ModuleHandle  : Interfaces.C.long;     --  module handle
-      ModuleName    : Win32.PCWSTR;          --  module name
+      nMajor         : Interfaces.C.int;     --  plugin's major version #
+      nMinor         : Interfaces.C.int;     --  plugin's minor version #
+      nBuild         : Interfaces.C.int;     --  plugin's build #
+      hModule        : Interfaces.C.long;    --  module handle
+      pszModule      : Win32.PCWSTR;         --  module name
    end record;
 
    type LP_Plugin_Info is access Plugin_Info;
@@ -106,20 +95,36 @@ package TakeCmd.Plugin is
       fRedraw     : Interfaces.C.int; --  if != 0, redraw the lin
    end record;
 
-   type LP_Key_Info is access Key_Info;
-
    pragma Convention (Convention => C, Entity => Key_Info);
-   pragma Convention (Convention => C, Entity => LP_Key_Info);
 
    ---------------------------------------------------------------------------
-   --  Ada's array handling is far superior to C and it would be a waste not
-   --  to use that.
+   --  Returning from the PlugIn:
+   --
+   --  For internal variables and variable functions, copy the result string
+   --  over pszArguments. The maximum string length for internal variables and
+   --  variable functions is 2K (2047 characters + null byte).
    --
    subtype Buffer is Win32.WCHAR_Array (1 .. 2 ** 11);
    type LP_Buffer is access Buffer;
 
+   pragma Convention (Convention => C, Entity => LP_Buffer);
+
+   ---------------------------------------------------------------------------
+   --
+   --  There is a special return value (0xFEDCBA98) that tells the parser to
+   --  assume that the plugin decided not to handle the variable/function/
+   --  command. The parser then continues looking for a matching internal,
+   --  then external.  Note that you can use this return value to have
+   --  your plugin modify the command line and then pass it on to an
+   --  existing internal variable/function/command!
+   --
+   --  Ada strickly checks signed and unsigned integers - hence we have to use
+   --  the true (negative) error code.
+   --
+   Did_Not_Process : Interfaces.C.int := -16#1234568#;
+
 end TakeCmd.Plugin;
 
 ------------------------------------------------------------- {{{1 ----------
---  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab     :
---  vim: set textwidth=0 filetype=ada foldmethod=expr nospell          :
+--  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
+--  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:

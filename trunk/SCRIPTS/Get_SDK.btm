@@ -1,15 +1,15 @@
 :!/bin/zsh
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
 ::   Description: Options setable by the Ada plugin
-::           $Id: Get_SDK.zsh 7 2007-10-27 16:33:50Z krischik@users.sourceforge.net $
+::           $Id$
 ::     Copyright: Copyright (C) 2007 Martin Krischik
 ::       Licence: GNU General Public License
 ::    Maintainer: Martin Krischik
-::       $Author: krischik@users.sourceforge.net $
-::         $Date: 2007-10-27 18:33:50 +0200 (Sa, 27 Okt 2007) $
+::       $Author$
+::         $Date$
 ::       Version: 4.5
-::     $Revision: 7 $
-::      $HeadURL: https://mkutils.googlecode.com/svn/trunk/SCRIPTS/Get_SDK.zsh $
+::     $Revision$
+::      $HeadURL$
 ::       History: 25.10.2007 MK 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::   Copyright (C) 2007  Martin Krischik

@@ -34,13 +34,16 @@
 
 pragma License (Gpl);
 
-with Win32.Winbase;
-with TakeCmd;
-with Ada.Calendar;
 with Ada.Calendar.Formatting;
+with Ada.Calendar;
+with Ada.Characters.Wide_Latin_1;
 with Ada.Exceptions;
 with Ada.Strings.Wide_Fixed;
 with Ada.Unchecked_Deallocation;
+
+with TakeCmd;
+
+with Win32.Winbase;
 
 pragma Elaborate_All (TakeCmd);
 
@@ -48,13 +51,6 @@ package body Ada_Demo is
 
    use type Win32.WCHAR_Array;
    use type Interfaces.C.int;
-
-   task type Remark_Task is
-      entry Say_Hello;
-      entry Shutdown;
-   end Remark_Task;
-
-   type Remark_Access is access Remark_Task;
 
    DLL_Name       : aliased constant Win32.WCHAR_Array :=
       "Ada_Demo" & Win32.Wide_Nul;
@@ -68,26 +64,52 @@ package body Ada_Demo is
       "A demonstration Plugin for 4NT/TC, written with Ada." &
       Win32.Wide_Nul;
    Implements     : aliased constant Win32.WCHAR_Array :=
-      "@REVERSE,_HELLO,REMARK,TASKREMARK,DIR,*KEY,USEBUFFER" &
+      "@REVERSE,_HELLO,REMARK,TASKREMARK,_TASKREMARK,DIR,*KEY,USEBUFFER" &
       Win32.Wide_Nul;
 
    Plugin_Info : TakeCmd.Plugin.LP_Plugin_Info := null;
    My_Remark   : Remark_Access                 := null;
 
+   ---------------------------------------------------------------------------
+   --  You can use Ada tasking facilities inside a plug-in. Just be aware that
+   --  library level task won't work and that most - if not all - command from
+   --  the TakeCmd library can not be used.
+   --
    task body Remark_Task is
    begin
+      Remark_Value.Set_Remark ("The Task has started.");
       loop
          select
-            accept Say_Hello do
-               null;
-            end Say_Hello;
+            accept Execute;
+            Remark_Value.Set_Remark ("The Task has run.");
          or
-            accept Shutdown do
-               abort Remark_Task;
-            end Shutdown;
+            terminate;
          end select;
       end loop;
+   exception
+      when An_Exception : others =>
+         Remark_Value.Set_Remark
+           (Ada.Exceptions.Wide_Exception_Name (An_Exception));
+         TakeCmd.CrLf;
    end Remark_Task;
+
+   protected body Remark_Value is
+      function Get_Remark return Wide_String is
+      begin
+         return Ada.Strings.Wide_Fixed.Trim (Remark, Ada.Strings.Both);
+      end Get_Remark;
+
+      procedure Set_Remark (New_Remark : in Wide_String) is
+      begin
+         Ada.Strings.Wide_Fixed.Move
+           (Source  => New_Remark,
+            Target  => Remark,
+            Drop    => Ada.Strings.Right,
+            Justify => Ada.Strings.Left,
+            Pad     => Ada.Strings.Wide_Space);
+         return;
+      end Set_Remark;
+   end Remark_Value;
 
    ---------------------------------------------------------------------------
    --  This function shows how you can modify the behaviour of a 4NT/TC
@@ -140,7 +162,8 @@ package body Ada_Demo is
    end C_Remark;
 
    ---------------------------------------------------------------------------
-   --  This is an Internal Command called from 4NT/TC
+   --  This is an Internal Command called from 4NT/TC which is executed in
+   --  another task.
    --
    function C_Task_Remark
      (Arguments : in Win32.PCWSTR)
@@ -148,10 +171,7 @@ package body Ada_Demo is
    is
       pragma Unreferenced (Arguments);
    begin
-      if My_Remark = null then
-         My_Remark := new Remark_Task;
-      end if;
-      My_Remark.all.Say_Hello;
+      My_Remark.all.Execute;
       return 0;
    exception
       when An_Exception : others =>
@@ -163,7 +183,7 @@ package body Ada_Demo is
 
    ---------------------------------------------------------------------------
    --  This function illustrates how to call TakeCmd.dll functions which
-   --  require a buffer in which to manipualte the supplied string. A number
+   --  require a buffer in which to manipulate the supplied string. A number
    --  is supplied as a parameter to this function and it uses "Addcommas" to
    --  insert the thousands separator into the number. If the supplied
    --  parameter is not a valid number it is left unchanged. For example:
@@ -252,17 +272,17 @@ package body Ada_Demo is
       if Plugin_Info = null then
          Plugin_Info :=
             new TakeCmd.Plugin.Plugin_Info'
-           (DLLName       => Win32.Addr (DLL_Name),
-            Author        => Win32.Addr (Author),
-            AuthorEmail   => Win32.Addr (Author_Email),
-            AuthorWebSite => Win32.Addr (Author_WebSite),
-            Description   => Win32.Addr (Description),
-            Implements    => Win32.Addr (Implements),
-            MajorVer      => 1,
-            MinorVer      => 0,
-            BuildNum      => 0,
-            ModuleHandle  => 0,
-            ModuleName    => null);
+           (pszDll         => Win32.Addr (DLL_Name),
+            pszAuthor      => Win32.Addr (Author),
+            pszEmail       => Win32.Addr (Author_Email),
+            pszWWW         => Win32.Addr (Author_WebSite),
+            pszDescription => Win32.Addr (Description),
+            pszFunctions   => Win32.Addr (Implements),
+            nMajor         => 1,
+            nMinor         => 0,
+            nBuild         => 0,
+            hModule        => 0,
+            pszModule      => null);
          TakeCmd.Q_Put_String
            (Win32.WCHAR_Array'("Ada_Demo: Plugin Info created!"));
          TakeCmd.CrLf;
@@ -287,6 +307,9 @@ package body Ada_Demo is
    --
    function Initialize_Plugin return  Win32.BOOL is
    begin
+      if My_Remark = null then
+         My_Remark := new Remark_Task;
+      end if;
       TakeCmd.Q_Put_String
         (Win32.WCHAR_Array'("Ada_Demo: DLL initialized OK!"));
       TakeCmd.CrLf;
@@ -343,13 +366,14 @@ package body Ada_Demo is
       pragma Unreferenced (End_Process);
       use type TakeCmd.Plugin.LP_Plugin_Info;
    begin
+      if My_Remark /= null then
+         Deallocate (My_Remark);
+      end if;
+
       if Plugin_Info /= null then
          Deallocate (Plugin_Info);
       end if;
-      if My_Remark /= null then
-         My_Remark.all.Shutdown;
-         Deallocate (My_Remark);
-      end if;
+
       TakeCmd.Q_Put_String
         (Win32.WCHAR_Array'("Ada_Demo: DLL shut down OK!"));
       TakeCmd.CrLf;
@@ -384,8 +408,36 @@ package body Ada_Demo is
          return -2;
    end V_Hello;
 
+   ---------------------------------------------------------------------------
+   --  This is an Internal Variable called from 4NT/TC
+   --
+   function V_Task_Remark
+     (Arguments : access TakeCmd.Plugin.Buffer)
+      return      Interfaces.C.int
+   is
+      Response : aliased constant Wide_String :=
+         Remark_Value.Get_Remark & Ada.Characters.Wide_Latin_1.NUL;
+      Dummy    : Win32.PWSTR;
+
+      pragma Warnings (Off, Dummy);
+   begin
+      Dummy :=
+         Win32.Winbase.lstrcpynW
+           (lpString1  => Win32.Addr (Arguments.all),
+            lpString2  => Win32.Addr (Response),
+            iMaxLength => Arguments'Length);
+
+      return 0;
+   exception
+      when An_Exception : others =>
+         TakeCmd.Q_Put_String
+           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.CrLf;
+         return -2;
+   end V_Task_Remark;
+
 ------------------------------------------------------------------------------
---  Start of code that will be executed when the plugin is first loaded.
+--  Start of code that will be executed when the plug-in is first loaded.
 --
 begin
    TakeCmd.Q_Put_String (Win32.WCHAR_Array'("Ada_Demo: DLL loaded OK!"));
@@ -397,5 +449,5 @@ exception
 end Ada_Demo;
 
 ------------------------------------------------------------- {{{1 ----------
---  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab     :
---  vim: set textwidth=0 filetype=ada foldmethod=expr nospell          :
+--  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
+--  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:

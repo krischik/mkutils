@@ -1,6 +1,7 @@
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: takecmd.ads 3 2007-10-27 15:48:43Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -1946,12 +1947,13 @@ package TakeCmd is
    --
    --
    --
-   --  // keys values for the keystroke plugins // A normal Unicode character
-   --  has a value from 0-0xFFFF // An extended key (Alt keys, function keys,
-   --  etc.) adds 0x10000 (i.e., "FBIT") to the scan code value // (If you
+   --  keys values for the keystroke plugins. A normal Unicode character
+   --  has a value from 0-0xFFFF An extended key (Alt keys, function keys,
+   --  etc.) adds 0x10000 (i.e., "FBIT") to the scan code value  (If you
    --  prefer, you can get the keyboard state to get the VK_* value from
-   --  Windows) #define FBIT 0x10000
-   --
+   --  Windows)
+
+   FBIT : constant Interfaces.C.int := 16#10000#;
    --  #define SHIFT_TAB        15+FBIT
    --  #define ALT_TAB          165+FBIT
    --  #define CTL_TAB          148+FBIT
@@ -2049,5 +2051,5 @@ private
 end TakeCmd;
 
 ------------------------------------------------------------- {{{1 ----------
---  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab     :
---  vim: set textwidth=0 filetype=ada foldmethod=expr nospell          :
+--  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
+--  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:

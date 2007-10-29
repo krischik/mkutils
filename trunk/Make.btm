@@ -32,13 +32,11 @@
 SETLOCAL
     SET             HOME=%[HOMEDRIVE]%[HOMEPATH]
     SET     Project_Home=%@PATH[%_batchname]
-    SET ADA_INCLUDE_PATH=%[ADA_INCLUDE_PATH];%[GNAT_GPL_HOME]\lib\gcc\pentium-mingw32msv\4.1.3\adainclude
-    SET ADA_PROJECT_PATH=%[ADA_PROJECT_PATH];%[GNAT_GPL_HOME]lib\gnat
-    SET     LIBRARY_PATH=%[LIBRARY_PATH];%[Project_Home]SDK
-    SET   C_INCLUDE_PATH=%[C_INCLUDE_PATH];%[Project_Home]SDK
 
-    gnumake-3.79.1-nt pentium4-Debug\lib\ada_demo.dll
-    gnumake-3.79.1-nt pentium4-Release\lib\ada_demo.dll
+    PUSHD %[Project_Home] 
+        gnumake-3.79.1-nt pentium4-Debug\lib\ada_demo.dll
+        gnumake-3.79.1-nt pentium4-Release\lib\ada_demo.dll
+    POPD
 ENDLOCAL
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
