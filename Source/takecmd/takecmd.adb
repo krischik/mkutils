@@ -31,7 +31,8 @@
 --  with Ada_Demo. If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------- }}}1 ----------
 
-pragma License (Gpl);
+pragma License (Modified_Gpl);
+pragma Ada_05;
 
 with Win32.Winnls;
 

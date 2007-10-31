@@ -15,26 +15,28 @@
 ----------------------------------------------------------------------------
 --  Copyright (C) 2007  Martin Krischik
 --
---  This file is part of Ada_Demo.
+--  This file is part of TakeCommand Plugin Library for Ada.
 --
---  Ada_Demo is free software: you can redistribute it and/or modify
+--  TakeCommand Plugin Library for Ada is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
 --  the Free Software Foundation, either version 3 of the License, or
 --  (at your option) any later version.
 --
---  Ada_Demo is distributed in the hope that it will be useful,
+--  TakeCommand Plugin Library for Ada is distributed in the hope that it will be useful,
 --  but WITHOUT ANY WARRANTY; without even the implied warranty of
 --  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 --  GNU General Public License for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
+--  along with TakeCommand Plugin Library for Ada.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------- }}}1 ----------
 --
 -- This file is not to be edited thrue the project poroperties in GPS.
 --
 
 with "win32ada.gpr";
+with "ADVAPI32.gpr";
+with "TakeCmd.gpr";
 
 project TakeCmd.Ada is
    type Style_Type  is ("Debug"  , "Release");
@@ -48,14 +50,14 @@ project TakeCmd.Ada is
 
    for Exec_Dir            use  Base & "/" & Target & "-" & Style;
    for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj/takecmd";
-   for Source_Dirs         use (Base & "/Source",
-                                Base & "/Source/" & Target);
+   for Source_Dirs         use (Base & "/Source/takecmd");
    for Languages           use ("Ada");
-   for Library_Name        use "ada_demo";
+   for Library_Name        use "takecmd_ada";
    for Library_Dir         use  Base & "/" & Target & "-" & Style & "/lib/takecmd";
    for Library_Kind        use "static";
    for Library_Interface   use (
       "takecmd",
+      "takecmd.trace",
       "takecmd.plugin");
    for Library_Options     use (
          "-Wl,--kill-at");        -- Remove @nn from exported symbols
@@ -189,6 +191,8 @@ project TakeCmd.Ada is
    Source_Files := (
       "takecmd.ads",
       "takecmd.adb",
+      "takecmd-trace.adb",
+      "takecmd-trace.ads",
       "takecmd-plugin.ads");
 
 end TakeCmd.Ada;

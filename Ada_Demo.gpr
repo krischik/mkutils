@@ -34,8 +34,7 @@
 -- This file is not to be edited thrue the project poroperties in GPS.
 --
 
-with "win32ada.gpr";
-with "TakeCmd.gpr";
+with "TakeCmd-ada.gpr";
 
 project Ada_Demo is
    type Style_Type  is ("Debug"  , "Release");
@@ -49,8 +48,7 @@ project Ada_Demo is
 
    for Exec_Dir            use  Base & "/" & Target & "-" & Style;
    for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj/ada_demo";
-   for Source_Dirs         use (Base & "/Source",
-                                Base & "/Source/" & Target);
+   for Source_Dirs         use (Base & "/Source/ada_demo");
    for Languages           use ("Ada");
    for Library_Name        use "ada_demo";
    for Library_Dir         use  Base & "/" & Target & "-" & Style & "/lib/ada_demo";
@@ -58,9 +56,7 @@ project Ada_Demo is
    for Library_Version     use "libada_demo.so." & Version;
    for Library_Auto_Init   use "true";
    for Library_Interface   use (
-      "ada_demo",
-      "takecmd",
-      "takecmd.plugin");
+      "ada_demo");
    for Library_Options     use (
          "-Wl,--kill-at");        -- Remove @nn from exported symbols
 
@@ -192,10 +188,7 @@ project Ada_Demo is
 
    Source_Files := (
       "ada_demo.adb",
-      "ada_demo.ads",
-      "takecmd.ads",
-      "takecmd.adb",
-      "takecmd-plugin.ads");
+      "ada_demo.ads");
 
 end Ada_Demo;
 

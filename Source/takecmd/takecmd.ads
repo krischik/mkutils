@@ -1,6 +1,7 @@
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: takecmd.ads 15 2007-10-31 08:27:40Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -112,13 +113,17 @@
 --  buffer should be at least 2K and preferably 8K to 16K to allow for
 --  variable and alias expansion.
 --
-pragma License (Gpl);
+
+pragma License (Modified_Gpl);
+pragma Ada_05;
 
 with Interfaces.C;
 with Win32;
 
 package TakeCmd is
    pragma Linker_Options ("-lTakeCmd");
+
+   subtype Buffer is Win32.WCHAR_Array (1 .. 2 ** 11);
 
    --  /*******************************************************************
    --   * Prototypes for internal commands
@@ -1501,12 +1506,23 @@ package TakeCmd is
    --   * .INI functions
    --   *
    --   ********************************************************************/
+
    --  int WINAPI QueryOptionValue( LPTSTR pszOption, LPTSTR pszValue );
    --  /*
    --   Return the value of the .INI parameter pszOption as a string in
    --  pszValue
    --  */
-   --
+
+   function QueryOptionValue
+     (pszOption : in Win32.PCWSTR;
+      pszValue  : access Buffer)
+      return      Interfaces.C.int;
+
+   pragma Import
+     (Convention => Stdcall,
+      Entity => QueryOptionValue,
+      External_Name => "QueryOptionValue");
+
    --
    --
    --  /********************************************************************
@@ -1945,11 +1961,10 @@ package TakeCmd is
    --
    --
    --
-   --  keys values for the keystroke plugins. A normal Unicode character
-   --  has a value from 0-0xFFFF An extended key (Alt keys, function keys,
-   --  etc.) adds 0x10000 (i.e., "FBIT") to the scan code value  (If you
-   --  prefer, you can get the keyboard state to get the VK_* value from
-   --  Windows)
+   --  keys values for the keystroke plugins. A normal Unicode character has a
+   --  value from 0-0xFFFF An extended key (Alt keys, function keys, etc.)
+   --  adds 0x10000 (i.e., "FBIT") to the scan code value (If you prefer, you
+   --  can get the keyboard state to get the VK_* value from Windows)
 
    FBIT : constant Interfaces.C.int := 16#10000#;
    --  #define SHIFT_TAB        15+FBIT

@@ -1,6 +1,7 @@
 -------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: mk_utils.adb 15 2007-10-31 08:27:40Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -8,7 +9,8 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL: https://mkutils.googlecode.com/svn/trunk/Source/mk_utils.adb
+--  $
 --      History: 30.10.2007 MK Initial Release
 ------------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
@@ -65,7 +67,8 @@ package body MK_Utils is
 
    Plugin_Info : TakeCmd.Plugin.LP_Plugin_Info := null;
 
-   ---------------------------------------------------------------------------
+   -----------------e---------------------------------------------------------
+   ---
    --  Change Owner of a File
    --
    function C_Change_Owner
@@ -216,6 +219,13 @@ package body MK_Utils is
          return Win32.TRUE;
    end Shutdown_Plugin;
 
+begin
+   TakeCmd.Q_Put_String (Win32.WCHAR_Array'("Ada_Demo: DLL loaded OK!"));
+   TakeCmd.CrLf;
+exception
+   when An_Exception : others =>
+      TakeCmd.Q_Put_String
+        (Ada.Exceptions.Exception_Information (An_Exception));
 end MK_Utils;
 
 ------------------------------------------------------------- {{{1 ----------

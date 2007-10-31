@@ -32,9 +32,7 @@
 -- This file is not to be edited thrue the project poroperties in GPS.
 --
 
-with "win32ada.gpr";
-with "ADVAPI32.gpr";
-with "TakeCmd.gpr";
+with "TakeCmd-ada.gpr";
 
 project MK_Utils is
    type Style_Type  is ("Debug"  , "Release");
@@ -44,19 +42,14 @@ project MK_Utils is
    Version      := "1.0.0";
    Source_Files := (
       "mk_utils.adb",
-      "mk_utils.ads",
-      "takecmd.ads",
-      "takecmd.adb",
-      "takecmd-plugin.ads",
-      "win32-advapi.ads");
+      "mk_utils.ads");
 
    Style  : Style_Type  := external ("style" , "Release");
    Target : Target_Type := external ("target", "pentium4");
 
    for Exec_Dir            use  Base & "/" & Target & "-" & Style;
    for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj/mk_utils";
-   for Source_Dirs         use (Base & "/Source",
-                                Base & "/Source/" & Target);
+   for Source_Dirs         use (Base & "/Source/mk_utils");
    for Languages           use ("Ada");
    for Library_Name        use "mk_utils";
    for Library_Src_Dir     use  Base & "/" & Target & "-" & Style & "/lib/mk_utils";
@@ -65,9 +58,7 @@ project MK_Utils is
    for Library_Version     use "libmk_utils.so." & Version;
    for Library_Auto_Init   use "true";
    for Library_Interface   use (
-      "mk_utils",
-      "takecmd",
-      "takecmd.plugin");
+      "mk_utils");
    for Library_Options     use (
          "-Wl,--kill-at");        -- Remove @nn from exported symbols
 
