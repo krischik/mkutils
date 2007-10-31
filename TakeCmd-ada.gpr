@@ -35,9 +35,8 @@
 --
 
 with "win32ada.gpr";
-with "TakeCmd.gpr";
 
-project Ada_Demo is
+project TakeCmd.Ada is
    type Style_Type  is ("Debug"  , "Release");
    type Target_Type is ("i686"   , "pentium4", "x86_64");
 
@@ -48,17 +47,14 @@ project Ada_Demo is
    Target : Target_Type := external ("target", "pentium4");
 
    for Exec_Dir            use  Base & "/" & Target & "-" & Style;
-   for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj/ada_demo";
+   for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj/takecmd";
    for Source_Dirs         use (Base & "/Source",
                                 Base & "/Source/" & Target);
    for Languages           use ("Ada");
    for Library_Name        use "ada_demo";
-   for Library_Dir         use  Base & "/" & Target & "-" & Style & "/lib/ada_demo";
-   for Library_Kind        use "dynamic";
-   for Library_Version     use "libada_demo.so." & Version;
-   for Library_Auto_Init   use "true";
+   for Library_Dir         use  Base & "/" & Target & "-" & Style & "/lib/takecmd";
+   for Library_Kind        use "static";
    for Library_Interface   use (
-      "ada_demo",
       "takecmd",
       "takecmd.plugin");
    for Library_Options     use (
@@ -191,13 +187,11 @@ project Ada_Demo is
    end Pretty_Printer;
 
    Source_Files := (
-      "ada_demo.adb",
-      "ada_demo.ads",
       "takecmd.ads",
       "takecmd.adb",
       "takecmd-plugin.ads");
 
-end Ada_Demo;
+end TakeCmd.Ada;
 
 ------------------------------------------------------------------------
 --vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab :

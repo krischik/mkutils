@@ -29,13 +29,15 @@
 ::  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: }}}1 ::::::::::
 
-SETLOCAL
-    SET             HOME=%[HOMEDRIVE]%[HOMEPATH]
-    SET     Project_Home=%@PATH[%_batchname]
+@ECHO OFF
 
-    PUSHD %[Project_Home] 
-        gnumake-3.79.1-nt all
-    POPD
+SETLOCAL
+    PLUGIN /L pentium4-Release\lib\mk_utils\mk_utils.dll
+    PLUGIN /P
+
+    SHOWOWNER Test_MK_Utils.btm
+
+    PLUGIN /U MK_Utils
 ENDLOCAL
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::

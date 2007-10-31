@@ -1,7 +1,6 @@
 -------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id: takecmd-plugin.ads 3 2007-10-27 15:48:43Z
---  krischik@users.sourceforge.net $
+--          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -9,10 +8,10 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL:
---  https://gnuada.svn.sourceforge.net/svnroot/gnuada/trunk/tools/vim/ada_opti
---  ons.vim $
---      History: 25.10.2007 MK
+--     $HeadURL$
+--      History: 25.10.2007 MK Initial Release
+--               29.10.2007 MK Added Threading, parameter names closer to
+--                             C original
 -----------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
 --

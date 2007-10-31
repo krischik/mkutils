@@ -32,7 +32,7 @@
 @ECHO OFF
 
 SETLOCAL
-    PLUGIN /L pentium4-Release\lib\ada_demo.dll
+    PLUGIN /L pentium4-Release\lib\ada_demo\ada_demo.dll
     PLUGIN /P
 
     DIR

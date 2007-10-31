@@ -1,7 +1,6 @@
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id: ada_demo.ads 11 2007-10-28 15:28:45Z
---  krischik@users.sourceforge.net $
+--          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -9,10 +8,11 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL:
---  https://gnuada.svn.sourceforge.net/svnroot/gnuada/trunk/tools/vim/ada_opti
---  ons.vim $
---      History: 25.10.2007 MK
+--     $HeadURL$
+--      History: 25.10.2007 MK Initial Release
+--               29.10.2007 MK Added Threading, parameter names closer to
+--                             C original
+--         Help: http://www.jpsoftwiki.com/wiki/index.php?title=Ada_Demo_%28plugin%29
 ----------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
 --

@@ -1,7 +1,6 @@
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id: takecmd.ads 3 2007-10-27 15:48:43Z
---  krischik@users.sourceforge.net $
+--          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -9,10 +8,10 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL:
---  https://gnuada.svn.sourceforge.net/svnroot/gnuada/trunk/tools/vim/ada_opti
---  ons.vim $
---      History: 25.10.2007 MK
+--     $HeadURL$
+--      History: 25.10.2007 MK Initial Release
+--               29.10.2007 MK Added Threading, parameter names closer to
+--                             C original
 ----------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
 --
@@ -203,8 +202,7 @@ package TakeCmd is
    --  int WINAPI Memory_Cmd( LPTSTR pszArguments );
    --  int WINAPI Mklnk_Cmd( LPTSTR pszArguments );
    --  int WINAPI Msgbox_Cmd( LPTSTR pszArguments );
-   --  int WINAPI Mv_Cmd( LPTSTR pszArguments );                        //
-   --  MOVE command
+   --  int WINAPI Mv_Cmd( LPTSTR pszArguments ); MOVE command
    --  int WINAPI On_Cmd( LPTSTR pszArguments );
    --  int WINAPI Option_Cmd( LPTSTR pszArguments );
    --  int WINAPI OSD_Cmd( LPTSTR );
@@ -225,7 +223,7 @@ package TakeCmd is
    --  int WINAPI Rd_Cmd( LPTSTR pszArguments );
    --  int WINAPI Reboot_Cmd( LPTSTR pszArguments );
    --  int WINAPI Recycle_Cmd( LPTSTR pszArguments );
-   --  int WINAPI Remark_Cmd( LPTSTR pszArguments );            // REM
+   --  int WINAPI Remark_Cmd( LPTSTR pszArguments );      REM
    --  int WINAPI Ren_Cmd( LPTSTR pszArguments );
    --  int WINAPI Ret_Cmd( LPTSTR pszArguments );
    --  int WINAPI Rexec_Cmd( LPTSTR pszArguments );
