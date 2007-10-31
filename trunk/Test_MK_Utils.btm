@@ -35,7 +35,7 @@ SETLOCAL
     PLUGIN /L pentium4-Release\lib\mk_utils\mk_utils.dll
     PLUGIN /P
 
-    SHOWOWNER Test_MK_Utils.btm
+::    SHOWOWNER Test_MK_Utils.btm
 
     PLUGIN /U MK_Utils
 ENDLOCAL
