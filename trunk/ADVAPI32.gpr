@@ -34,14 +34,14 @@
 -- This file is not to be edited thrue the project poroperties in GPS.
 --
 
-project TakeCmd is
+project ADVAPI32 is
    Base := ".";
 
    for Languages use ("c");
    for Library_Dir use Base & "/SDK";
-   for Library_Name use "TakeCmd";
+   for Library_Name use "ADVAPI32";
    for Externally_Built use "true";
-end TakeCmd;
+end ADVAPI32;
 
 ------------------------------------------------------------------------
 --vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab :

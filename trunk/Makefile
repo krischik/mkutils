@@ -32,13 +32,19 @@
 .PHONY: pretty
 .PHONY: all
 
-Project_File	:= Ada_Demo.gpr
+Project_Files	:= Ada_Demo.gpr				\
+ 		   ADVAPI32.gpr				\
+ 		   MK_Utils.gpr				\
+ 		   TakeCmd.gpr
 Source_Files	:= $(wildcard Source/*.ad?)
-Library_Files	:= SDK/libTakeCmd.a
+Library_Files	:= SDK/libTakeCmd.a			\
+    		   SDK/libADVAPI32.a
 
 all:							\
 	pentium4-Release\lib\ada_demo.dll		\
-	pentium4-Debug\lib\ada_demo.dll
+	pentium4-Debug\lib\ada_demo.dll			\
+	pentium4-Release\lib\mk_utils.dll		\
+	pentium4-Debug\lib\mk_utils.dll
 
 pretty:
 	gnat pretty -P Ada_Demo.gpr
@@ -49,17 +55,32 @@ SDK/TakeCmd.def: %[JPPATH]/TakeCmd.dll
 SDK/libTakeCmd.a: SDK/TakeCmd.def
 	cd SDK && gnatdll -k -e TakeCmd.def -d TakeCmd.dll
 
+SDK/libADVAPI32.a: SDK/ADVAPI32.def
+	cd SDK && gnatdll -k -e ADVAPI32.def -d ADVAPI32.dll
+
 pentium4-Release\lib\ada_demo.dll:		\
-	${Project_File}				\
+	${Project_Files}				\
 	${Source_Files}				\
 	${Library_Files}
 	gnat make -P Ada_Demo.gpr -XStyle=Release -XTarget=pentium4
 
 pentium4-Debug\lib\ada_demo.dll:		\
-	${Project_File}				\
+	${Project_Files}				\
 	${Source_Files}				\
 	${Library_Files}
 	gnat make -P Ada_Demo.gpr -XStyle=Debug -XTarget=pentium4
+
+pentium4-Release\lib\mk_utils.dll:		\
+	${Project_Files}				\
+	${Source_Files}				\
+	${Library_Files}
+	gnat make -P mk_utils.gpr -XStyle=Release -XTarget=pentium4
+
+pentium4-Debug\lib\mk_utils.dll:		\
+	${Project_Files}				\
+	${Source_Files}				\
+	${Library_Files}
+	gnat make -P mk_utils.gpr -XStyle=Debug -XTarget=pentium4
 
 #------------------------------------------------------------ {{{1 ----------
 #vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=0 noexpandtab :
