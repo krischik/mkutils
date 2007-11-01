@@ -1,6 +1,7 @@
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: win32-advapi.ads 16 2007-10-31 17:08:47Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -8,7 +9,8 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/takecmd/win32-advapi.ads $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -42,7 +44,7 @@ package Win32.Advapi is
 
    UNAMEMAXSIZE : constant := 256;
 
-   subtype UNAME is  Win32.WCHAR_Array (1 .. UNAMEMAXSIZE);
+   subtype UNAME is Win32.WCHAR_Array (1 .. UNAMEMAXSIZE);
 
    type SE_OBJECT_TYPE is (
       SE_UNKNOWN_OBJECT_TYPE,

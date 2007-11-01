@@ -1,6 +1,7 @@
 -------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: takecmd-plugin.ads 16 2007-10-31 17:08:47Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -8,7 +9,9 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/takecmd/takecmd-plugin.ads
+--  $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -114,9 +117,9 @@ package TakeCmd.Plugin is
    --  There is a special return value (0xFEDCBA98) that tells the parser to
    --  assume that the plugin decided not to handle the variable/function/
    --  command. The parser then continues looking for a matching internal,
-   --  then external.  Note that you can use this return value to have
-   --  your plugin modify the command line and then pass it on to an
-   --  existing internal variable/function/command!
+   --  then external. Note that you can use this return value to have your
+   --  plugin modify the command line and then pass it on to an existing
+   --  internal variable/function/command!
    --
    --  Ada strickly checks signed and unsigned integers - hence we have to use
    --  the true (negative) error code.

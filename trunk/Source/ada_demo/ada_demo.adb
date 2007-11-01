@@ -1,6 +1,7 @@
 -------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: ada_demo.adb 16 2007-10-31 17:08:47Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -8,7 +9,8 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/ada_demo/ada_demo.adb $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -41,10 +43,12 @@ with Ada.Strings.Wide_Fixed;
 with Ada.Unchecked_Deallocation;
 
 with TakeCmd;
+with TakeCmd.Trace;
 
 with Win32.Winbase;
 
 pragma Elaborate_All (TakeCmd);
+pragma Elaborate_All (TakeCmd.Trace);
 
 package body Ada_Demo is
 
@@ -64,6 +68,12 @@ package body Ada_Demo is
       Win32.Wide_Nul;
    Implements     : aliased constant Win32.WCHAR_Array :=
       "@REVERSE,_HELLO,REMARK,TASKREMARK,_TASKREMARK,DIR,*KEY,USEBUFFER" &
+      "," &
+      TakeCmd.Trace.Trace_Init &
+      "," &
+      TakeCmd.Trace.Write_Line_Number &
+      ",_" &
+      TakeCmd.Trace.Write_Line_Number &
       Win32.Wide_Nul;
 
    Plugin_Info : TakeCmd.Plugin.LP_Plugin_Info := null;

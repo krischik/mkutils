@@ -1,6 +1,7 @@
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: mk_utils.ads 16 2007-10-31 17:08:47Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -8,11 +9,13 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/mk_utils/mk_utils.ads $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
---         Help: http://www.jpsoftwiki.com/wiki/index.php?title=MK_Utils_%28plugin%29
+--         Help:
+--  http://www.jpsoftwiki.com/wiki/index.php?title=MK_Utils_%28plugin%29
 ----------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
 --
@@ -68,9 +71,13 @@ package MK_Utils is
    ---------------------------------------------------------------------------
    --  Change Owner of a File
    --
-   function C_Change_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
+   function C_Change_Owner
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int;
 
-   function C_Show_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
+   function C_Show_Owner
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int;
 
 private
 

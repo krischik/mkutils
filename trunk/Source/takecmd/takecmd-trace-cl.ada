@@ -1,7 +1,6 @@
 -------------------------------------------------------------- {{{1 ----------
---  Description: Options setable by the Ada plugin
---          $Id: takecmd-plugin.ads 15 2007-10-31 08:27:40Z
---  krischik@users.sourceforge.net $
+--  Description: Trace facility for 4NT / Take Command Plugins
+--          $Id: $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -9,8 +8,7 @@
 --        $Date: 2007-10-31 09:27:40 +0100 (Mi, 31 Okt 2007) $
 --      Version: 4.5
 --    $Revision: 15 $
---     $HeadURL:
---  https://mkutils.googlecode.com/svn/trunk/Source/takecmd-plugin.ads $
+--     $HeadURL: $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -35,18 +33,6 @@
 
 pragma License (Modified_Gpl);
 pragma Ada_05;
-
-with Ada.Text_IO;
-with Ada.Task_Identification;
-with Ada.Strings.Fixed;
-with Ada.Characters.Latin_1;
-with Ada.Strings.Maps;
-with Ada.Characters.Handling;
-with Ada.Characters.Conversions;
-with Ada.Containers.Indefinite_Hashed_Maps;
-with Ada.Strings.Hash;
-
---  with GNAT.Traceback.Symbolic;
 
 ---------------------------------------------------------------------------
 --
@@ -146,14 +132,35 @@ protected body Cl is
    --  Initialize Trace.
    --
    procedure Initialize is
-      Value : aliased TakeCmd.Buffer;
+      Value : aliased TakeCmd.Buffer := (others => ' ');
+      Result : Interfaces.C.int;
+      Test  : aliased constant Win32.WCHAR_Array :=
+         "Editor" & Win32.Wide_Nul;
    begin
+      Result := TakeCmd.QueryOptionValue
+            (pszOption => Win32.Addr (Test),
+             pszValue  => Value'Access);
+      if  Result =
+         0
+      then
+         TakeCmd.Q_Put_String
+           (Win32.WCHAR_Array'("TakeCmd: " & Value (1 .. 20)));
+         TakeCmd.CrLf;
+      else
+         Result := TakeCmd.Error (Result);
+      end if;
       if TakeCmd.QueryOptionValue
             (pszOption => Win32.Addr (Trace_Opt),
              pszValue  => Value'Access) =
          0
       then
-         if Value = Trace_Opt_On then
+         TakeCmd.Q_Put_String
+           (Win32.WCHAR_Array'("TakeCmd: " &
+                               Trace_Opt &
+                               " " &
+                               Value (1 .. 20)));
+         TakeCmd.CrLf;
+         if Value (1 .. Trace_Opt_On'Length) = Trace_Opt_On then
             State.On := True;
             --  elsif Value = Trace_Opt_NoPrefix then
             --  State.On                := True;
@@ -161,29 +168,37 @@ protected body Cl is
             --  State.Write_Line_Number := False;
          end if;
       end if;
+      TakeCmd.Q_Put_String (Win32.WCHAR_Array'("TakeCmd: Init trace 2..."));
+      TakeCmd.CrLf;
       if TakeCmd.QueryOptionValue
             (pszOption => Win32.Addr (Trace_Opt_To),
              pszValue  => Value'Access) =
          0
       then
-         if Value = Trace_Opt_To_Err1
-           or else Value = Trace_Opt_To_Err2
+         if Value (1 .. Trace_Opt_To_Err1'Length) = Trace_Opt_To_Err1
+           or else Value (1 .. Trace_Opt_To_Err2'Length) =
+                   Trace_Opt_To_Err2
          then
             State.Location := Standard_Error;
-         elsif Value = Trace_Opt_To_Std1
-           or else Value = Trace_Opt_To_Std2
+         elsif Value (1 .. Trace_Opt_To_Std1'Length) = Trace_Opt_To_Std1
+           or else Value (1 .. Trace_Opt_To_Std2'Length) =
+                   Trace_Opt_To_Std2
          then
             State.Location := Standard_Output;
-         elsif Value = Trace_Opt_To_File then
+         elsif Value (1 .. Trace_Opt_To_File'Length) =
+               Trace_Opt_To_File
+         then
             State.Location := File;
-         elsif Value = Trace_Opt_To_Queue1
-           or else Value = Trace_Opt_To_Queue2
+         elsif Value (1 .. Trace_Opt_To_Queue1'Length) =
+               Trace_Opt_To_Queue1
+           or else Value (1 .. Trace_Opt_To_Queue2'Length) =
+                   Trace_Opt_To_Queue2
          then
             State.Location := Queue;
          end if;
       end if;
       if TakeCmd.QueryOptionValue
-            (pszOption => Win32.Addr (Trace_Opt_To),
+            (pszOption => Win32.Addr (Trace_Opt_File),
              pszValue  => Value'Access) =
          0
       then

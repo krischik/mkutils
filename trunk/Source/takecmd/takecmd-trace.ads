@@ -1,7 +1,6 @@
 -------------------------------------------------------------- {{{1 ----------
---  Description: Options setable by the Ada plugin
---          $Id: takecmd-plugin.ads 15 2007-10-31 08:27:40Z
---  krischik@users.sourceforge.net $
+--  Description: Trace facility for 4NT / Take Command Plugins
+--          $Id: $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -9,8 +8,7 @@
 --        $Date: 2007-10-31 09:27:40 +0100 (Mi, 31 Okt 2007) $
 --      Version: 4.5
 --    $Revision: 15 $
---     $HeadURL:
---  https://mkutils.googlecode.com/svn/trunk/Source/takecmd-plugin.ads $
+--     $HeadURL: $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -43,6 +41,8 @@ with Ada.Strings.Unbounded;
 with Ada.Exceptions;
 with Ada.Finalization;
 
+with TakeCmd.Plugin;
+
 with GNAT.Source_Info;
 
 package TakeCmd.Trace is
@@ -57,6 +57,21 @@ package TakeCmd.Trace is
    --  Trace Destination
    --
    type Destination is (Queue, Standard_Error, Standard_Output, File);
+
+   ---------------------------------------------------------------------------
+   --
+   --  Initialise Trace Sub-System
+   --
+   function C_Trace_Init
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int;
+
+   Trace_Init : aliased constant Win32.WCHAR_Array := "TRACEINIT";
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Trace_Init,
+      External_Name => "TRACEINIT");
 
    ---------------------------------------------------------------------------
    --
@@ -84,6 +99,7 @@ package TakeCmd.Trace is
    --  additional suffixes of the same form are appended after the separating
    --  string " instantiated at ". The result is considered to be a static
    --  string constant.
+   --
    function Source return String renames GNAT.Source_Info.Source_Location;
 
    ---------------------------------------------------------------------------
@@ -94,6 +110,7 @@ package TakeCmd.Trace is
    --  There are allways some extra Adjust with matching. Finalize.
    --
    --  Name of the function calls to be traced.
+   --
    function Function_Trace (Name : in String) return Object;
 
    ---------------------------------------------------------------------------
@@ -120,6 +137,7 @@ package TakeCmd.Trace is
    --  Message   : Free form Message
    --  Entity    : Location destriptor. Suggested content: AdaCL.Trace.Entity
    --  Source    : Location destriptor. Suggested content: AdaCL.Trace.Source
+   --
    procedure Assert
      (Condition : in Boolean;
       Raising   : in Ada.Exceptions.Exception_Id;
@@ -131,19 +149,29 @@ package TakeCmd.Trace is
    --
    --  Write Line numbers
    --
-   procedure Enable_Write_Line_Number;
+   function C_Write_Line_Number
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int;
 
-   ---------------------------------------------------------------------------
-   --
-   --  Don't Write Line numbers
-   --
-   procedure Disable_Write_Line_Number;
+   Write_Line_Number : aliased constant Win32.WCHAR_Array := "TRACEWRITELINENUMBER";
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Write_Line_Number,
+      External_Name => "TRACEWRITELINENUMBER");
 
    ---------------------------------------------------------------------------
    --
    --  check if Line numbers are written
    --
-   function Is_Write_Line_Number_Enabled return Boolean;
+   function V_Write_Line_Number
+     (Arguments : access TakeCmd.Plugin.Buffer)
+      return      Interfaces.C.int;
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => V_Write_Line_Number,
+      External_Name => "_TRACEWRITELINENUMBER");
 
    ---------------------------------------------------------------------------
    --
@@ -429,9 +457,6 @@ private
    pragma Inline (Enable_Verbose);
    pragma Inline (Disable_Trace);
    pragma Inline (Enable_Trace);
-   pragma Inline (Is_Write_Line_Number_Enabled);
-   pragma Inline (Disable_Write_Line_Number);
-   pragma Inline (Enable_Write_Line_Number);
    pragma Inline (Assert);
    pragma Inline (Function_Trace);
    pragma Inline (Is_Trace_Enabled);

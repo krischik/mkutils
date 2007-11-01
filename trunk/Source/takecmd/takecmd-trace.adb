@@ -1,7 +1,6 @@
 -------------------------------------------------------------- {{{1 ----------
---  Description: Options setable by the Ada plugin
---          $Id: takecmd-plugin.ads 15 2007-10-31 08:27:40Z
---  krischik@users.sourceforge.net $
+--  Description: Trace facility for 4NT / Take Command Plugins
+--          $Id: $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -9,8 +8,7 @@
 --        $Date: 2007-10-31 09:27:40 +0100 (Mi, 31 Okt 2007) $
 --      Version: 4.5
 --    $Revision: 15 $
---     $HeadURL:
---  https://mkutils.googlecode.com/svn/trunk/Source/takecmd-plugin.ads $
+--     $HeadURL: $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -45,14 +43,18 @@ with Ada.Characters.Handling;
 with Ada.Characters.Conversions;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Strings.Hash;
-
+with Win32;
+with Win32.Winbase;
+with TakeCmd;
 --  with GNAT.Traceback.Symbolic;
+
+pragma Elaborate_All (Win32);
+pragma Elaborate_All (TakeCmd);
 
 --
 --  4NT / Take Commmand Plugin Library Trace
 --
 package body TakeCmd.Trace is
-
    ---------------------------------------------------------------------------
    --
    use type System.Storage_Elements.Storage_Offset;
@@ -107,6 +109,7 @@ package body TakeCmd.Trace is
    --  Write_Line_Number Trace with line numbers.
    --  Write_Prefix      Trace with thread profex and optional line numbers.
    --  Verbose           Verbose operation.
+   --
    for States use record
       Location          at 0 range 0 .. 3;
       On                at 0 range 4 .. 4;
@@ -119,6 +122,7 @@ package body TakeCmd.Trace is
    --
    --  Thread_No : Each Thread has a number. A number is shorter then string.
    --  Indent    : Function indeting is counded separate for every thread
+   --
    type Thread_ID is record
       Thread_No : Natural := Natural'First;
       Indent    : Natural := Natural'First;
@@ -281,6 +285,7 @@ package body TakeCmd.Trace is
    --  New_Item : String we want to insert
    --  Mapping  : Search mapping
    --  Count    : Count of replaces done
+   --
    procedure Append_All
      (Source   : in out S_U.Unbounded_String;
       Search   : in String;
@@ -289,8 +294,6 @@ package body TakeCmd.Trace is
       Count    : out Natural);
 
    ---------------------------------------------------------------------------
-   ---
-
    --
    --  Indent Level
    --
@@ -299,8 +302,12 @@ package body TakeCmd.Trace is
    --  Commandline options
    --
    Trace_Verbose       : aliased constant Win32.WCHAR_Array := "verbose";
-   Trace_Opt           : aliased constant Win32.WCHAR_Array := "TRACE";
-   Trace_Opt_On        : aliased constant Win32.WCHAR_Array := "ON";
+   Trace_Opt           : aliased constant Win32.WCHAR_Array :=
+      "TRACE" & Win32.Wide_Nul;
+   Trace_Opt_On        : aliased constant Win32.WCHAR_Array :=
+      "ON" & Win32.Wide_Nul;
+   Trace_Opt_Off       : aliased constant Win32.WCHAR_Array :=
+      "OFF" & Win32.Wide_Nul;
    Trace_Opt_To        : aliased constant Win32.WCHAR_Array := "TRACETO";
    Trace_Opt_To_Err1   : aliased constant Win32.WCHAR_Array := "STDERR";
    Trace_Opt_To_Err2   : aliased constant Win32.WCHAR_Array := "ERR";
@@ -323,7 +330,21 @@ package body TakeCmd.Trace is
    protected body Cl is separate;
 
    ---------------------------------------------------------------------------
-   ---
+   --
+   --  Copy Instanz.
+   --
+   --  This :  Object itself.
+   --
+   procedure Adjust (This : in out Object) is
+   begin
+      if Is_Trace_Enabled then
+         Cl.Write_Formatted_String
+           (Text   => This.Trace_Name,
+            Marker => Marker_Indent);
+      end if;
+   end Adjust;
+
+   ---------------------------------------------------------------------------
    --
    --  Searches for all occurences of text "Search" and Inserts text "Insert"
    --  after the found text but only when "Insert" is not allready there.
@@ -333,6 +354,7 @@ package body TakeCmd.Trace is
    --  New_Item : String we want to insert
    --  Mapping  : Search mapping
    --  Count    : Count of replaces done
+   --
    procedure Append_All
      (Source   : in out S_U.Unbounded_String;
       Search   : in String;
@@ -415,21 +437,6 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --
-   --  Copy Instanz.
-   --
-   --  This :  Object itself.
-   procedure Adjust (This : in out Object) is
-   begin
-      if Is_Trace_Enabled then
-         Cl.Write_Formatted_String
-           (Text   => This.Trace_Name,
-            Marker => Marker_Indent);
-      end if;
-   end Adjust;
-
-   ---------------------------------------------------------------------------
-   --
    --  Assert a Condition. If the condition is not true create a trace entry
    --  describing the assertion and then raise an exception.
    --
@@ -438,6 +445,7 @@ package body TakeCmd.Trace is
    --  Message   : Free form Message
    --  Entity    : Location destriptor. Suggested content: AdaCL.Trace.Entity
    --  Source    : Location destriptor. Suggested content: AdaCL.Trace.Source
+   --
    procedure Assert
      (Condition : in Boolean;
       Raising   : in Ada.Exceptions.Exception_Id;
@@ -454,6 +462,22 @@ package body TakeCmd.Trace is
             Source  => Source);
       end if;
    end Assert;
+
+   function C_Trace_Init
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int
+   is
+   begin
+      Cl.Initialize;
+      pragma Debug (Enable_Trace);
+      pragma Debug (Write_To_File);
+      return 0;
+   exception
+      when An_Exception : others =>
+         TakeCmd.Q_Put_String
+           (Ada.Exceptions.Exception_Information (An_Exception));
+         return -2;
+   end C_Trace_Init;
 
    ---------------------------------------------------------------------------
    --
@@ -477,10 +501,37 @@ package body TakeCmd.Trace is
    --
    --  Don't Write Line numbers
    --
-   procedure Disable_Write_Line_Number is
+   function C_Write_Line_Number
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int
+   is
+      Arguments_Length : constant Natural :=
+         Natural (Win32.Winbase.lstrlenW (Arguments));
+      Buffer           : Win32.WCHAR_Array (1 .. Arguments_Length + 1);
+      Dummy            : Win32.PWSTR;
+
+      pragma Warnings (Off, Buffer);
+      pragma Warnings (Off, Dummy);
    begin
-      Cl.Set_Write_Line_Number (False);
-   end Disable_Write_Line_Number;
+      Dummy :=
+         Win32.Winbase.lstrcpynW
+           (lpString1  => Win32.Addr (Buffer),
+            lpString2  => Arguments,
+            iMaxLength => Buffer'Length);
+      if Buffer (2 .. Trace_Opt_On'Length + 1) = Trace_Opt_On then
+         Cl.Set_Write_Line_Number (True);
+      elsif Buffer (2 .. Trace_Opt_Off'Length + 1) = Trace_Opt_Off then
+         Cl.Set_Write_Line_Number (False);
+      end if;
+
+      return 0;
+   exception
+      when An_Exception : others =>
+         TakeCmd.Q_Put_String
+           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.CrLf;
+         return -2;
+   end C_Write_Line_Number;
 
    ---------------------------------------------------------------------------
    --
@@ -508,15 +559,6 @@ package body TakeCmd.Trace is
    begin
       Cl.Set_Verbose (True);
    end Enable_Verbose;
-
-   ---------------------------------------------------------------------------
-   --
-   --  Write Line numbers
-   --
-   procedure Enable_Write_Line_Number is
-   begin
-      Cl.Set_Write_Line_Number (True);
-   end Enable_Write_Line_Number;
 
    ---------------------------------------------------------------------------
    --
@@ -548,9 +590,8 @@ package body TakeCmd.Trace is
    --  you can't limit to just one call to Initialize and one to Finalize
    --  There are allways some extra Adjust with matching. Finalize.
    --
-   function Function_Trace (
-      --  Name of the function calls to be traced.
-Name : String) return Object is
+   --  Name : Name of the function calls to be traced.
+   function Function_Trace (Name : String) return Object is
       Retval : constant Object (Name'Length) :=
         (Inherited.Controlled with
          Name_Length => Name'Length,
@@ -591,10 +632,24 @@ Name : String) return Object is
    --
    --  check if Line numbers are written
    --
-   function Is_Write_Line_Number_Enabled return Boolean is
+   function V_Write_Line_Number
+     (Arguments : access TakeCmd.Plugin.Buffer)
+      return      Interfaces.C.int
+   is
    begin
-      return Cl.Get_Write_Line_Number;
-   end Is_Write_Line_Number_Enabled;
+      if Cl.Get_Write_Line_Number then
+         Arguments.all (1 .. Trace_Opt_On'Length) := Trace_Opt_On;
+      else
+         Arguments.all (1 .. Trace_Opt_Off'Length) := Trace_Opt_Off;
+      end if;
+      return 0;
+   exception
+      when An_Exception : others =>
+         TakeCmd.Q_Put_String
+           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.CrLf;
+         return -2;
+   end V_Write_Line_Number;
 
    ---------------------------------------------------------------------------
    --
@@ -612,6 +667,7 @@ Name : String) return Object is
    --  Raising : Exeption which is raised Message : Free form Message Entity :
    --  Location destriptor. Suggested content: AdaCL.Trace.Entity Source :
    --  Location destriptor. Suggested content: AdaCL.Trace.Source
+   --
    procedure Raise_Exception
      (Raising : in Ada.Exceptions.Exception_Id;
       Message : in String := "No Message given";
@@ -657,6 +713,7 @@ Name : String) return Object is
    --  appropriate padding for indentation.
    --
    --  A_String : String to be written
+   --
    procedure Write (A_String : in String) is
    begin
       if Is_Trace_Enabled then
@@ -669,6 +726,7 @@ Name : String) return Object is
    --  Write an Address.
    --
    --  A_String : String to be written
+   --
    procedure Write (A_String : in String; An_Address : in Sys.Address) is
    begin
       if Is_Trace_Enabled then
@@ -695,6 +753,7 @@ Name : String) return Object is
    --  appropriate padding for indentation.
    --
    --  A_Unbounded : String to be written
+   --
    procedure Write (A_Unbounded : in S_U.Unbounded_String) is
       use Ada.Strings.Unbounded;
    begin
@@ -710,6 +769,7 @@ Name : String) return Object is
    --  Write an Exception to the Trace
    --
    --  An_Exception : String to be written
+   --
    procedure Write (An_Exception : in Ada.Exceptions.Exception_Occurrence) is
       use Ada.Exceptions;
    begin
@@ -730,6 +790,7 @@ Name : String) return Object is
    --  An_Exception : String to be written
    --  An_Entity    : Procedure in which the exception was caught
    --  A_Source     : Source File in which Entity is located.
+   --
    procedure Write
      (An_Exception : in Ada.Exceptions.Exception_Occurrence;
       An_Entity    : in String;
@@ -803,10 +864,12 @@ Name : String) return Object is
       return;
    end Write_Commandline_Help;
 
+   ---------------------------------------------------------------------------
    --
    --  Create a memory dump
    --
    --  String to be written
+   --
    procedure Write_Dump
      (An_Address : in Sys.Address;
       A_Size     : in Sys_SE.Storage_Count)
@@ -901,6 +964,7 @@ Name : String) return Object is
    --
    --  An_Address :  String to be written
    --  A_Size     :  Size in Storage_Elements.
+   --
    procedure Write_Dump
      (An_Address : in System.Address;
       A_Size     : in Integer)
@@ -916,13 +980,12 @@ Name : String) return Object is
    end Write_Dump;
 
    ---------------------------------------------------------------------------
-   ---
-
    --
    --  Write an IString using Write_Formatted_String after adding the
    --  appropriate padding for indentation.
    --
    --  A_String : String to be written
+   --
    procedure Write_Error (A_String : in String) is
    begin
       if not Is_Trace_Enabled
@@ -937,13 +1000,12 @@ Name : String) return Object is
    end Write_Error;
 
    ---------------------------------------------------------------------------
-   ---
-
    --
    --  Write an IString using Write_Formatted_String after adding the
    --  appropriate padding for indentation.
    --
    --  A_Unbounded : String to be written
+   --
    procedure Write_Error (A_Unbounded : in S_U.Unbounded_String) is
       use Ada.Strings.Unbounded;
    begin
@@ -965,6 +1027,7 @@ Name : String) return Object is
    --  Write an Exception to the Trace
    --
    --  An_Exception : String to be written
+   --
    procedure Write_Error
      (An_Exception : in Ada.Exceptions.Exception_Occurrence)
    is
@@ -990,6 +1053,7 @@ Name : String) return Object is
    --  An_Exception :  String to be written
    --  An_Entity    :  Procedure in which the exception was caught
    --  A_Source     :  Source File in which Entity is located.
+   --
    procedure Write_Error
      (An_Exception : in Ada.Exceptions.Exception_Occurrence;
       An_Entity    : in String;
@@ -1036,6 +1100,7 @@ Name : String) return Object is
    --  as well.
    --
    --  A_String : String to be written
+   --
    procedure Write_Info (A_String : in String) is
    begin
       if Is_Verbose_Enabled
@@ -1056,6 +1121,7 @@ Name : String) return Object is
    --  Standart_Output.
    --
    --  A_Character : String to be written
+   --
    procedure Write_Info (A_Character : in Character) is
    begin
       if Is_Verbose_Enabled then
@@ -1072,6 +1138,7 @@ Name : String) return Object is
    --  as well.
    --
    --  A_Unbounded : String to be written
+   --
    procedure Write_Info (A_Unbounded : in S_U.Unbounded_String) is
       use Ada.Strings.Unbounded;
    begin
@@ -1141,6 +1208,7 @@ Name : String) return Object is
    --  appropriate padding for indentation.
    --
    --  A_String : String to be written
+   --
    procedure Write_Wide (A_String : in Wide_String) is
    begin
       if Is_Trace_Enabled then
@@ -1150,8 +1218,4 @@ Name : String) return Object is
       end if;
    end Write_Wide;
 
-begin
-   Cl.Initialize;
-   pragma Debug (Enable_Trace);
-   pragma Debug (Write_To_File);
 end TakeCmd.Trace;
