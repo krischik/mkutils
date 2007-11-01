@@ -58,7 +58,8 @@ project TakeCmd.Ada is
    for Library_Interface   use (
       "takecmd",
       "takecmd.trace",
-      "takecmd.plugin");
+      "takecmd.plugin",
+      "win32.advapi");
    for Library_Options     use (
          "-Wl,--kill-at");        -- Remove @nn from exported symbols
 
@@ -159,6 +160,8 @@ project TakeCmd.Ada is
    end Linker;
 
    package Naming is
+      for Specification_Suffix ("c") use ".h";
+      for Implementation_Suffix ("c") use ".c";
       for Specification_Suffix ("ada") use ".ads";
       for Implementation_Suffix ("ada") use ".adb";
       for Separate_Suffix use ".ada";
@@ -192,8 +195,10 @@ project TakeCmd.Ada is
       "takecmd.ads",
       "takecmd.adb",
       "takecmd-trace.adb",
+      "takecmd-trace.ada",
       "takecmd-trace.ads",
-      "takecmd-plugin.ads");
+      "takecmd-plugin.ads",
+      "win32-advapi.ads");
 
 end TakeCmd.Ada;
 

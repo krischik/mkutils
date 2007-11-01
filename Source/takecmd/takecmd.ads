@@ -1,4 +1,5 @@
-------------------------------------------------------------- {{{1 ----------
+------------------------------------------------------------
+--- {{{1 ----------
 --  Description: Options setable by the Ada plugin
 --          $Id: takecmd.ads 15 2007-10-31 08:27:40Z
 --  krischik@users.sourceforge.net $
@@ -9,7 +10,8 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/takecmd/takecmd.ads $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -629,6 +631,16 @@ package TakeCmd is
    --  /*
    --   Display a formatted Windows error message w/optional argument
    --  */
+
+   function Error (nErrorCode : in Interfaces.C.int; pszArg : in Win32.PCWSTR
+      := null)
+      return      Interfaces.C.int;
+   pragma Import
+     (Convention => Stdcall,
+      Entity => Error,
+      External_Name => "error");
+
+
    --
    --  int WINAPI ErrorMsgBox( int nErrorCode, LPTSTR pszArg );
    --  /*

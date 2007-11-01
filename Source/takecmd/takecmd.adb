@@ -1,6 +1,8 @@
-------------------------------------------------------------- {{{1 ----------
+------------------------------------------------------------- {{{1
+------------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: takecmd.adb 16 2007-10-31 17:08:47Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -8,7 +10,8 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/takecmd/takecmd.adb $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original

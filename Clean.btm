@@ -29,35 +29,13 @@
 ::  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: }}}1 ::::::::::
 
-@ECHO OFF
-
 SETLOCAL
     SET             HOME=%[HOMEDRIVE]%[HOMEPATH]
     SET     Project_Home=%@PATH[%_batchname]
 
     PUSHD %[Project_Home] 
-	gnat make -P Ada_Demo -XStyle=Release -XTarget=pentium4
+        gnumake-3.79.1-nt clean
     POPD
-ENDLOCAL
-
-SETLOCAL
-    PLUGIN /L pentium4-Release\lib\ada_demo\ada_demo.dll
-    PLUGIN /P
-
-    TRACEINIT
-    ECHO Trace Write Line Number is %_TraceWriteLineNumber 
-    TraceWriteLineNumber OFF
-    ECHO Trace Write Line Number is %_TraceWriteLineNumber 
-    DIR
-    REMARK
-    ECHO Task status is: %_Taskremark
-    TASKREMARK
-    ECHO Task status is: %_Taskremark
-    USEBUFFER 123456789
-    ECHO Reverse ABCDE is: %@Reverse[ABCDE]
-    ECHO Hello is: %_Hello
-    
-    PLUGIN /U Ada_Demo
 ENDLOCAL
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::

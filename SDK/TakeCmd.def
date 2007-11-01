@@ -304,7 +304,7 @@ EXPORTS
 	QueryMouseClickWaiting
 	?QueryNTFSInfo@@YAEHPAUQDISKINFO@@@Z
 	?QueryOSVersion@@YAXPAU_OSVERSIONINFOW@@@Z
-	QueryOptionValue
+	QueryOptionValue@8
 	QueryPluginInfo
 	?QueryPluginPathname@@YGPA_WPA_W@Z
 	QueryTrueName
@@ -455,7 +455,7 @@ EXPORTS
 	?aGlobals@@3UGLOBAL_VARIABLES@@A
 	?aIniFile@@3UINIFILE@@A
 	egets
-	error
+	error@8
 	?gVM@@3U_VM_DATA@@A
 	honk
 	?is_signed_digit@@YAHH@Z
