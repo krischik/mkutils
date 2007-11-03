@@ -1,14 +1,14 @@
 -------------------------------------------------------------- {{{1 ----------
 --  Description: Trace facility for 4NT / Take Command Plugins
---          $Id: $
+--          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
---      $Author: krischik@users.sourceforge.net $
---        $Date: 2007-10-31 09:27:40 +0100 (Mi, 31 Okt 2007) $
+--      $Author$
+--        $Date$
 --      Version: 4.5
---    $Revision: 15 $
---     $HeadURL: $
+--    $Revision$
+--     $HeadURL$
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
