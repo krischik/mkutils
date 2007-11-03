@@ -44,10 +44,14 @@ SETLOCAL
     PLUGIN /L pentium4-Release\lib\ada_demo\ada_demo.dll
     PLUGIN /P
 
-    TRACEINIT
+    TraceWriteLineNumber ON
+    TraceWritePrefix ON
+    TraceEnable ON
+    TraceVerbose OFF
     ECHO Trace Write Line Number is %_TraceWriteLineNumber 
-    TraceWriteLineNumber OFF
-    ECHO Trace Write Line Number is %_TraceWriteLineNumber 
+    ECHO Trace Write Line Number is %_TraceWritePrefix 
+    ECHO Trace Write Line Number is %_TraceEnable      
+    ECHO Trace Write Line Number is %_TraceVerbose     
     DIR
     REMARK
     ECHO Task status is: %_Taskremark

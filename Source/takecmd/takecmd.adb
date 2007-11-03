@@ -1,5 +1,4 @@
-------------------------------------------------------------- {{{1
-------------
+----------------------------------------------------------------------------
 --  Description: Options setable by the Ada plugin
 --          $Id: takecmd.adb 16 2007-10-31 17:08:47Z
 --  krischik@users.sourceforge.net $
@@ -32,7 +31,7 @@
 --
 --  You should have received a copy of the GNU General Public License along
 --  with Ada_Demo. If not, see <http://www.gnu.org/licenses/>.
-------------------------------------------------------------- }}}1 ----------
+----------------------------------------------------------------------------
 
 pragma License (Modified_Gpl);
 pragma Ada_05;
@@ -43,6 +42,7 @@ package body TakeCmd is
 
    use type Win32.WCHAR_Array;
    use type Interfaces.C.size_t;
+   use type Interfaces.C.int;
 
    ------------------
    -- Q_Put_String --
@@ -76,11 +76,10 @@ package body TakeCmd is
    end Q_Put_String;
 
    procedure Q_Put_String (Text_To_Display : in Win32.CHAR_Array) is
-      Wite_Text : Win32.WCHAR_Array (1 .. Text_To_Display'Length + 1);
+      Wide_Text : Win32.WCHAR_Array (1 .. Text_To_Display'Length + 1);
       Result    : Win32.INT;
 
-      pragma Warnings (Off, Result);
-      pragma Warnings (Off, Wite_Text);
+      pragma Warnings (Off, Wide_Text);
    begin
       Result :=
          Win32.Winnls.MultiByteToWideChar
@@ -88,8 +87,11 @@ package body TakeCmd is
             dwFlags        => Win32.Winnls.MB_PRECOMPOSED,
             lpMultiByteStr => Win32.Addr (Text_To_Display),
             cchMultiByte   => Text_To_Display'Length,
-            lpWideCharStr  => Win32.Addr (Wite_Text),
-            cchWideChar    => Wite_Text'Length);
+            lpWideCharStr  => Win32.Addr (Wide_Text),
+            cchWideChar    => Wide_Text'Length);
+      if Result /= 0 then
+         Q_Put_String (Wide_Text);
+      end if;
       return;
    end Q_Put_String;
 
@@ -114,6 +116,6 @@ package body TakeCmd is
 
 end TakeCmd;
 
-------------------------------------------------------------- {{{1 ----------
+----------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
 --  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:
