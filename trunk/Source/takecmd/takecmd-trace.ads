@@ -46,6 +46,11 @@ with TakeCmd.Plugin;
 with GNAT.Source_Info;
 
 package TakeCmd.Trace is
+   ---------------------------------------------------------------------------
+   --
+   --  Parameter error
+   --
+   NAME_ERROR : exception;
 
    ---------------------------------------------------------------------------
    --  Name_Length : Lenght of trace String
@@ -57,21 +62,6 @@ package TakeCmd.Trace is
    --  Trace Destination
    --
    type Destination is (Queue, Standard_Error, Standard_Output, File);
-
-   ---------------------------------------------------------------------------
-   --
-   --  Initialise Trace Sub-System
-   --
-   function C_Trace_Init
-     (Arguments : in Win32.PCWSTR)
-      return      Interfaces.C.int;
-
-   Trace_Init : aliased constant Win32.WCHAR_Array := "TRACEINIT";
-
-   pragma Export
-     (Convention => Stdcall,
-      Entity => C_Trace_Init,
-      External_Name => "TRACEINIT");
 
    ---------------------------------------------------------------------------
    --
@@ -153,7 +143,8 @@ package TakeCmd.Trace is
      (Arguments : in Win32.PCWSTR)
       return      Interfaces.C.int;
 
-   Write_Line_Number : aliased constant Win32.WCHAR_Array := "TRACEWRITELINENUMBER";
+   Write_Line_Number : aliased constant Win32.WCHAR_Array :=
+      "TRACEWRITELINENUMBER";
 
    pragma Export
      (Convention => Stdcall,
@@ -177,37 +168,53 @@ package TakeCmd.Trace is
    --
    --  Enable Trace
    --
-   procedure Enable_Trace;
+   function C_Enable (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
 
-   ---------------------------------------------------------------------------
-   --
-   --  Enable Trace
-   --
-   procedure Disable_Trace;
+   Enable : aliased constant Win32.WCHAR_Array := "TRACEENABLE";
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Enable,
+      External_Name => "TRACEENABLE");
 
    ---------------------------------------------------------------------------
    --
    --  check is trace is Enabled
    --
-   function Is_Trace_Enabled return Boolean;
-
-   ---------------------------------------------------------------------------
-   --
-   --  Enable Verbose Output
-   --
-   procedure Enable_Verbose;
+   function V_Enable
+     (Arguments : access TakeCmd.Plugin.Buffer)
+      return      Interfaces.C.int;
+   pragma Export
+     (Convention => Stdcall,
+      Entity => V_Enable,
+      External_Name => "_TRACEENABLE");
 
    ---------------------------------------------------------------------------
    --
    --  Disable Verbose Output
    --
-   procedure Disable_Verbose;
+   function C_Verbose
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int;
+
+   Verbose : aliased constant Win32.WCHAR_Array := "TRACEVERBOSE";
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Verbose,
+      External_Name => "TRACEVERBOSE");
 
    ---------------------------------------------------------------------------
    --
    --  check is trace is Enabled
    --
-   function Is_Verbose_Enabled return Boolean;
+   function V_Verbose
+     (Arguments : access TakeCmd.Plugin.Buffer)
+      return      Interfaces.C.int;
+   pragma Export
+     (Convention => Stdcall,
+      Entity => V_Verbose,
+      External_Name => "_TRACEVERBOSE");
 
    ---------------------------------------------------------------------------
    --
@@ -249,19 +256,28 @@ package TakeCmd.Trace is
    --
    --  Enable the write prefix
    --
-   procedure Enable_Write_Prefix;
+   function C_Write_Prefix
+     (Arguments : in Win32.PCWSTR)
+      return      Interfaces.C.int;
 
-   ---------------------------------------------------------------------------
-   --
-   --  Disable_ the write prefix
-   --
-   procedure Disable_Write_Prefix;
+   Write_Prefix : aliased constant Win32.WCHAR_Array := "TRACEWRITEPREFIX";
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Write_Prefix,
+      External_Name => "TRACEWRITEPREFIX");
 
    ---------------------------------------------------------------------------
    --
    --  Check the write prefix flag
    --
-   function Is_Write_Prefix_Enabled return Boolean;
+   function V_Write_Prefix
+     (Arguments : access TakeCmd.Plugin.Buffer)
+      return      Interfaces.C.int;
+   pragma Export
+     (Convention => Stdcall,
+      Entity => V_Write_Prefix,
+      External_Name => "_TRACEWRITEPREFIX");
 
    ---------------------------------------------------------------------------
    --
@@ -453,22 +469,13 @@ private
    --  This : Object itself.
    procedure Finalize (This : in out Object);
 
-   pragma Inline (Disable_Verbose);
-   pragma Inline (Enable_Verbose);
-   pragma Inline (Disable_Trace);
-   pragma Inline (Enable_Trace);
    pragma Inline (Assert);
    pragma Inline (Function_Trace);
-   pragma Inline (Is_Trace_Enabled);
-   pragma Inline (Is_Verbose_Enabled);
    pragma Inline (Write_To_Queue);
    pragma Inline (Write_To_Standard_Error);
    pragma Inline (Write_To_Standard_Output);
    pragma Inline (Write_To_File);
    pragma Inline (Trace_Destination);
-   pragma Inline (Enable_Write_Prefix);
-   pragma Inline (Disable_Write_Prefix);
-   pragma Inline (Is_Write_Prefix_Enabled);
 
    pragma No_Return (Raise_Exception);
 

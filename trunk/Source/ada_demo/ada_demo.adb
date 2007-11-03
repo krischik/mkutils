@@ -67,13 +67,24 @@ package body Ada_Demo is
       "A demonstration Plugin for 4NT/TC, written with Ada." &
       Win32.Wide_Nul;
    Implements     : aliased constant Win32.WCHAR_Array :=
-      "@REVERSE,_HELLO,REMARK,TASKREMARK,_TASKREMARK,DIR,*KEY,USEBUFFER" &
-      "," &
-      TakeCmd.Trace.Trace_Init &
+      "@REVERSE," &
+      "_HELLO,REMARK,TASKREMARK,_TASKREMARK,DIR,*KEY,USEBUFFER" &
       "," &
       TakeCmd.Trace.Write_Line_Number &
       ",_" &
       TakeCmd.Trace.Write_Line_Number &
+      "," &
+      TakeCmd.Trace.Verbose &
+      ",_" &
+      TakeCmd.Trace.Verbose &
+      "," &
+      TakeCmd.Trace.Enable &
+      ",_" &
+      TakeCmd.Trace.Enable &
+      "," &
+      TakeCmd.Trace.Write_Prefix &
+      ",_" &
+      TakeCmd.Trace.Write_Prefix &
       Win32.Wide_Nul;
 
    Plugin_Info : TakeCmd.Plugin.LP_Plugin_Info := null;
@@ -153,6 +164,7 @@ package body Ada_Demo is
    end C_Dir;
 
    ---------------------------------------------------------------------------
+   --
    --  This is an Internal Command called from 4NT/TC
    --
    function C_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
@@ -171,6 +183,7 @@ package body Ada_Demo is
    end C_Remark;
 
    ---------------------------------------------------------------------------
+   --
    --  This is an Internal Command called from 4NT/TC which is executed in
    --  another task.
    --
