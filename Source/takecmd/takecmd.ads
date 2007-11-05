@@ -1,5 +1,4 @@
-------------------------------------------------------------
---- {{{1 ----------
+----------------------------------------------------------------------------
 --  Description: Options setable by the Ada plugin
 --          $Id: takecmd.ads 15 2007-10-31 08:27:40Z
 --  krischik@users.sourceforge.net $
@@ -15,45 +14,41 @@
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
+--         Help: http://www.jpsoftwiki.com/wiki/index.php?title=Plugin/Ada
 ----------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
 --
 --  This file is part of Ada_Demo.
 --
---  Ada_Demo is free software: you can redistribute it and/or modify it under
---  the terms of the GNU General Public License as published by the Free
---  Software Foundation, either version 3 of the License, or (at your option)
---  any later version.
+--  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
---  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT
---  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
---  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
---  more details.
+--  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+--  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+--  See the GNU General Public License for more details.
 --
---  You should have received a copy of the GNU General Public License along
---  with Ada_Demo. If not, see <http://www.gnu.org/licenses/>.
+--  You should have received a copy of the GNU General Public License along with Ada_Demo. If
+--  not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------- }}}1 ----------
 --  Using TakeCmd.dll functions with Ada
 --  -------------------------------------
 --
---  I have not translated the entire TakeCmd.h into Ada functions and
---  procedures because it would take a long time and be prone to error. If you
---  need to call a function(s) in TakeCmd.dll the simplest way is to add then
---  here.
+--  I have not translated the entire TakeCmd.h into Ada functions and procedures because it
+--  would take a long time and be prone to error. If you need to call a function(s) in
+--  TakeCmd.dll the simplest way is to add then here.
 --
---  This is an example of how to translate a TakeCmd.dll function to Ada. I'm
---  using the HEAD command as an example. In TakeCmd.h the command is defined
---  as:
+--  This is an example of how to translate a TakeCmd.dll function to Ada. I'm using the HEAD
+--  command as an example. In TakeCmd.h the command is defined as:
 --
 --        int WINAPI HeadCmd( LPTSTR pszArguments )
 --
---  which means that the function "Head_Cmd" is called using the "WINAPI"
---  calling convention (equivalent to "stdcall") and is passed a pointer to a
---  null terminated string containing the command's arguments, and the command
---  returns an integer value on completion.
+--  which means that the function "Head_Cmd" is called using the "WINAPI" calling convention
+--  (equivalent to "stdcall") and is passed a pointer to a null terminated string containing
+--  the command's arguments, and the command returns an integer value on completion.
 --
---  To use the above command from within your Ada plugin you would make the
---  following declaration:
+--  To use the above command from within your Ada plugin you would make the following
+--  declaration:
 --
 --    function Head_Cmd (Arguments: in Win32.PCWSTR) return Interfaces.C.int;
 --    pragma Import
@@ -61,9 +56,9 @@
 --       Entity        => HeadCmd,
 --       External_Name => "HeadCmd");
 --
---  If the declaration in TakeCmd.h begins with "void" it means there is no
---  return value, which is equivalent to a "Procedure" declaration in Ada. For
---  example, the TakeCmd.h declaration:
+--  If the declaration in TakeCmd.h begins with "void" it means there is no return value,
+--  which is equivalent to a "Procedure" declaration in Ada. For example, the TakeCmd.h
+--  declaration:
 --
 --    void WINAPI CrLf( void );
 --
@@ -75,21 +70,20 @@
 --       Entity        => CrLf,
 --       External_Name => "CrLf");
 --
---  This plugin contains an example of calling TakeCmd.dll functions in the
---  command "Remark".
+--  This plugin contains an example of calling TakeCmd.dll functions in the command "Remark".
 --
---  Some functions in TakeCmd.dll manipulate the string that you pass to them
---  within the buffer in which the string resides. Therefore, if the
---  TakeCmd.dll function can return a longer string than is passed to it, you
---  must make sure that you pass the string in a buffer that is large enough
---  to provide working space and to hold the returned string if appropriate.
+--  Some functions in TakeCmd.dll manipulate the string that you pass to them within the
+--  buffer in which the string resides. Therefore, if the TakeCmd.dll function can return a
+--  longer string than is passed to it, you must make sure that you pass the string in a
+--  buffer that is large enough to provide working space and to hold the returned string if
+--  appropriate.
 --
 --  An example of such a function is:
 --
 --    void WINAPI AddCommas( LPTSTR pszNumber );
 --
---  which inserts the thousands separator into the supplied number. In Delphi
---  this would be declared as:
+--  which inserts the thousands separator into the supplied number. In Delphi this would be
+--  declared as:
 --
 --    procedure AddCommas(Arguments: in Win32.PCWSTR);
 --    pragma Import
@@ -97,26 +91,24 @@
 --       Entity        => AddCommas,
 --       External_Name => "AddCommas");
 --
---  When this procedure adds in the thousands separator the resulting string
---  will be longer than the string that you started with, and so you must
---  allow room for that expansion. The size of the buffer that you need cannot
---  be precisely defined, and you may need to experiment. However, as a
---  guideline I would suggest a buffer of at least three times the length of
---  the string that you are passing to the function.
+--  When this procedure adds in the thousands separator the resulting string will be longer
+--  than the string that you started with, and so you must allow room for that expansion. The
+--  size of the buffer that you need cannot be precisely defined, and you may need to
+--  experiment. However, as a guideline I would suggest a buffer of at least three times the
+--  length of the string that you are passing to the function.
 --
---  A working example of calling this kind of function is included in the
---  "usebuffer" function below.
+--  A working example of calling this kind of function is included in the "usebuffer" function
+--  below.
 --
 --  Note that if you use the following function from TakeCmd.dll:
 --
 --     int WINAPI Command( LPTSTR pszLine, int nReserved );
 --
---  which calls the parser to expand and execute the supplied command then the
---  buffer should be at least 2K and preferably 8K to 16K to allow for
---  variable and alias expansion.
+--  which calls the parser to expand and execute the supplied command then the buffer should
+--  be at least 2K and preferably 8K to 16K to allow for variable and alias expansion.
 --
 
-pragma License (Modified_Gpl);
+pragma License (Gpl);
 pragma Ada_05;
 
 with Interfaces.C;
@@ -632,14 +624,11 @@ package TakeCmd is
    --   Display a formatted Windows error message w/optional argument
    --  */
 
-   function Error (nErrorCode : in Interfaces.C.int; pszArg : in Win32.PCWSTR
-      := null)
-      return      Interfaces.C.int;
-   pragma Import
-     (Convention => Stdcall,
-      Entity => Error,
-      External_Name => "error");
-
+   function Error
+     (nErrorCode : in Interfaces.C.int;
+      pszArg     : in Win32.PCWSTR := null)
+      return       Interfaces.C.int;
+   pragma Import (Convention => Stdcall, Entity => Error, External_Name => "error");
 
    --
    --  int WINAPI ErrorMsgBox( int nErrorCode, LPTSTR pszArg );
@@ -868,8 +857,8 @@ package TakeCmd is
    --   Returns 0 for match; <> 0 for no match
    --   *s  matches any collection of characters in the string
    --      up to (but not including) the s.
-   --   ? matches any single character in the other string. [!abc-m] match a
-   --   character to the set in the brackets (if fBrackets!=0);
+   --   ? matches any single character in the other string. [!abc-m] match a character to the
+   --   set in the brackets (if fBrackets!=0);
    --      ! means reverse the test; - means match if included in the range.
    --
    --   if fExtension != 0, interpret a '.' as a filename extension separator
@@ -1336,10 +1325,7 @@ package TakeCmd is
    --
    procedure QPuts (pszString : in Win32.PCWSTR);
 
-   pragma Import
-     (Convention => Stdcall,
-      Entity => QPuts,
-      External_Name => "QPuts");
+   pragma Import (Convention => Stdcall, Entity => QPuts, External_Name => "QPuts");
 
    procedure Q_Put_String (Text_To_Display : in Win32.WCHAR_Array);
    procedure Q_Put_String (Text_To_Display : in Interfaces.C.wchar_array);
@@ -1356,10 +1342,7 @@ package TakeCmd is
 
    procedure CrLf;
 
-   pragma Import
-     (Convention => Stdcall,
-      Entity => CrLf,
-      External_Name => "CrLf");
+   pragma Import (Convention => Stdcall, Entity => CrLf, External_Name => "CrLf");
 
    --
    --  void  WINAPI QPutc( HANDLE hFile, TCHAR cChar );
@@ -1449,11 +1432,11 @@ package TakeCmd is
    --  /*
    --   Create a shortcut using the shell's IShellLink and IPersistFile
    --     interfaces  to create and store a shortcut to the specified object.
-   --   Returns the result of calling the member functions of the interfaces.
-   --   pszPathObj - address of a buffer containing the path of the object.
-   --   pszArgs - command line arguments pszWorkingDir - working directory
-   --   pszDesc - address of a buffer containing the description of the shell
-   --   link. pszPathLink - address of a buffer containing the path where the
+   --   Returns the result of calling the member functions of the interfaces. pszPathObj -
+   --   address of a buffer containing the path of the object. pszArgs - command line
+   --   arguments pszWorkingDir - working directory pszDesc - address of a buffer containing
+   --   the description of the shell link. pszPathLink - address of a buffer containing the
+   --   path where the
    --     shell link is to be stored.
    --   pszIcon - icon file display
    --   nIconOffset - offset in pszIcon for desired icon
@@ -1594,10 +1577,7 @@ package TakeCmd is
    --
    procedure AddCommas (pszNumber : in Win32.PCWSTR);
 
-   pragma Import
-     (Convention => Stdcall,
-      Entity => AddCommas,
-      External_Name => "AddCommas");
+   pragma Import (Convention => Stdcall, Entity => AddCommas, External_Name => "AddCommas");
 
    --
    --  long WINAPI GetRandom( long nStart, long nEnd);
@@ -1845,12 +1825,10 @@ package TakeCmd is
    --  /*
    --   Returns the a pointer to the "nth" argument in the command line
    --     or NULL if no nth argument exists
-   --   nIndex is the 0-based argument to return The argument is saved into
-   --   lpszBuffer (can be NULL) ppNthPtr is a pointer to the last argument
-   --   (can be NULL)
+   --   nIndex is the 0-based argument to return The argument is saved into lpszBuffer (can be
+   --   NULL) ppNthPtr is a pointer to the last argument (can be NULL)
    --
-   --   The default delimiters are space, comma, tab, and switch character.
-   --   The single
+   --   The default delimiters are space, comma, tab, and switch character. The single
    --     back quote and double quotes will override enclosed delimiters.
    --  You can modify
    --     the delimiters by OR'ing the nIndex argument:
@@ -1973,10 +1951,10 @@ package TakeCmd is
    --
    --
    --
-   --  keys values for the keystroke plugins. A normal Unicode character has a
-   --  value from 0-0xFFFF An extended key (Alt keys, function keys, etc.)
-   --  adds 0x10000 (i.e., "FBIT") to the scan code value (If you prefer, you
-   --  can get the keyboard state to get the VK_* value from Windows)
+   --  keys values for the keystroke plugins. A normal Unicode character has a value from
+   --  0-0xFFFF An extended key (Alt keys, function keys, etc.) adds 0x10000 (i.e., "FBIT") to
+   --  the scan code value (If you prefer, you can get the keyboard state to get the VK_*
+   --  value from Windows)
 
    FBIT : constant Interfaces.C.int := 16#10000#;
    --  #define SHIFT_TAB        15+FBIT
@@ -2066,8 +2044,8 @@ package TakeCmd is
    --  #define CTL_SHIFT_LEFT  204+FBIT
    --  #define CTL_SHIFT_RIGHT 205+FBIT
    --
-   --  #define LEFT_MOUSE_BUTTON 250+FBIT #define RIGHT_MOUSE_BUTTON 251+FBIT
-   --  #define MIDDLE_MOUSE_BUTTON 252+FBIT
+   --  #define LEFT_MOUSE_BUTTON 250+FBIT #define RIGHT_MOUSE_BUTTON 251+FBIT #define
+   --  MIDDLE_MOUSE_BUTTON 252+FBIT
 
 private
 
@@ -2075,6 +2053,6 @@ private
 
 end TakeCmd;
 
-------------------------------------------------------------- {{{1 ----------
+----------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
 --  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:

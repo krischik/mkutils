@@ -17,18 +17,16 @@
 --
 --  This file is part of MK_Utils.
 --
---  MK_Utils is free software: you can redistribute it and/or modify it under
---  the terms of the GNU General Public License as published by the Free
---  Software Foundation, either version 3 of the License, or (at your option)
---  any later version.
+--  MK_Utils is free software: you can redistribute it and/or modify it under the terms of the
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
---  MK_Utils is distributed in the hope that it will be useful, but WITHOUT
---  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
---  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
---  more details.
+--  MK_Utils is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+--  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+--  See the GNU General Public License for more details.
 --
---  You should have received a copy of the GNU General Public License along
---  with MK_Utils. If not, see <http://www.gnu.org/licenses/>.
+--  You should have received a copy of the GNU General Public License along with MK_Utils. If
+--  not, see <http://www.gnu.org/licenses/>.
 -------------------------------------------------------------- }}}1 ----------
 
 pragma License (Gpl);
@@ -52,18 +50,16 @@ package body MK_Utils is
    use type Interfaces.C.int;
    use type Interfaces.C.unsigned_long;
 
-   DLL_Name       : aliased constant Win32.WCHAR_Array :=
-      "MK_Utils" & Win32.Wide_Nul;
-   Author         : aliased constant Win32.WCHAR_Array :=
-      "Martin Krischik" & Win32.Wide_Nul;
+   DLL_Name       : aliased constant Win32.WCHAR_Array := "MK_Utils" & Win32.Wide_Nul;
+   Author         : aliased constant Win32.WCHAR_Array := "Martin Krischik" &
+                                                          Win32.Wide_Nul;
    Author_Email   : aliased constant Win32.WCHAR_Array :=
       "krischik@users.sourceforge.net" & Win32.Wide_Nul;
    Author_WebSite : aliased constant Win32.WCHAR_Array :=
       "http://mkutils.googlecode.com" & Win32.Wide_Nul;
    Description    : aliased constant Win32.WCHAR_Array :=
       "Utilities for 4NT and Take Command." & Win32.Wide_Nul;
-   Implements     : aliased constant Win32.WCHAR_Array :=
-      "CHOWN" & Win32.Wide_Nul;
+   Implements     : aliased constant Win32.WCHAR_Array := "CHOWN" & Win32.Wide_Nul;
 
    Plugin_Info : TakeCmd.Plugin.LP_Plugin_Info := null;
 
@@ -71,18 +67,14 @@ package body MK_Utils is
    ---
    --  Change Owner of a File
    --
-   function C_Change_Owner
-     (Arguments : in Win32.PCWSTR)
-      return      Interfaces.C.int
-   is
+   function C_Change_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
       Result : Interfaces.C.int := TakeCmd.Plugin.Did_Not_Process;
    begin
 
       return Result;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end C_Change_Owner;
@@ -90,10 +82,7 @@ package body MK_Utils is
    ---------------------------------------------------------------------------
    --  Show Owner of a File
    --
-   function C_Show_Owner
-     (Arguments : in Win32.PCWSTR)
-      return      Interfaces.C.int
-   is
+   function C_Show_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
       Result              : Win32.DWORD;
       Success             : Win32.BOOL;
       Owner               : aliased Win32.Winnt.PSID;
@@ -137,17 +126,16 @@ package body MK_Utils is
       return Interfaces.C.int (Result);
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end C_Show_Owner;
 
    ---------------------------------------------------------------------------
-   --  Called by 4NT/TC (after the call to "InitializePlugin") to get
-   --  information from the plugin, primarily for the names of functions,
-   --  variables & commands. All that is necessary is to return a pointer to
-   --  the PluginInfo structure that was populated when the Plugin loaded.
+   --  Called by 4NT/TC (after the call to "InitializePlugin") to get information from the
+   --  plugin, primarily for the names of functions, variables & commands. All that is
+   --  necessary is to return a pointer to the PluginInfo structure that was populated when
+   --  the Plugin loaded.
    --
    function Get_Plugin_Info return  TakeCmd.Plugin.LP_Plugin_Info is
       use type TakeCmd.Plugin.LP_Plugin_Info;
@@ -170,37 +158,32 @@ package body MK_Utils is
       return Plugin_Info;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return null;
    end Get_Plugin_Info;
 
    ---------------------------------------------------------------------------
-   --  Called by 4NT/TC after loading the plugin. The API requires a return of
-   --  0, but as the function is declared as a boolean we must, somewhat
-   --  counter-intuitively, return "false".
+   --  Called by 4NT/TC after loading the plugin. The API requires a return of 0, but as the
+   --  function is declared as a boolean we must, somewhat counter-intuitively, return
+   --  "false".
    --
    function Initialize_Plugin return  Win32.BOOL is
    begin
       return Win32.FALSE;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return Win32.TRUE;
    end Initialize_Plugin;
 
    ---------------------------------------------------------------------------
-   --  Called by 4NT/TC when shutting down, if EndProcess = 0, only the plugin
-   --  is being closed; if EndProcess = 1, then 4NT/TC is shutting down. The
-   --  API requires a return of 0, but as the function is declared as a
-   --  boolean we must, somewhat counter-intuitively, return "false".
-   function Shutdown_Plugin
-     (End_Process : in Win32.BOOL)
-      return        Win32.BOOL
-   is
+   --  Called by 4NT/TC when shutting down, if EndProcess = 0, only the plugin is being
+   --  closed; if EndProcess = 1, then 4NT/TC is shutting down. The API requires a return of
+   --  0, but as the function is declared as a boolean we must, somewhat counter-intuitively,
+   --  return "false".
+   function Shutdown_Plugin (End_Process : in Win32.BOOL) return Win32.BOOL is
       procedure Deallocate is new Ada.Unchecked_Deallocation (
          Object => TakeCmd.Plugin.Plugin_Info,
          Name => TakeCmd.Plugin.LP_Plugin_Info);
@@ -213,8 +196,7 @@ package body MK_Utils is
       return Win32.FALSE;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return Win32.TRUE;
    end Shutdown_Plugin;
@@ -224,8 +206,7 @@ begin
    TakeCmd.CrLf;
 exception
    when An_Exception : others =>
-      TakeCmd.Q_Put_String
-        (Ada.Exceptions.Exception_Information (An_Exception));
+      TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
 end MK_Utils;
 
 ------------------------------------------------------------- {{{1 ----------

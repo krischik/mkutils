@@ -183,7 +183,7 @@ project TakeCmd.Ada is
          "-c4",      -- reformat comment blocks
          "-cl3",     -- indentation level for continuation lines, nnn from 1 .. 9
          "-dd",      -- progress indicator verbose mode
-         "-M78",     -- set maximum line length,
+         "-M94",     -- set maximum line length,
          "-pM",      -- set pragma casing mixed case
          "-rf",      -- replace the argument source with the pretty-printed source
          "-v",       -- verbose mode

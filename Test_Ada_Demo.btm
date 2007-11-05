@@ -45,13 +45,14 @@ SETLOCAL
     PLUGIN /P
 
     TraceWriteLineNumber ON
-    TraceWritePrefix ON
-    TraceEnable ON
-    TraceVerbose OFF
-    ECHO Trace Write Line Number is %_TraceWriteLineNumber 
-    ECHO Trace Write Line Number is %_TraceWritePrefix 
-    ECHO Trace Write Line Number is %_TraceEnable      
-    ECHO Trace Write Line Number is %_TraceVerbose     
+    TraceWritePrefix     ON
+    TraceEnable          ON
+    TraceVerbose         OFF
+
+    ECHO Trace Write LineNumber is %_TraceWriteLineNumber 
+    ECHO Trace Write Prefix     is %_TraceWritePrefix 
+    ECHO Trace Enable           is %_TraceEnable      
+    ECHO Trace Verbose          is %_TraceVerbose     
     DIR
     REMARK
     ECHO Task status is: %_Taskremark
