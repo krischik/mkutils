@@ -1,6 +1,7 @@
--------------------------------------------------------------- {{{1 ----------
+----------------------------------------------------------------------------
 --  Description: Trace facility for 4NT / Take Command Plugins
---          $Id$
+--          $Id: takecmd-trace.adb 20 2007-11-03 09:52:26Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -8,44 +9,43 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/takecmd/takecmd-trace.adb $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
+--         Help: http://www.jpsoftwiki.com/wiki/index.php?title=Plugin/Ada
 -----------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
 --
 --  This file is part of Ada_Demo.
 --
---  Ada_Demo is free software: you can redistribute it and/or modify it under
---  the terms of the GNU General Public License as published by the Free
---  Software Foundation, either version 3 of the License, or (at your option)
---  any later version.
+--  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
---  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT
---  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
---  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
---  more details.
+--  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+--  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+--  See the GNU General Public License for more details.
 --
---  You should have received a copy of the GNU General Public License along
---  with Ada_Demo. If not, see <http://www.gnu.org/licenses/>.
--------------------------------------------------------------- }}}1 ----------
+--  You should have received a copy of the GNU General Public License along with Ada_Demo. If
+--  not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------------
 
-pragma License (Modified_Gpl);
+pragma License (Gpl);
 pragma Ada_05;
 
 with Ada.Text_IO;
 with Ada.Task_Identification;
 with Ada.Strings.Fixed;
 with Ada.Characters.Latin_1;
-with Ada.Strings.Maps;
 with Ada.Characters.Handling;
 with Ada.Characters.Conversions;
 with Ada.Containers.Indefinite_Hashed_Maps;
 with Ada.Strings.Hash;
 with Win32;
-with Win32.Winbase;
 with TakeCmd;
+with TakeCmd.Strings;
 --  with GNAT.Traceback.Symbolic;
 
 pragma Elaborate_All (Win32);
@@ -68,7 +68,6 @@ package body TakeCmd.Trace is
    --
    package S_U renames Ada.Strings.Unbounded;
    package S_F renames Ada.Strings.Fixed;
-   package Maps renames Ada.Strings.Maps;
    package C_L1 renames Ada.Characters.Latin_1;
    package C_H renames Ada.Characters.Handling;
    package IO renames Ada.Text_IO;
@@ -101,8 +100,8 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  More or less to try out a record layout - mind you the C++ original
-   --  used similar techniques - only they where not at all as elegant.
+   --  More or less to try out a record layout - mind you the C++ original used similar
+   --  techniques - only they where not at all as elegant.
    --
    --  Location          Trace Destination
    --  On                Trace is On
@@ -217,9 +216,7 @@ package body TakeCmd.Trace is
       --
       --  Text   : Text to be written
       --  Marker : Marker to be used
-      procedure Write_Formatted_String
-        (Text   : in String;
-         Marker : in String);
+      procedure Write_Formatted_String (Text : in String; Marker : in String);
 
       --
       --  Write Text
@@ -236,11 +233,10 @@ package body TakeCmd.Trace is
       --
       --  Filename of Trace if Destination ist File
       --
-      Filename : S_U.Unbounded_String :=
-         S_U.To_Unbounded_String ("Trace.Out");
+      Filename : S_U.Unbounded_String := S_U.To_Unbounded_String ("Trace.Out");
       --
-      --  The original IBM design opened and closed the File all the time.
-      --  However, Ada.Text_IO won't allow that and of course, it is slow.
+      --  The original IBM design opened and closed the File all the time. However,
+      --  Ada.Text_IO won't allow that and of course, it is slow.
       --
       Filehandle : IO.File_Type;
       --
@@ -269,33 +265,13 @@ package body TakeCmd.Trace is
       pragma Inline (Get_Trace_Location);
       pragma Inline (Set_Trace_Location);
    end Cl;
-   ---------------------------------------------------------------------------
-   ---
-   --
-   --  Searches for all occurences of text "Search" and Inserts text "Insert"
-   --  after the found text but only when "Insert" is not allready there.
-   --
-   --  Source   : String to be changed
-   --  Search   : String we look for
-   --  New_Item : String we want to insert
-   --  Mapping  : Search mapping
-   --  Count    : Count of replaces done
-   --
-   procedure Append_All
-     (Source   : in out S_U.Unbounded_String;
-      Search   : in String;
-      New_Item : in String;
-      Mapping  : in Maps.Character_Mapping := Maps.Identity;
-      Count    : out Natural);
 
    ---------------------------------------------------------------------------
    --
    --  Check if parameter is on of off
    --
    function Is_On_Off (Arguments : in Win32.PCWSTR) return Boolean;
-   procedure Is_On_Off
-     (Value     : in Boolean;
-      Arguments : in out TakeCmd.Plugin.Buffer);
+   procedure Is_On_Off (Value : in Boolean; Arguments : in out TakeCmd.Plugin.Buffer);
 
    ---------------------------------------------------------------------------
    --
@@ -305,10 +281,8 @@ package body TakeCmd.Trace is
    --
    --  Commandline options
    --
-   Trace_Opt_On        : aliased constant Win32.WCHAR_Array :=
-      "ON" & Win32.Wide_Nul;
-   Trace_Opt_Off       : aliased constant Win32.WCHAR_Array :=
-      "OFF" & Win32.Wide_Nul;
+   Trace_Opt_On        : constant Wide_String               := "ON";
+   Trace_Opt_Off       : constant Wide_String               := "OFF";
    Trace_Opt_To        : aliased constant Win32.WCHAR_Array := "TRACETO";
    Trace_Opt_To_Err1   : aliased constant Win32.WCHAR_Array := "STDERR";
    Trace_Opt_To_Err2   : aliased constant Win32.WCHAR_Array := "ERR";
@@ -339,107 +313,14 @@ package body TakeCmd.Trace is
    procedure Adjust (This : in out Object) is
    begin
       if Cl.Get_On then
-         Cl.Write_Formatted_String
-           (Text   => This.Trace_Name,
-            Marker => Marker_Indent);
+         Cl.Write_Formatted_String (Text => This.Trace_Name, Marker => Marker_Indent);
       end if;
    end Adjust;
 
    ---------------------------------------------------------------------------
    --
-   --  Searches for all occurences of text "Search" and Inserts text "Insert"
-   --  after the found text but only when "Insert" is not allready there.
-   --
-   --  Source   : String to be changed
-   --  Search   : String we look for
-   --  New_Item : String we want to insert
-   --  Mapping  : Search mapping
-   --  Count    : Count of replaces done
-   --
-   procedure Append_All
-     (Source   : in out S_U.Unbounded_String;
-      Search   : in String;
-      New_Item : in String;
-      Mapping  : in Maps.Character_Mapping := Maps.Identity;
-      Count    : out Natural)
-   is
-      use Ada.Strings.Unbounded;
-      use Ada.Strings.Fixed;
-
-      --
-      --  Offset from which we start. 0 means search from the first character
-      --
-      Offset : Natural := Natural'First;
-      --
-      --  Lenght of the full string
-      --
-      Len : constant Natural := Length (Source);
-   begin
-      --
-      --  nothing found yet
-      --
-      Count := Natural'First;
-
-      Search_Next : loop
-         --
-         --  Last Found Item was at the end of the String
-         --
-         exit Search_Next when Len = 0 or else Offset >= Len;
-
-         Next_Sub_String : declare
-            --
-            --  We slice from the Offset on to the end. One might be suprised
-            --  to learn that Sub_String'First might not be 1
-            --
-            Sub_String : constant String :=
-               Slice (Source => Source, Low => Offset + 1, High => Len);
-            --
-            --  We search for Pattern
-            --
-            Low  : constant Natural :=
-               Index
-                 (Source  => Sub_String,
-                  Pattern => Search,
-                  Going   => Ada.Strings.Forward,
-                  Mapping => Mapping);
-            High : constant Natural := Low + Search'Length;
-         begin
-            --
-            --  Exit Loop when we havn't found anything
-            --
-            exit Search_Next when Low = 0;
-
-            if New_Item'Length > Sub_String'Last - High + 1
-              or else New_Item /=
-                      Sub_String (High .. High + New_Item'Length - 1)
-            then
-               --
-               --  We insert one character after the end of the found string
-               --  when the new text does not allready follow. This can of
-               --  course only happen when there are enouch characters behind
-               --  the found string to contain the new text.
-               --
-               Insert
-                 (Source   => Source,
-                  Before   => High + Offset + 1 - Sub_String'First,
-                  New_Item => New_Item);
-               --
-               --  Found one.
-               --
-               Count := Natural'Succ (Count);
-            end if;
-            --
-            --  We set the offset to the end of the found string.
-            --
-            Offset := Offset + High;
-         end Next_Sub_String;
-      end loop Search_Next;
-   end Append_All;
-
-   ---------------------------------------------------------------------------
-   --
-   --  Assert a Condition. If the condition is not true create a trace entry
-   --  describing the assertion and then raise an exception.
+   --  Assert a Condition. If the condition is not true create a trace entry describing the
+   --  assertion and then raise an exception.
    --
    --  Condition : Condition which should be true
    --  Raising   : Exeption which is raised
@@ -450,9 +331,9 @@ package body TakeCmd.Trace is
    procedure Assert
      (Condition : in Boolean;
       Raising   : in Ada.Exceptions.Exception_Id;
-      Message   : in String := "No Message given.";
-      Entity    : in String := "No Entity given.";
-      Source    : in String := "No Source given.")
+      Message   : in Wide_String := "No Message given.";
+      Entity    : in Wide_String := "No Entity given.";
+      Source    : in Wide_String := "No Source given.")
    is
    begin
       if not Condition then
@@ -475,8 +356,7 @@ package body TakeCmd.Trace is
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end C_Enable;
@@ -485,18 +365,14 @@ package body TakeCmd.Trace is
    --
    --  Enable Trace
    --
-   function C_Verbose
-     (Arguments : in Win32.PCWSTR)
-      return      Interfaces.C.int
-   is
+   function C_Verbose (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    begin
       Cl.Set_Verbose (Is_On_Off (Arguments));
 
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end C_Verbose;
@@ -505,18 +381,14 @@ package body TakeCmd.Trace is
    --
    --  Don't Write Line numbers
    --
-   function C_Write_Line_Number
-     (Arguments : in Win32.PCWSTR)
-      return      Interfaces.C.int
-   is
+   function C_Write_Line_Number (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    begin
       Cl.Set_Write_Line_Number (Is_On_Off (Arguments));
 
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end C_Write_Line_Number;
@@ -525,18 +397,14 @@ package body TakeCmd.Trace is
    --
    --  Disable the Write prefix
    --
-   function C_Write_Prefix
-     (Arguments : in Win32.PCWSTR)
-      return      Interfaces.C.int
-   is
+   function C_Write_Prefix (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    begin
       Cl.Set_Write_Prefix (Is_On_Off (Arguments));
 
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end C_Write_Prefix;
@@ -549,18 +417,16 @@ package body TakeCmd.Trace is
    procedure Finalize (This : in out Object) is
    begin
       if Cl.Get_On then
-         Cl.Write_Formatted_String
-           (Text   => This.Trace_Name,
-            Marker => Marker_Outdent);
+         Cl.Write_Formatted_String (Text => This.Trace_Name, Marker => Marker_Outdent);
       end if;
    end Finalize;
 
    ---------------------------------------------------------------------------
    --
-   --  Functrace is not quite as usefull as the C++ version. The reason are
-   --  the missing constructors and destructors in Ada. With Controlled types
-   --  you can't limit to just one call to Initialize and one to Finalize
-   --  There are allways some extra Adjust with matching. Finalize.
+   --  Functrace is not quite as usefull as the C++ version. The reason are the missing
+   --  constructors and destructors in Ada. With Controlled types you can't limit to just one
+   --  call to Initialize and one to Finalize There are allways some extra Adjust with
+   --  matching. Finalize.
    --
    --  Name : Name of the function calls to be traced.
    function Function_Trace (Name : String) return Object is
@@ -570,13 +436,10 @@ package body TakeCmd.Trace is
          Trace_Name  => Name);
    begin
       --
-      --  The Initialize method is not realy a replacement for a proper
-      --  contructor.
+      --  The Initialize method is not realy a replacement for a proper contructor.
       --
       if Cl.Get_On then
-         Cl.Write_Formatted_String
-           (Text   => Retval.Trace_Name,
-            Marker => Marker_Indent);
+         Cl.Write_Formatted_String (Text => Retval.Trace_Name, Marker => Marker_Indent);
       end if;
 
       return Retval;
@@ -587,23 +450,20 @@ package body TakeCmd.Trace is
    --  Check if parameter is on of off
    --
    function Is_On_Off (Arguments : in Win32.PCWSTR) return Boolean is
-      Arguments_Length : constant Natural :=
-         Natural (Win32.Winbase.lstrlenW (Arguments));
-      Buffer           : Win32.WCHAR_Array (1 .. Arguments_Length + 1);
-      Dummy            : Win32.PWSTR;
-      Result           : Boolean;
+      Buffer : constant Wide_String :=
+         TakeCmd.Strings.To_Ada
+             (Arguments   => Arguments,
+              Keep_Null   => False,
 
-      pragma Warnings (Off, Buffer);
-      pragma Warnings (Off, Dummy);
+            To_Upper    => True,
+            Trim_Spaces => True);
+
+      Result : Boolean;
+
    begin
-      Dummy :=
-         Win32.Winbase.lstrcpynW
-           (lpString1  => Win32.Addr (Buffer),
-            lpString2  => Arguments,
-            iMaxLength => Buffer'Length);
-      if Buffer (2 .. Trace_Opt_On'Length + 1) = Trace_Opt_On then
+      if Buffer = Trace_Opt_On then
          Result := True;
-      elsif Buffer (2 .. Trace_Opt_Off'Length + 1) = Trace_Opt_Off then
+      elsif Buffer = Trace_Opt_Off then
          Result := False;
       else
          raise NAME_ERROR with "Value is neither 'ON' nor 'OFF'";
@@ -612,15 +472,12 @@ package body TakeCmd.Trace is
       return Result;
    end Is_On_Off;
 
-   procedure Is_On_Off
-     (Value     : in Boolean;
-      Arguments : in out TakeCmd.Plugin.Buffer)
-   is
+   procedure Is_On_Off (Value : in Boolean; Arguments : in out TakeCmd.Plugin.Buffer) is
    begin
       if Value then
-         Arguments (1 .. Trace_Opt_On'Length) := Trace_Opt_On;
+         Arguments := TakeCmd.Strings.To_Win (Trace_Opt_On);
       else
-         Arguments (1 .. Trace_Opt_Off'Length) := Trace_Opt_Off;
+         Arguments := TakeCmd.Strings.To_Win (Trace_Opt_Off);
       end if;
 
       return;
@@ -630,36 +487,28 @@ package body TakeCmd.Trace is
    --
    --  Trace the given exeption details and then raise the exception.
    --
-   --  Raising : Exeption which is raised Message : Free form Message Entity :
-   --  Location destriptor. Suggested content: AdaCL.Trace.Entity Source :
-   --  Location destriptor. Suggested content: AdaCL.Trace.Source
+   --  Raising : Exeption which is raised Message : Free form Message Entity : Location
+   --  destriptor. Suggested content: AdaCL.Trace.Entity Source : Location destriptor.
+   --  Suggested content: AdaCL.Trace.Source
    --
    procedure Raise_Exception
      (Raising : in Ada.Exceptions.Exception_Id;
-      Message : in String := "No Message given";
-      Entity  : in String := "No Entity given.";
-      Source  : in String := "No Source given.")
+      Message : in Wide_String := "No Message given";
+      Entity  : in Wide_String := "No Entity given.";
+      Source  : in Wide_String := "No Source given.")
    is
       use Ada.Exceptions;
    begin
-      Write ("Raise Exception " & Exception_Name (Raising));
+      Write ("Raise Exception " & Wide_Exception_Name (Raising));
       Write ("   with Message " & Message);
       Write ("   for Entity   " & Entity);
       Write ("   in Source    " & Source);
 
       Raise_Exception
         (E       => Raising,
-         Message =>
-            Message &
-            " Entity :" &
-            Entity &
-            "." &
-            " Source :" &
-            Source &
-            ".");
+         Message => Message & " Entity :" & Entity & "." & " Source :" & Source & ".");
       --
-      --  GNAT designer forgot to add pragma No_Return to
-      --  Ada.Exceptions.Raise_Exception.
+      --  GNAT designer forgot to add pragma No_Return to Ada.Exceptions.Raise_Exception.
       --
       raise Constraint_Error;
    end Raise_Exception;
@@ -677,19 +526,13 @@ package body TakeCmd.Trace is
    --
    --  check is trace is Enabled
    --
-   function V_Enable
-     (Arguments : access TakeCmd.Plugin.Buffer)
-      return      Interfaces.C.int
-   is
+   function V_Enable (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
    begin
-      Is_On_Off
-        (Value     => Cl.Get_On,
-         Arguments => Arguments.all);
+      Is_On_Off (Value => Cl.Get_On, Arguments => Arguments.all);
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end V_Enable;
@@ -698,19 +541,13 @@ package body TakeCmd.Trace is
    --
    --  check is trace is Enabled
    --
-   function V_Verbose
-     (Arguments : access TakeCmd.Plugin.Buffer)
-      return      Interfaces.C.int
-   is
+   function V_Verbose (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
    begin
-      Is_On_Off
-        (Value     =>  Cl.Get_Verbose,
-         Arguments => Arguments.all);
+      Is_On_Off (Value => Cl.Get_Verbose, Arguments => Arguments.all);
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end V_Verbose;
@@ -724,18 +561,14 @@ package body TakeCmd.Trace is
       return      Interfaces.C.int
    is
    begin
-      Is_On_Off
-        (Value     => Cl.Get_Write_Line_Number,
-         Arguments => Arguments.all);
+      Is_On_Off (Value => Cl.Get_Write_Line_Number, Arguments => Arguments.all);
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end V_Write_Line_Number;
-
 
    ---------------------------------------------------------------------------
    --
@@ -746,26 +579,23 @@ package body TakeCmd.Trace is
       return      Interfaces.C.int
    is
    begin
-      Is_On_Off
-        (Value     =>  Cl.Get_Write_Prefix,
-         Arguments => Arguments.all);
+      Is_On_Off (Value => Cl.Get_Write_Prefix, Arguments => Arguments.all);
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String
-           (Ada.Exceptions.Exception_Information (An_Exception));
+         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
          TakeCmd.CrLf;
          return -2;
    end V_Write_Prefix;
 
    ---------------------------------------------------------------------------
    --
-   --  Write an IString using Write_Formatted_String after adding the
-   --  appropriate padding for indentation.
+   --  Write an IString using Write_Formatted_String after adding the appropriate padding for
+   --  indentation.
    --
    --  A_String : String to be written
    --
-   procedure Write (A_String : in String) is
+   procedure Write (A_String : in Wide_String) is
    begin
       if Cl.Get_On then
          Cl.Write_Formatted_String (Text => A_String, Marker => Marker_Std);
@@ -800,8 +630,8 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an IString using Write_Formatted_String after adding the
-   --  appropriate padding for indentation.
+   --  Write an IString using Write_Formatted_String after adding the appropriate padding for
+   --  indentation.
    --
    --  A_Unbounded : String to be written
    --
@@ -809,9 +639,7 @@ package body TakeCmd.Trace is
       use Ada.Strings.Unbounded;
    begin
       if Cl.Get_On then
-         Cl.Write_Formatted_String
-           (Text   => To_String (A_Unbounded),
-            Marker => Marker_Std);
+         Cl.Write_Formatted_String (Text => To_String (A_Unbounded), Marker => Marker_Std);
       end if;
    end Write;
 
@@ -856,9 +684,7 @@ package body TakeCmd.Trace is
          Cl.Write_Formatted_String
            (Text   => "Function: " & An_Entity,
             Marker => Marker_Special);
-         Cl.Write_Formatted_String
-           (Text   => "Source: " & A_Source,
-            Marker => Marker_Special);
+         Cl.Write_Formatted_String (Text => "Source: " & A_Source, Marker => Marker_Special);
          --       Cl.Write_Formatted_String (
          --          Text   => G_TB.Symbolic_Traceback (An_Exception),
          --          Marker => Marker_Special);
@@ -921,18 +747,14 @@ package body TakeCmd.Trace is
    --
    --  String to be written
    --
-   procedure Write_Dump
-     (An_Address : in Sys.Address;
-      A_Size     : in Sys_SE.Storage_Count)
-   is
+   procedure Write_Dump (An_Address : in Sys.Address; A_Size : in Sys_SE.Storage_Count) is
    begin
       Write ("Address         : ", An_Address);
       Write ("Lenght          :" & Sys_SE.Storage_Count'Image (A_Size));
 
       if Cl.Get_On then
          Dump : declare
-            package Byte_IO is new IO.Modular_IO (
-               Num => Sys_SE.Storage_Element);
+            package Byte_IO is new IO.Modular_IO (Num => Sys_SE.Storage_Element);
 
             use Ada.Strings.Fixed;
 
@@ -944,9 +766,7 @@ package body TakeCmd.Trace is
             Address_Len  : constant := 8;
             Byte_Len     : constant := 2;
             Byte_Offset  : constant := 18;   --  Dump  [01234567]
-            ASCII_Offset : constant := Byte_Offset +
-                                       Line_Len * (Byte_Len + 1) +
-                                       1;
+            ASCII_Offset : constant := Byte_Offset + Line_Len * (Byte_Len + 1) + 1;
             Text_Len     : constant := ASCII_Offset + Line_Len;
 
             Byte_Text    : String (1 .. 3 + Byte_Len + 1);
@@ -967,20 +787,13 @@ package body TakeCmd.Trace is
                   Address_Text (4) := '0';
                end if;
 
-               Move
-                 (Source => "Dump  [" & Address_Text (4 .. 11) & "]: ",
-                  Target => Text);
+               Move (Source => "Dump  [" & Address_Text (4 .. 11) & "]: ", Target => Text);
 
                Col      := 0;
                Byte_Col := Byte_Offset;
 
-               Dump_Column : while Col < Line_Len
-                 and then          Col + Line < A_Size
-               loop
-                  Byte_IO.Put
-                    (To   => Byte_Text,
-                     Item => Data (Line + Col),
-                     Base => 16);
+               Dump_Column : while Col < Line_Len and then Col + Line < A_Size loop
+                  Byte_IO.Put (To => Byte_Text, Item => Data (Line + Col), Base => 16);
 
                   if Byte_Text (4) = '#' then
                      Byte_Text (4) := '0';
@@ -1000,9 +813,7 @@ package body TakeCmd.Trace is
                   Byte_Col := Byte_Col + (Byte_Len + 1);
                end loop Dump_Column;
 
-               Cl.Write_Formatted_String
-                 (Text   => Text,
-                  Marker => Marker_Std);
+               Cl.Write_Formatted_String (Text => Text, Marker => Marker_Std);
                Line := Line + Line_Len;
             end loop Dump_Line;
          end Dump;
@@ -1016,12 +827,8 @@ package body TakeCmd.Trace is
    --  An_Address :  String to be written
    --  A_Size     :  Size in Storage_Elements.
    --
-   procedure Write_Dump
-     (An_Address : in System.Address;
-      A_Size     : in Integer)
-   is
-      Size : Sys_SE.Storage_Count :=
-         Sys_SE.Storage_Count (A_Size / Sys.Storage_Unit);
+   procedure Write_Dump (An_Address : in System.Address; A_Size : in Integer) is
+      Size : Sys_SE.Storage_Count := Sys_SE.Storage_Count (A_Size / Sys.Storage_Unit);
    begin
       if (A_Size mod Sys.Storage_Unit) /= 0 then
          Size := Size + 1;
@@ -1032,16 +839,14 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an IString using Write_Formatted_String after adding the
-   --  appropriate padding for indentation.
+   --  Write an IString using Write_Formatted_String after adding the appropriate padding for
+   --  indentation.
    --
    --  A_String : String to be written
    --
    procedure Write_Error (A_String : in String) is
    begin
-      if not Cl.Get_On
-        or else Trace_Destination /= Standard_Error
-      then
+      if not Cl.Get_On or else Trace_Destination /= Standard_Error then
          IO.Put_Line (IO.Standard_Error, A_String);
       end if;
 
@@ -1052,24 +857,20 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an IString using Write_Formatted_String after adding the
-   --  appropriate padding for indentation.
+   --  Write an IString using Write_Formatted_String after adding the appropriate padding for
+   --  indentation.
    --
    --  A_Unbounded : String to be written
    --
    procedure Write_Error (A_Unbounded : in S_U.Unbounded_String) is
       use Ada.Strings.Unbounded;
    begin
-      if not Cl.Get_On
-        or else Trace_Destination /= Standard_Error
-      then
+      if not Cl.Get_On or else Trace_Destination /= Standard_Error then
          IO.Put_Line (IO.Standard_Error, To_String (A_Unbounded));
       end if;
 
       if Cl.Get_On then
-         Cl.Write_Formatted_String
-           (Text   => To_String (A_Unbounded),
-            Marker => Marker_Std);
+         Cl.Write_Formatted_String (Text => To_String (A_Unbounded), Marker => Marker_Std);
       end if;
    end Write_Error;
 
@@ -1079,17 +880,11 @@ package body TakeCmd.Trace is
    --
    --  An_Exception : String to be written
    --
-   procedure Write_Error
-     (An_Exception : in Ada.Exceptions.Exception_Occurrence)
-   is
+   procedure Write_Error (An_Exception : in Ada.Exceptions.Exception_Occurrence) is
       use Ada.Exceptions;
    begin
-      if not Cl.Get_On
-        or else Trace_Destination /= Standard_Error
-      then
-         IO.Put_Line
-           (IO.Standard_Error,
-            Exception_Information (An_Exception));
+      if not Cl.Get_On or else Trace_Destination /= Standard_Error then
+         IO.Put_Line (IO.Standard_Error, Exception_Information (An_Exception));
          --              IO.Put_Line (IO.Standard_Error,
          --  G_TB.Symbolic_Traceback (An_Exception));
       end if;
@@ -1112,9 +907,7 @@ package body TakeCmd.Trace is
    is
       use Ada.Exceptions;
    begin
-      if not Cl.Get_On
-        or else Trace_Destination /= Standard_Error
-      then
+      if not Cl.Get_On or else Trace_Destination /= Standard_Error then
          IO.New_Line (IO.Standard_Error);
          IO.Put (IO.Standard_Error, Exception_Information (An_Exception));
          IO.Put_Line (IO.Standard_Error, "Function: " & Entity);
@@ -1123,17 +916,13 @@ package body TakeCmd.Trace is
          --  G_TB.Symbolic_Traceback (An_Exception));
       end if;
 
-      Write
-        (An_Exception => An_Exception,
-         An_Entity    => An_Entity,
-         A_Source     => A_Source);
+      Write (An_Exception => An_Exception, An_Entity => An_Entity, A_Source => A_Source);
 
    end Write_Error;
 
    ---------------------------------------------------------------------------
    --
-   --  When verbose is aktivated then an empty line is written to
-   --  Standart_Output
+   --  When verbose is aktivated then an empty line is written to Standart_Output
    --
    procedure Write_Info is
    begin
@@ -1144,19 +933,17 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an IString using writeFormattedString after adding the
-   --  appropriate padding for indentation.
+   --  Write an IString using writeFormattedString after adding the appropriate padding for
+   --  indentation.
    --
-   --  When verbose is aktivated then the string is written to Standart_Output
-   --  as well.
+   --  When verbose is aktivated then the string is written to Standart_Output as well.
    --
    --  A_String : String to be written
    --
    procedure Write_Info (A_String : in String) is
    begin
       if Cl.Get_Verbose
-        and then (not Cl.Get_On
-                 or else Trace_Destination /= Standard_Output)
+        and then (not Cl.Get_On or else Trace_Destination /= Standard_Output)
       then
          IO.Put_Line (IO.Standard_Output, A_String);
       end if;
@@ -1168,8 +955,7 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  When verbose is aktivated then the character is written to
-   --  Standart_Output.
+   --  When verbose is aktivated then the character is written to Standart_Output.
    --
    --  A_Character : String to be written
    --
@@ -1182,11 +968,10 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an IString using writeFormattedString after adding the
-   --  appropriate padding for indentation.
+   --  Write an IString using writeFormattedString after adding the appropriate padding for
+   --  indentation.
    --
-   --  When verbose is aktivated then the string is written to Standart_Output
-   --  as well.
+   --  When verbose is aktivated then the string is written to Standart_Output as well.
    --
    --  A_Unbounded : String to be written
    --
@@ -1194,16 +979,13 @@ package body TakeCmd.Trace is
       use Ada.Strings.Unbounded;
    begin
       if Cl.Get_Verbose
-        and then (not Cl.Get_On
-                 or else Trace_Destination /= Standard_Output)
+        and then (not Cl.Get_On or else Trace_Destination /= Standard_Output)
       then
          IO.Put_Line (IO.Standard_Output, To_String (A_Unbounded));
       end if;
 
       if Cl.Get_On then
-         Cl.Write_Formatted_String
-           (Text   => To_String (A_Unbounded),
-            Marker => Marker_Std);
+         Cl.Write_Formatted_String (Text => To_String (A_Unbounded), Marker => Marker_Std);
       end if;
    end Write_Info;
 
@@ -1255,8 +1037,8 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an IString using Write_Formatted_String after adding the
-   --  appropriate padding for indentation.
+   --  Write an IString using Write_Formatted_String after adding the appropriate padding for
+   --  indentation.
    --
    --  A_String : String to be written
    --

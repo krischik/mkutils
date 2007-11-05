@@ -1,7 +1,6 @@
-------------------------------------------------------------- {{{1 ----------
+----------------------------------------------------------------------------
 --  Description: Options setable by the Ada plugin
---          $Id: win32-advapi.ads 16 2007-10-31 17:08:47Z
---  krischik@users.sourceforge.net $
+--          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -9,31 +8,29 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL:
---  https://mkutils.googlecode.com/svn/trunk/Source/takecmd/win32-advapi.ads $
+--     $HeadURL$
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
+--         Help: http://www.jpsoftwiki.com/wiki/index.php?title=Plugin/Ada
 ----------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
 --
 --  This file is part of Ada_Demo.
 --
---  Ada_Demo is free software: you can redistribute it and/or modify it under
---  the terms of the GNU General Public License as published by the Free
---  Software Foundation, either version 3 of the License, or (at your option)
---  any later version.
+--  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
---  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT
---  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
---  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
---  more details.
+--  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+--  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+--  See the GNU General Public License for more details.
 --
---  You should have received a copy of the GNU General Public License along
---  with Ada_Demo. If not, see <http://www.gnu.org/licenses/>.
-------------------------------------------------------------- }}}1 ----------
+--  You should have received a copy of the GNU General Public License along with Ada_Demo. If
+--  not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------------
 
-pragma License (Modified_Gpl);
+pragma License (Gpl);
 pragma Ada_05;
 
 with Win32;
@@ -98,6 +95,6 @@ private
 
 end Win32.Advapi;
 
-------------------------------------------------------------- {{{1 ----------
+----------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
 --  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:

@@ -62,6 +62,7 @@ project Ada_Demo is
       "ada_demo",
       "takecmd",
       "takecmd.trace",
+      "takecmd.strings",
       "takecmd.plugin");
    for Library_Options     use (
          "-Wl,--kill-at");        -- Remove @nn from exported symbols
@@ -184,7 +185,7 @@ project Ada_Demo is
          "-c4",      -- reformat comment blocks
          "-cl3",     -- indentation level for continuation lines, nnn from 1 .. 9
          "-dd",      -- progress indicator verbose mode
-         "-M78",     -- set maximum line length,
+         "-M94",     -- set maximum line length,
          "-pM",      -- set pragma casing mixed case
          "-rf",      -- replace the argument source with the pretty-printed source
          "-v",       -- verbose mode
@@ -194,7 +195,14 @@ project Ada_Demo is
 
    Source_Files := (
       "ada_demo.adb",
-      "ada_demo.ads");
+      "ada_demo.ads",
+      "takecmd-plugin.ads",
+      "takecmd-trace.ada",
+      "takecmd-trace.adb",
+      "takecmd-trace.ads",
+      "takecmd.adb",
+      "takecmd.ads",
+      "win32-advapi.ads");
 
 end Ada_Demo;
 

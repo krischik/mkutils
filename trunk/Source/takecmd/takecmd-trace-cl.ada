@@ -1,4 +1,4 @@
--------------------------------------------------------------- {{{1 ----------
+----------------------------------------------------------------------------
 --  Description: Trace facility for 4NT / Take Command Plugins
 --          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
@@ -12,27 +12,29 @@
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
+--         Help: http://www.jpsoftwiki.com/wiki/index.php?title=Plugin/Ada
 -----------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
 --
 --  This file is part of Ada_Demo.
 --
---  Ada_Demo is free software: you can redistribute it and/or modify it under
---  the terms of the GNU General Public License as published by the Free
---  Software Foundation, either version 3 of the License, or (at your option)
---  any later version.
+--  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
---  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT
---  ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
---  FITNESS FOR A PARTICULAR PURPOSE. See the GNU General Public License for
---  more details.
+--  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+--  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+--  See the GNU General Public License for more details.
 --
---  You should have received a copy of the GNU General Public License along
---  with Ada_Demo. If not, see <http://www.gnu.org/licenses/>.
--------------------------------------------------------------- }}}1 ----------
+--  You should have received a copy of the GNU General Public License along with Ada_Demo. If
+--  not, see <http://www.gnu.org/licenses/>.
+----------------------------------------------------------------------------
 
-pragma License (Modified_Gpl);
+pragma License (Gpl);
 pragma Ada_05;
+
+with Ada.Strings.Maps;
+with TakeCmd.Strings;
 
 ---------------------------------------------------------------------------
 --
@@ -228,22 +230,17 @@ protected body Cl is
             Prefix : declare
                StrThread_ID : constant String :=
                   S_F.Head (Natural'Image (Thread.Thread_No), 5);
-               StrLineNo    : constant String :=
-                  S_F.Head (Natural'Image (Get_Sequence), 5);
+               StrLineNo    : constant String := S_F.Head (Natural'Image (Get_Sequence), 5);
             begin
-               StrPrefix := StrLineNo &
-                            ":" &
-                            StrThread_ID &
-                            ":" &
-                            StrPrefix;
+               StrPrefix := StrLineNo & ":" & StrThread_ID & ":" & StrPrefix;
             end Prefix;
          end if;
 
-         Append_All
+         TakeCmd.Strings.Append_All
            (Source   => StrOut,
             Search   => StrLF,
             New_Item => To_String (StrPrefix),
-            Mapping  => Maps.Identity,
+            Mapping  => Ada.Strings.Maps.Identity,
             Count    => Count);
          StrOut := StrPrefix & StrOut;
 
