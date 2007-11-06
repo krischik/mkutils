@@ -49,7 +49,6 @@ pragma Elaborate_All (TakeCmd);
 pragma Elaborate_All (TakeCmd.Trace);
 
 package body Ada_Demo is
-
    use type Win32.WCHAR_Array;
    use type Interfaces.C.int;
 
@@ -63,22 +62,43 @@ package body Ada_Demo is
    Description    : aliased constant Win32.WCHAR_Array :=
       "A demonstration Plugin for 4NT/TC, written with Ada." & Win32.Wide_Nul;
    Implements     : aliased constant Win32.WCHAR_Array :=
-      "@REVERSE," &
-      "_HELLO,REMARK,TASKREMARK,_TASKREMARK,DIR,*KEY,USEBUFFER" &
+      "DIR" &
       "," &
-      TakeCmd.Trace.Write_Line_Number &
-      ",_" &
-      TakeCmd.Trace.Write_Line_Number &
+      "REMARK" &
       "," &
-      TakeCmd.Trace.Verbose &
-      ",_" &
-      TakeCmd.Trace.Verbose &
+      "TASKREMARK" &
+      "," &
+      "USEBUFFER" &
       "," &
       TakeCmd.Trace.Enable &
-      ",_" &
-      TakeCmd.Trace.Enable &
+      "," &
+      TakeCmd.Trace.To &
+      "," &
+      TakeCmd.Trace.Trace_File &
+      "," &
+      TakeCmd.Trace.Verbose &
+      "," &
+      TakeCmd.Trace.Write_Line_Number &
       "," &
       TakeCmd.Trace.Write_Prefix &
+      "," &
+      TakeCmd.Trace.X_Write &
+      ",*" &
+      "KEY" &
+      ",@" &
+      "REVERSE" &
+      ",_" &
+      "HELLO" &
+      ",_" &
+      "TASKREMARK" &
+      ",_" &
+      TakeCmd.Trace.Enable &
+      ",_" &
+      TakeCmd.Trace.To &
+      ",_" &
+      TakeCmd.Trace.Verbose &
+      ",_" &
+      TakeCmd.Trace.Write_Line_Number &
       ",_" &
       TakeCmd.Trace.Write_Prefix &
       Win32.Wide_Nul;
@@ -96,14 +116,19 @@ package body Ada_Demo is
       Remark_Value.Set_Remark ("The Task has started.");
       loop
          select
-            accept Execute;
+            accept Execute do
+               TakeCmd.Trace.Write (Wide_String'("Accept Execute"));
+            end Execute;
+            TakeCmd.Trace.Write (Wide_String'("Start Execute"));
             Remark_Value.Set_Remark ("The Task has run.");
+            TakeCmd.Trace.Write (Wide_String'("Done Execute"));
          or
             terminate;
          end select;
       end loop;
    exception
       when An_Exception : others =>
+         TakeCmd.Trace.Write_Error (An_Exception);
          Remark_Value.Set_Remark (Ada.Exceptions.Wide_Exception_Name (An_Exception));
          TakeCmd.CrLf;
    end Remark_Task;
@@ -115,6 +140,9 @@ package body Ada_Demo is
       end Get_Remark;
 
       procedure Set_Remark (New_Remark : in Wide_String) is
+         Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (
+            TakeCmd.Trace.Entity);
+         pragma Unreferenced (Trace);
       begin
          Ada.Strings.Wide_Fixed.Move
            (Source  => New_Remark,
@@ -134,13 +162,16 @@ package body Ada_Demo is
    --  returned and 4NT/TC will execute the DIR command as normal.
    --
    function C_Dir (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
+      Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
+      pragma Unreferenced (Trace);
+
       Minute : constant Ada.Calendar.Formatting.Minute_Number :=
          Ada.Calendar.Formatting.Minute (Ada.Calendar.Clock);
       Result : Interfaces.C.int                               :=
          TakeCmd.Plugin.Did_Not_Process;
 
-      pragma Unreferenced (Arguments);
    begin
+      TakeCmd.Trace.Write (Arguments);
       if Minute mod 2 = 0 then
          TakeCmd.Q_Put_String
            (Win32.WCHAR_Array'("Sorry, the Minutes are even, " &
@@ -151,8 +182,7 @@ package body Ada_Demo is
       return Result;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return -2;
    end C_Dir;
 
@@ -161,15 +191,18 @@ package body Ada_Demo is
    --  This is an Internal Command called from 4NT/TC
    --
    function C_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
-      pragma Unreferenced (Arguments);
+      Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
+      pragma Unreferenced (Trace);
+
    begin
+      TakeCmd.Trace.Write (Arguments);
+
       TakeCmd.Q_Put_String (Win32.WCHAR_Array'("What a trivial Ada generated Plugin!"));
       TakeCmd.CrLf;
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return -2;
    end C_Remark;
 
@@ -178,14 +211,16 @@ package body Ada_Demo is
    --  This is an Internal Command called from 4NT/TC which is executed in another task.
    --
    function C_Task_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
-      pragma Unreferenced (Arguments);
+      Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
+      pragma Unreferenced (Trace);
    begin
+      TakeCmd.Trace.Write (Arguments);
+
       My_Remark.all.Execute;
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return -2;
    end C_Task_Remark;
 
@@ -199,6 +234,9 @@ package body Ada_Demo is
    --    123,456,789
    --
    function C_Use_Buffer (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
+      Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
+      pragma Unreferenced (Trace);
+
       Arguments_Length : constant Natural                                               :=
          Natural (Win32.Winbase.lstrlenW (Arguments));
       Buffer           : Wide_String (1 .. Arguments_Length + Arguments_Length / 3 + 1) :=
@@ -207,6 +245,8 @@ package body Ada_Demo is
 
       pragma Warnings (Off, Dummy);
    begin
+      TakeCmd.Trace.Write (Arguments);
+
       TakeCmd.Strings.To_Ada
         (Arguments   => Arguments,
          Buffer      => Buffer,
@@ -221,8 +261,7 @@ package body Ada_Demo is
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return -2;
    end C_Use_Buffer;
 
@@ -230,12 +269,17 @@ package body Ada_Demo is
    --  This is a Variable Function called from 4NT/TC
    --
    function F_Reverse (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
+      Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
+      pragma Unreferenced (Trace);
+
       Arguments_Length : constant Natural           :=
          Natural (Win32.Winbase.lstrlenW (Win32.Addr (Arguments.all)));
       Reverse_String   : constant Win32.WCHAR_Array :=
          Arguments.all (Arguments'First .. Arguments'First + Arguments_Length - 1);
       Result           : Interfaces.C.int           := TakeCmd.Plugin.Did_Not_Process;
    begin
+      TakeCmd.Trace.Write (Arguments.all);
+
       if Arguments_Length = 0 then
          Result := 1;
       else
@@ -248,8 +292,7 @@ package body Ada_Demo is
       return Result;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return -2;
    end F_Reverse;
 
@@ -285,8 +328,7 @@ package body Ada_Demo is
       return Plugin_Info;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return null;
    end Get_Plugin_Info;
 
@@ -305,8 +347,7 @@ package body Ada_Demo is
       return Win32.FALSE;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return Win32.TRUE;
    end Initialize_Plugin;
 
@@ -325,8 +366,7 @@ package body Ada_Demo is
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return -2;
    end K_Key;
 
@@ -356,11 +396,13 @@ package body Ada_Demo is
 
       TakeCmd.Q_Put_String (Win32.WCHAR_Array'("Ada_Demo: DLL shut down OK!"));
       TakeCmd.CrLf;
+
+      TakeCmd.Trace.Shutdown_Plugin;
+
       return Win32.FALSE;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return Win32.TRUE;
    end Shutdown_Plugin;
 
@@ -368,6 +410,9 @@ package body Ada_Demo is
    --  This is an Internal Variable called from 4NT/TC
    --
    function V_Hello (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
+      Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
+      pragma Unreferenced (Trace);
+
       Response : constant Win32.WCHAR_Array :=
          "Hello from an Ada generated Plugin!" & Win32.Wide_Nul;
    begin
@@ -376,8 +421,7 @@ package body Ada_Demo is
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return -2;
    end V_Hello;
 
@@ -388,6 +432,9 @@ package body Ada_Demo is
      (Arguments : access TakeCmd.Plugin.Buffer)
       return      Interfaces.C.int
    is
+      Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
+      pragma Unreferenced (Trace);
+
       Response : aliased constant Wide_String :=
          Remark_Value.Get_Remark & Ada.Characters.Wide_Latin_1.NUL;
       Dummy    : Win32.PWSTR;
@@ -403,8 +450,7 @@ package body Ada_Demo is
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Error (An_Exception);
          return -2;
    end V_Task_Remark;
 

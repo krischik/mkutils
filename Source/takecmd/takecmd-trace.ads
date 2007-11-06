@@ -36,30 +36,27 @@ pragma Ada_05;
 with System;
 with System.Storage_Elements;
 
-with Ada.Strings.Unbounded;
 with Ada.Exceptions;
-with Ada.Finalization;
 
 with TakeCmd.Plugin;
 
 with GNAT.Source_Info;
 
+private with Ada.Finalization;
+
 package TakeCmd.Trace is
-   ---------------------------------------------------------------------------
-   --
-   --  Parameter error
-   --
-   NAME_ERROR : exception;
 
    ---------------------------------------------------------------------------
    --  Name_Length : Lenght of trace String
-   type Object (Name_Length : Positive) is new Ada.Finalization.Controlled with private;
+   type Object (Name_Length : Positive) is tagged private;
 
    ---------------------------------------------------------------------------
    --
    --  Trace Destination
    --
-   type Destination is (Queue, Standard_Error, Standard_Output, File);
+   type Destination is (Console, Standard_Error, Standard_Output, File);
+
+   for Destination'Size use 8;
 
    ---------------------------------------------------------------------------
    --
@@ -98,6 +95,8 @@ package TakeCmd.Trace is
    --
    function Function_Trace (Name : in String) return Object;
 
+   pragma Inline (Function_Trace);
+
    ---------------------------------------------------------------------------
    --
    --  Trace the given exeption details and then raise the exception.
@@ -108,9 +107,11 @@ package TakeCmd.Trace is
    --
    procedure Raise_Exception
      (Raising : in Ada.Exceptions.Exception_Id;
-      Message : in Wide_String := "No Message given";
-      Entity  : in Wide_String := "No Entity given.";
-      Source  : in Wide_String := "No Source given.");
+      Message : in String := "No Message given";
+      Entity  : in String := "No Entity given.";
+      Source  : in String := "No Source given.");
+
+   pragma No_Return (Raise_Exception);
 
    ---------------------------------------------------------------------------
    --
@@ -126,9 +127,17 @@ package TakeCmd.Trace is
    procedure Assert
      (Condition : in Boolean;
       Raising   : in Ada.Exceptions.Exception_Id;
-      Message   : in Wide_String := "No Message given.";
-      Entity    : in Wide_String := "No Entity given.";
-      Source    : in Wide_String := "No Source given.");
+      Message   : in String := "No Message given.";
+      Entity    : in String := "No Entity given.";
+      Source    : in String := "No Source given.");
+
+   pragma Inline (Assert);
+
+   ---------------------------------------------------------------------------
+   --
+   --  Shutdown Plugin: close trace file - of open
+   --
+   procedure Shutdown_Plugin;
 
    ---------------------------------------------------------------------------
    --
@@ -194,6 +203,7 @@ package TakeCmd.Trace is
    --  check is trace is Enabled
    --
    function V_Verbose (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int;
+
    pragma Export
      (Convention => Stdcall,
       Entity => V_Verbose,
@@ -201,39 +211,34 @@ package TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write to queue - not supported yet.
+   --  Set Trace Destination
    --
-   procedure Write_To_Queue;
+   function C_To (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
 
-   ---------------------------------------------------------------------------
-   --
-   --  Write to Standart Error
-   --
-   procedure Write_To_Standard_Error;
+   To : aliased constant Win32.WCHAR_Array := "TRACETO";
 
-   ---------------------------------------------------------------------------
-   --
-   --  Write to Standart Error
-   --
-   procedure Write_To_Standard_Output;
-
-   ---------------------------------------------------------------------------
-   --
-   --  Write to queue - not supported yet.
-   --
-   procedure Write_To_File;
-
-   ---------------------------------------------------------------------------
-   --
-   --  Set Filename for Trace File
-   --
-   procedure Write_To_File (New_Filename : in String);
+   pragma Export (Convention => Stdcall, Entity => C_To, External_Name => "TRACETO");
 
    ---------------------------------------------------------------------------
    --
    --  Check the Trace Destination
    --
-   function Trace_Destination return Destination;
+   function V_To (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int;
+
+   pragma Export (Convention => Stdcall, Entity => V_To, External_Name => "_TRACETO");
+
+   ---------------------------------------------------------------------------
+   --
+   --  Set Filename for Trace File
+   --
+   function C_Trace_File (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
+
+   Trace_File : aliased constant Win32.WCHAR_Array := "TRACEFILE";
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Trace_File,
+      External_Name => "TRACEFILE");
 
    ---------------------------------------------------------------------------
    --
@@ -255,6 +260,7 @@ package TakeCmd.Trace is
    function V_Write_Prefix
      (Arguments : access TakeCmd.Plugin.Buffer)
       return      Interfaces.C.int;
+
    pragma Export
      (Convention => Stdcall,
       Entity => V_Write_Prefix,
@@ -262,26 +268,37 @@ package TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an IString using writeFormattedString after adding the appropriate padding for
-   --  indentation.
+   --  Write an Wide_String using writeFormattedString after adding the appropriate padding
+   --  for indentation.
    --
    --  A_String : String to be written
+   --
    procedure Write (A_String : in Wide_String);
+   procedure Write (A_String : in Win32.PCWSTR);
+
+   pragma Inline (Write);
+
+   procedure Write (A_String : in TakeCmd.Plugin.Buffer);
+
+   pragma Inline (Write);
+
+   procedure Write (A_String : in String);
+
+   pragma Inline (Write);
+
+   function C_Write (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
+
+   X_Write : aliased constant Win32.WCHAR_Array := "TRACEWRITE";
+
+   pragma Export (Convention => Stdcall, Entity => C_Write, External_Name => "TRACEWRITE");
 
    ---------------------------------------------------------------------------
    --
    --  Write an Address.
    --
    --  A_String : String to be written
-   procedure Write (A_String : in String; An_Address : in System.Address);
-
-   ---------------------------------------------------------------------------
    --
-   --  Write an IString using writeFormattedString after adding the appropriate padding for
-   --  indentation.
-   --
-   --  A_Unbounded : String to be written
-   procedure Write (A_Unbounded : in Ada.Strings.Unbounded.Unbounded_String);
+   procedure Write (A_String : in Wide_String; An_Address : in System.Address);
 
    ---------------------------------------------------------------------------
    --
@@ -301,14 +318,6 @@ package TakeCmd.Trace is
      (An_Exception : in Ada.Exceptions.Exception_Occurrence;
       An_Entity    : in String;
       A_Source     : in String);
-
-   ---------------------------------------------------------------------------
-   --
-   --  Write an IString using writeFormattedString after adding the appropriate padding for
-   --  indentation.
-   --
-   --  A_String : String to be written
-   procedure Write_Wide (A_String : in Wide_String);
 
    ---------------------------------------------------------------------------
    --
@@ -334,15 +343,15 @@ package TakeCmd.Trace is
    --  indentation.
    --
    --  A_String : String to be written
-   procedure Write_Error (A_String : in String);
+   procedure Write_Error (A_String : in Wide_String);
 
    ---------------------------------------------------------------------------
    --
    --  Write an IString using writeFormattedString after adding the appropriate padding for
    --  indentation.
    --
-   --  A_Unbounded : String to be written
-   procedure Write_Error (A_Unbounded : in Ada.Strings.Unbounded.Unbounded_String);
+   --  A_Unbounded : String to be written procedure Write_Error (A_Unbounded : in
+   --  Ada.Strings.Unbounded.Unbounded_String);
 
    ---------------------------------------------------------------------------
    --
@@ -377,14 +386,7 @@ package TakeCmd.Trace is
    --  When verbose is aktivated then the string is written to Standart_Output as well.
    --
    --  A_String : String to be written
-   procedure Write_Info (A_String : in String);
-
-   ---------------------------------------------------------------------------
-   --
-   --  When verbose is aktivated then the character is written to Standart_Output.
-   --
-   --  A_Character : String to be written
-   procedure Write_Info (A_Character : in Character);
+   procedure Write_Info (A_String : in Wide_String);
 
    ---------------------------------------------------------------------------
    --
@@ -393,8 +395,8 @@ package TakeCmd.Trace is
    --
    --  When verbose is aktivated then the string is written to Standart_Output as well.
    --
-   --  A_Unbounded : String to be written
-   procedure Write_Info (A_Unbounded : in Ada.Strings.Unbounded.Unbounded_String);
+   --  A_Unbounded : String to be written procedure Write_Info (A_Unbounded : in
+   --  Ada.Strings.Unbounded.Unbounded_String);
 
    ---------------------------------------------------------------------------
    --
@@ -438,17 +440,5 @@ private
    --
    --  This : Object itself.
    procedure Finalize (This : in out Object);
-
-   pragma Inline (Assert);
-   pragma Inline (Function_Trace);
-   pragma Inline (Write_To_Queue);
-   pragma Inline (Write_To_Standard_Error);
-   pragma Inline (Write_To_Standard_Output);
-   pragma Inline (Write_To_File);
-   pragma Inline (Trace_Destination);
-
-   pragma No_Return (Raise_Exception);
-
-   for Destination'Size use 8;
 
 end TakeCmd.Trace;

@@ -1,4 +1,5 @@
-----------------------------------------------------------------------------
+--------------------------------------------------------------------------
+----
 ---
 --  Description: Trace facility for 4NT / Take Command Plugins
 --          $Id$
@@ -34,7 +35,6 @@
 pragma License (Gpl);
 pragma Ada_05;
 
-with Ada.Strings.Fixed;
 with Ada.Strings.Wide_Fixed;
 with Ada.Strings.Wide_Maps.Wide_Constants;
 with Win32.Winbase;
@@ -55,10 +55,11 @@ package body TakeCmd.Strings is
    --  Count    : Count of replaces done
    --
    procedure Append_All
-     (Source   : in out Ada.Strings.Unbounded.Unbounded_String;
-      Search   : in String;
-      New_Item : in String;
-      Mapping  : in Ada.Strings.Maps.Character_Mapping := Ada.Strings.Maps.Identity;
+     (Source   : in out Ada.Strings.Wide_Unbounded.Unbounded_Wide_String;
+      Search   : in Wide_String;
+      New_Item : in Wide_String;
+      Mapping  : in Ada.Strings.Wide_Maps.Wide_Character_Mapping :=
+         Ada.Strings.Wide_Maps.Identity;
       Count    : out Natural)
    is
       --
@@ -68,7 +69,7 @@ package body TakeCmd.Strings is
       --
       --  Lenght of the full string
       --
-      Len : constant Natural := Ada.Strings.Unbounded.Length (Source);
+      Len : constant Natural := Ada.Strings.Wide_Unbounded.Length (Source);
    begin
       --
       --  nothing found yet
@@ -86,8 +87,8 @@ package body TakeCmd.Strings is
             --  We slice from the Offset on to the end. One might be suprised to learn that
             --  Sub_String'First might not be 1
             --
-            Sub_String : constant String :=
-               Ada.Strings.Unbounded.Slice
+            Sub_String : constant Wide_String :=
+               Ada.Strings.Wide_Unbounded.Slice
                  (Source => Source,
                   Low    => Offset + 1,
                   High   => Len);
@@ -95,7 +96,7 @@ package body TakeCmd.Strings is
             --  We search for Pattern
             --
             Low  : constant Natural :=
-               Ada.Strings.Fixed.Index
+               Ada.Strings.Wide_Fixed.Index
                  (Source  => Sub_String,
                   Pattern => Search,
                   Going   => Ada.Strings.Forward,
@@ -115,7 +116,7 @@ package body TakeCmd.Strings is
                --  does not allready follow. This can of course only happen when there are
                --  enouch characters behind the found string to contain the new text.
                --
-               Ada.Strings.Unbounded.Insert
+               Ada.Strings.Wide_Unbounded.Insert
                  (Source   => Source,
                   Before   => High + Offset + 1 - Sub_String'First,
                   New_Item => New_Item);
@@ -155,6 +156,48 @@ package body TakeCmd.Strings is
          Win32.Winbase.lstrcpynW
            (lpString1  => Win32.Addr (Buffer),
             lpString2  => Arguments,
+            iMaxLength => Buffer'Length);
+      pragma Unreferenced (Dummy);
+      pragma Warnings (Off, Buffer);
+   begin
+      if To_Upper then
+         Ada.Strings.Wide_Fixed.Translate
+           (Source  => Buffer,
+            Mapping => Ada.Strings.Wide_Maps.Wide_Constants.Upper_Case_Map);
+      end if;
+      if Trim_Spaces then
+         if Keep_Null then
+            return Ada.Strings.Wide_Fixed.Trim
+                     (Source => Buffer (Buffer'First .. Buffer'Last),
+                      Side   => Ada.Strings.Both);
+         else
+            return Ada.Strings.Wide_Fixed.Trim
+                     (Source => Buffer (Buffer'First .. Buffer'Last - 1),
+                      Side   => Ada.Strings.Both);
+         end if;
+      else
+         if Keep_Null then
+            return Buffer (Buffer'First .. Buffer'Last);
+         else
+            return Buffer (Buffer'First .. Buffer'Last - 1);
+         end if;
+      end if;
+   end To_Ada;
+
+   function To_Ada
+     (Arguments   : in TakeCmd.Plugin.Buffer;
+      Keep_Null   : in Boolean := False;
+      To_Upper    : in Boolean := False;
+      Trim_Spaces : in Boolean := False)
+      return        Wide_String
+   is
+      Arguments_Length : constant Natural     :=
+         Natural (Win32.Winbase.lstrlenW (Win32.Addr (Arguments)));
+      Buffer           : Wide_String (1 .. Arguments_Length + 1);
+      Dummy            : constant Win32.PWSTR :=
+         Win32.Winbase.lstrcpynW
+           (lpString1  => Win32.Addr (Buffer),
+            lpString2  => Win32.Addr (Arguments),
             iMaxLength => Buffer'Length);
       pragma Unreferenced (Dummy);
       pragma Warnings (Off, Buffer);
