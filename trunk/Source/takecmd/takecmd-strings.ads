@@ -33,8 +33,8 @@
 pragma License (Gpl);
 pragma Ada_05;
 
-with Ada.Strings.Unbounded;
-with Ada.Strings.Maps;
+with Ada.Strings.Wide_Unbounded;
+with Ada.Strings.Wide_Maps;
 
 with TakeCmd.Plugin;
 
@@ -51,10 +51,11 @@ package TakeCmd.Strings is
    --  Count    : Count of replaces done
    --
    procedure Append_All
-     (Source   : in out Ada.Strings.Unbounded.Unbounded_String;
-      Search   : in String;
-      New_Item : in String;
-      Mapping  : in Ada.Strings.Maps.Character_Mapping := Ada.Strings.Maps.Identity;
+     (Source   : in out Ada.Strings.Wide_Unbounded.Unbounded_Wide_String;
+      Search   : in Wide_String;
+      New_Item : in Wide_String;
+      Mapping  : in Ada.Strings.Wide_Maps.Wide_Character_Mapping :=
+      Ada.Strings.Wide_Maps.Identity;
       Count    : out Natural);
 
    ---------------------------------------------------------------------------
@@ -68,6 +69,15 @@ package TakeCmd.Strings is
    --
    function To_Ada
      (Arguments   : in Win32.PCWSTR;
+      Keep_Null   : in Boolean := False;
+      To_Upper    : in Boolean := False;
+      Trim_Spaces : in Boolean := False)
+      return        Wide_String;
+
+   pragma Pure_Function (To_Ada);
+
+   function To_Ada
+     (Arguments   : in TakeCmd.Plugin.Buffer;
       Keep_Null   : in Boolean := False;
       To_Upper    : in Boolean := False;
       Trim_Spaces : in Boolean := False)

@@ -9,7 +9,7 @@
 ::      Version: 4.5
 ::    $Revision$
 ::     $HeadURL$
-::      History: 25.10.2007 MK 
+::      History: 25.10.2007 MK
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
 ::  Copyright (C) 2007  Martin Krischik
 ::
@@ -35,8 +35,8 @@ SETLOCAL
     SET             HOME=%[HOMEDRIVE]%[HOMEPATH]
     SET     Project_Home=%@PATH[%_batchname]
 
-    PUSHD %[Project_Home] 
-	gnat make -P Ada_Demo -XStyle=Release -XTarget=pentium4
+    PUSHD %[Project_Home]
+        gnat make -P Ada_Demo -XStyle=Release -XTarget=pentium4
     POPD
 ENDLOCAL
 
@@ -44,24 +44,29 @@ SETLOCAL
     PLUGIN /L pentium4-Release\lib\ada_demo\ada_demo.dll
     PLUGIN /P
 
+    TraceFile            Test_Ada_Demo.trace
     TraceWriteLineNumber ON
-    TraceWritePrefix     ON
+    TraceWritePrefix     TRUE
     TraceEnable          ON
-    TraceVerbose         OFF
+    TraceEnable          XXX
+    TraceVerbose         ON
 
-    ECHO Trace Write LineNumber is %_TraceWriteLineNumber 
-    ECHO Trace Write Prefix     is %_TraceWritePrefix 
-    ECHO Trace Enable           is %_TraceEnable      
-    ECHO Trace Verbose          is %_TraceVerbose     
-    DIR
-    REMARK
+    TraceWrite  Test Trace.
+
+    ECHO Trace Write LineNumber is %_TraceWriteLineNumber
+    ECHO Trace Write Prefix     is %_TraceWritePrefix
+    ECHO Trace Enable           is %_TraceEnable
+    ECHO Trace Verbose          is %_TraceVerbose
+    ECHO Trace To               is %_TraceTo
+    DIR *.btm
+    REMARK    Calling Remark
     ECHO Task status is: %_Taskremark
-    TASKREMARK
+    TASKREMARK   Calling Task Remark
     ECHO Task status is: %_Taskremark
     USEBUFFER 123456789
     ECHO Reverse ABCDE is: %@Reverse[ABCDE]
     ECHO Hello is: %_Hello
-    
+
     PLUGIN /U Ada_Demo
 ENDLOCAL
 

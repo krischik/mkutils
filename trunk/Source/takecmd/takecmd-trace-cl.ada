@@ -8,7 +8,8 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL: https://mkutils.googlecode.com/svn/trunk/Source/takecmd/takecmd-trace-cl.ada
+--  $
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -33,8 +34,10 @@
 pragma License (Gpl);
 pragma Ada_05;
 
-with Ada.Strings.Maps;
+with Ada.Strings.Wide_Maps;
 with TakeCmd.Strings;
+with Ada.Task_Identification;
+with Ada.Strings.Wide_Unbounded;
 
 ---------------------------------------------------------------------------
 --
@@ -66,7 +69,8 @@ protected body Cl is
    --  Determine the threadId of the current thread
    --
    procedure Get_Thread_ID (Retval : out Thread_ID) is
-      Thread_Name : constant String := TaskID.Image (TaskID.Current_Task);
+      Thread_Name : constant String :=
+         Ada.Task_Identification.Image (Ada.Task_Identification.Current_Task);
    begin
       if Threads.Contains (Thread_Name) then
          Retval := Threads.Element (Thread_Name);
@@ -78,7 +82,8 @@ protected body Cl is
 
          if State.On then
             Write_Formatted_String
-              (Text   => "New Thread : " & Thread_Name,
+              (Text   => "New Thread : " &
+                         Ada.Characters.Conversions.To_Wide_String (Thread_Name),
                Marker => Marker_Special);
          end if;
       end if;
@@ -135,8 +140,8 @@ protected body Cl is
    --
    procedure Set_Filename (New_Filename : in String) is
    begin
-      if IO.Is_Open (Filehandle) then
-         IO.Close (Filehandle);
+      if Ada.Wide_Text_IO.Is_Open (Filehandle) then
+         Ada.Wide_Text_IO.Close (Filehandle);
       end if;
 
       Filename := S_U.To_Unbounded_String (New_Filename);
@@ -156,7 +161,8 @@ protected body Cl is
    --  Determine the threadId of the current thread
    --
    procedure Set_Thread_ID (New_Value : in Thread_ID) is
-      Thread_Name : constant String := TaskID.Image (TaskID.Current_Task);
+      Thread_Name : constant String :=
+         Ada.Task_Identification.Image (Ada.Task_Identification.Current_Task);
    begin
       if Threads.Contains (Thread_Name) then
          Threads.Replace (Key => Thread_Name, New_Item => New_Value);
@@ -201,14 +207,26 @@ protected body Cl is
       State.Write_Prefix := Write_Prefix;
    end Set_Write_Prefix;
 
+   ---------------------------------------------------------------------------
+   --
+   --  Shutdown Plugin: close trace file - of open
+   --
+   procedure Shutdown_Plugin is
+   begin
+      if Ada.Wide_Text_IO.Is_Open (Filehandle) then
+         Ada.Wide_Text_IO.Close (Filehandle);
+      end if;
+      return;
+   end Shutdown_Plugin;
+
    ------------------------------------------------------------------------
    --
    --  Write Formated Text
    --
    --  Text   : Text to be written
    --  Marker : Marker to be used
-   procedure Write_Formatted_String (Text : in String; Marker : in String) is
-      use Ada.Strings.Unbounded;
+   procedure Write_Formatted_String (Text : in Wide_String; Marker : in Wide_String) is
+      use Ada.Strings.Wide_Unbounded;
 
       Thread : Thread_ID;
    begin
@@ -221,16 +239,18 @@ protected body Cl is
       end if;
 
       Format : declare
-         StrOut    : Unbounded_String := To_Unbounded_String (Marker & Text);
-         StrPrefix : Unbounded_String := Thread.Indent * ' ';
-         StrLF     : constant String  := (1 => C_L1.LF);
-         Count     : Natural          := Natural'First;
+         StrOut    : Unbounded_Wide_String := To_Unbounded_Wide_String (Marker & Text);
+         StrPrefix : Unbounded_Wide_String := Thread.Indent * ' ';
+         StrLF     : constant Wide_String  :=
+           (1 => Ada.Characters.Conversions.To_Wide_Character (ASCII.LF));
+         Count     : Natural               := Natural'First;
       begin
          if State.Write_Prefix then
             Prefix : declare
-               StrThread_ID : constant String :=
-                  S_F.Head (Natural'Image (Thread.Thread_No), 5);
-               StrLineNo    : constant String := S_F.Head (Natural'Image (Get_Sequence), 5);
+               StrThread_ID : constant Wide_String :=
+                  Ada.Strings.Wide_Fixed.Head (Natural'Wide_Image (Thread.Thread_No), 5);
+               StrLineNo    : constant Wide_String :=
+                  Ada.Strings.Wide_Fixed.Head (Natural'Wide_Image (Get_Sequence), 5);
             begin
                StrPrefix := StrLineNo & ":" & StrThread_ID & ":" & StrPrefix;
             end Prefix;
@@ -239,12 +259,12 @@ protected body Cl is
          TakeCmd.Strings.Append_All
            (Source   => StrOut,
             Search   => StrLF,
-            New_Item => To_String (StrPrefix),
-            Mapping  => Ada.Strings.Maps.Identity,
+            New_Item => To_Wide_String (StrPrefix),
+            Mapping  => Ada.Strings.Wide_Maps.Identity,
             Count    => Count);
          StrOut := StrPrefix & StrOut;
 
-         Write_String (To_String (StrOut));
+         Write_String (To_Wide_String (StrOut));
       end Format;
 
       Inc_Sequence;
@@ -262,12 +282,12 @@ protected body Cl is
    --  Write Text
    --
    --  Text to be written
-   procedure Write_String (Text : in String) is
-      use Ada.Text_IO;
+   procedure Write_String (Text : in Wide_String) is
+      use Ada.Wide_Text_IO;
    begin
       case State.Location is
-         when Queue =>
-            null;
+         when Console =>
+            Q_Put_String (Text);
          when Standard_Error =>
             Put_Line (Standard_Error, Text);
          when Standard_Output =>
