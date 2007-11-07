@@ -21,8 +21,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3
---  of the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3 of
+--  the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -37,6 +37,7 @@ pragma Ada_05;
 
 with Ada.Strings.Wide_Fixed;
 with Ada.Strings.Wide_Maps.Wide_Constants;
+with Ada.Characters.Conversions;
 with Win32.Winbase;
 with Interfaces.C;
 
@@ -149,8 +150,7 @@ package body TakeCmd.Strings is
       Trim_Spaces : in Boolean := False)
       return        Wide_String
    is
-      Arguments_Length : constant Natural     :=
-         Natural (Win32.Winbase.lstrlenW (Arguments));
+      Arguments_Length : constant Natural     := Natural (Win32.Winbase.lstrlenW (Arguments));
       Buffer           : Wide_String (1 .. Arguments_Length + 1);
       Dummy            : constant Win32.PWSTR :=
          Win32.Winbase.lstrcpynW
@@ -279,6 +279,13 @@ package body TakeCmd.Strings is
                lpString2  => Win32.Addr (Arguments),
                iMaxLength => Arguments'Length + 1);
          Result (Arguments'Length + 1) := Win32.Wide_Nul;
+      end return;
+   end To_Win;
+
+   function To_Win (Arguments : in String) return TakeCmd.Plugin.Buffer is
+   begin
+      return Result : aliased TakeCmd.Plugin.Buffer do
+         Result := To_Win (Ada.Characters.Conversions.To_Wide_String (Arguments));
       end return;
    end To_Win;
 

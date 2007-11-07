@@ -699,6 +699,14 @@ package TakeCmd is
    --  /*
    --   Returns the environment variable
    --  */
+
+   function GetEnvironmentVariablePtr (pszVariable : in Win32.PCWSTR) return Win32.PCWSTR;
+
+   pragma Import
+     (Convention => Stdcall,
+      Entity => GetEnvironmentVariablePtr,
+      External_Name => "GetEnvironmentVariablePtr");
+
    --
    --  LPTSTR WINAPI GetAlias( LPTSTR pszAlias );
    --  /*

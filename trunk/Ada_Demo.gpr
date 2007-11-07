@@ -43,7 +43,7 @@ project Ada_Demo is
    type Target_Type is ("i686"   , "pentium4", "x86_64");
 
    Base := ".";
-   Version := "1.1.0";
+   Version := "2.1.0";
 
    Style  : Style_Type  := external ("style" , "Release");
    Target : Target_Type := external ("target", "pentium4");
@@ -185,7 +185,7 @@ project Ada_Demo is
          "-c4",      -- reformat comment blocks
          "-cl3",     -- indentation level for continuation lines, nnn from 1 .. 9
          "-dd",      -- progress indicator verbose mode
-         "-M94",     -- set maximum line length,
+         "-M96",     -- set maximum line length,
          "-pM",      -- set pragma casing mixed case
          "-rf",      -- replace the argument source with the pretty-printed source
          "-v",       -- verbose mode

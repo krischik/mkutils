@@ -20,8 +20,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3
---  of the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3 of
+--  the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -45,6 +45,15 @@ with Ada.Strings.Wide_Unbounded;
 --
 separate (TakeCmd.Trace)
 protected body Cl is
+
+   ------------------------------------------------------------------------
+   --
+   --  Get Filename for Trace File
+   --
+   function Get_Filename return String is
+   begin
+      return Ada.Strings.Unbounded.To_String (Filename);
+   end Get_Filename;
 
    ------------------------------------------------------------------------
    --
@@ -134,6 +143,20 @@ protected body Cl is
       Sequence := Natural'Succ (Sequence);
    end Inc_Sequence;
 
+   ---------------------------------------------------------------------------
+   --
+   --  Initialize_Plugin: Read initial setup from environment
+   --
+   procedure Initialize_Plugin is
+   --  use type Win32.WCHAR_Array;
+   --  Value : Win32.PCWSTR;
+   --  Dummy : Interfaces.C.int;
+   begin
+      --  := GetEnvironmentVariablePtr (Win32.Addr (Write_Line_Number & Win32.Wide_Nul)); :=
+      --  C_Write_Prefix (Value);
+      return;
+   end Initialize_Plugin;
+
    ------------------------------------------------------------------------
    --
    --  Set Filename for Trace File
@@ -144,7 +167,7 @@ protected body Cl is
          Ada.Wide_Text_IO.Close (Filehandle);
       end if;
 
-      Filename := S_U.To_Unbounded_String (New_Filename);
+      Filename := Ada.Strings.Unbounded.To_Unbounded_String (New_Filename);
    end Set_Filename;
 
    ------------------------------------------------------------------------
@@ -282,6 +305,7 @@ protected body Cl is
    --  Write Text
    --
    --  Text to be written
+   --
    procedure Write_String (Text : in Wide_String) is
       use Ada.Wide_Text_IO;
    begin
@@ -297,7 +321,7 @@ protected body Cl is
                Create
                  (File => Filehandle,
                   Mode => Out_File,
-                  Name => S_U.To_String (Filename),
+                  Name => Ada.Strings.Unbounded.To_String (Filename),
                   Form => "shared=yes");
             end if;
 

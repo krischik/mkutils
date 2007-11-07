@@ -1,8 +1,6 @@
 --------------------------------------------------------------------------
-------
 --  Description: Trace facility for 4NT / Take Command Plugins
---          $Id: takecmd-trace.adb 20 2007-11-03 09:52:26Z
---  krischik@users.sourceforge.net $
+--          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -10,8 +8,7 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL:
---  https://mkutils.googlecode.com/svn/trunk/Source/takecmd/takecmd-trace.adb $
+--     $HeadURL$
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -36,7 +33,6 @@
 pragma License (Gpl);
 pragma Ada_05;
 
-with Ada.Text_IO;
 with Ada.Wide_Text_IO;
 with Ada.Wide_Characters.Unicode;
 with Ada.Characters.Conversions;
@@ -48,7 +44,6 @@ with Ada.Strings.Unbounded;
 with Win32;
 with TakeCmd;
 with TakeCmd.Strings;
---  with GNAT.Traceback.Symbolic;
 
 pragma Elaborate_All (Win32);
 pragma Elaborate_All (TakeCmd);
@@ -61,18 +56,7 @@ package body TakeCmd.Trace is
    --
    use type System.Storage_Elements.Storage_Offset;
    use type System.Storage_Elements.Storage_Element;
-   use type System.Address;
-   use type Ada.Strings.Unbounded.Unbounded_String;
-   use type Ada.Text_IO.File_Type;
-   use type Win32.WCHAR_Array;
    use type Interfaces.C.int;
-   ---------------------------------------------------------------------------
-   --
-   package S_U renames Ada.Strings.Unbounded;
-   package Sys renames System;
-   package Sys_SE renames System.Storage_Elements;
-
-   --   package G_TB       renames GNAT.Traceback.Symbolic;
 
    ---------------------------------------------------------------------------
    --
@@ -97,25 +81,6 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  More or less to try out a record layout - mind you the C++ original used similar
-   --  techniques - only they where not at all as elegant.
-   --
-   --  Location          Trace Destination
-   --  On                Trace is On
-   --  Write_Line_Number Trace with line numbers.
-   --  Write_Prefix      Trace with thread profex and optional line numbers.
-   --  Verbose           Verbose operation.
-   --
-   for States use record
-      Location          at 0 range 0 .. 3;
-      On                at 0 range 4 .. 4;
-      Write_Line_Number at 0 range 5 .. 5;
-      Write_Prefix      at 0 range 6 .. 6;
-      Verbose           at 0 range 7 .. 7;
-   end record;
-
-   ---------------------------------------------------------------------------
-   --
    --  Thread_No : Each Thread has a number. A number is shorter then string.
    --  Indent    : Function indeting is counded separate for every thread
    --
@@ -136,84 +101,115 @@ package body TakeCmd.Trace is
    --  Protect all global data.
    --
    protected Cl is
-      ---------------------------------------------------------------------------
+      ------------------------------------------------------------------------
+      --
+      --  Initialize_Plugin: Read initial setup from environment
+      --
+      procedure Initialize_Plugin;
+
+      ------------------------------------------------------------------------
       --
       --  Shutdown Plugin: close trace file - of open
       --
       procedure Shutdown_Plugin;
 
+      ------------------------------------------------------------------------
       --
       --  Icrement Trace line counter by one
       --
       procedure Inc_Sequence;
 
+      ------------------------------------------------------------------------
       --
       --  Get Trace line counter
       --
       function Get_Sequence return Natural;
 
+      ------------------------------------------------------------------------
+      --
+      --  Set Filename for Trace File
+      --
       procedure Set_Filename (New_Filename : in String);
 
+      ------------------------------------------------------------------------
+      --
+      --  Get Filename for Trace File
+      --
+      function Get_Filename return String;
+
+      ------------------------------------------------------------------------
       --
       --  Determine the threadId of the current thread
       --
       procedure Get_Thread_ID (Retval : out Thread_ID);
 
+      ------------------------------------------------------------------------
       --
       --  Determine the threadId of the current thread
       --
       procedure Set_Thread_ID (New_Value : in Thread_ID);
 
+      ------------------------------------------------------------------------
       --
       --  Trace is On
       --
       function Get_On return Boolean;
 
+      ------------------------------------------------------------------------
       --
       --  Trace is On
       --
       procedure Set_On (On : Boolean);
 
+      ------------------------------------------------------------------------
       --
       --  Trace is On
       --
       function Get_Verbose return Boolean;
 
+      ------------------------------------------------------------------------
       --
       --  Trace is On
       --
       procedure Set_Verbose (Verbose : Boolean);
 
+      ------------------------------------------------------------------------
       --
       --  Trace with line numbers.
       --
       function Get_Write_Line_Number return Boolean;
 
+      ------------------------------------------------------------------------
       --
       --  Trace with line numbers.
       --
       procedure Set_Write_Line_Number (Write_Line_Number : Boolean);
 
+      ------------------------------------------------------------------------
       --
       --  Trace with thread profex and optional line numbers.
       --
       function Get_Write_Prefix return Boolean;
 
+      ------------------------------------------------------------------------
       --
       --  Trace with thread profex and optional line numbers.
       --
       procedure Set_Write_Prefix (Write_Prefix : Boolean);
 
+      ------------------------------------------------------------------------
       --
       --  Trace Destination
       --
       function Get_Trace_Location return Destination;
 
+      ------------------------------------------------------------------------
       --
       --  Trace Destination
       --
       procedure Set_Trace_Location (Location : in Destination);
 
+      ------------------------------------------------------------------------
       --
       --  Write Formated Text
       --
@@ -221,6 +217,7 @@ package body TakeCmd.Trace is
       --  Marker : Marker to be used
       procedure Write_Formatted_String (Text : in Wide_String; Marker : in Wide_String);
 
+      ------------------------------------------------------------------------
       --
       --  Write Text
       --
@@ -229,27 +226,39 @@ package body TakeCmd.Trace is
 
    private
 
+      ------------------------------------------------------------------------
       --
       --  Trace line counter
       --
       Sequence : Natural := Natural'First;
+
+      ------------------------------------------------------------------------
       --
       --  Filename of Trace if Destination ist File
       --
-      Filename : S_U.Unbounded_String := S_U.To_Unbounded_String ("Trace.Out");
+      Filename : Ada.Strings.Unbounded.Unbounded_String :=
+         Ada.Strings.Unbounded.To_Unbounded_String ("Trace.Out");
+
+      ------------------------------------------------------------------------
       --
       --  The original IBM design opened and closed the File all the time. However,
       --  Ada.Text_IO won't allow that and of course, it is slow.
       --
       Filehandle : Ada.Wide_Text_IO.File_Type;
+
+      ------------------------------------------------------------------------
       --
       --  Last Thread ID used
       --
       Thread_No : Natural := Natural'First;
+
+      ------------------------------------------------------------------------
       --
       --  Current Indenting Level for each thread
       --
       Threads : Thread_ID_Map.Map;
+
+      ------------------------------------------------------------------------
       --
       --  Status of Trace
       --
@@ -516,6 +525,15 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
+   --  Initialize_Plugin: Read initial setup from environment
+   --
+   procedure Initialize_Plugin is
+   begin
+      Cl.Initialize_Plugin;
+   end Initialize_Plugin;
+
+   ---------------------------------------------------------------------------
+   --
    --  Check if parameter is on of off
    --
    function Is_On_Off (Arguments : in Win32.PCWSTR) return Boolean is
@@ -570,9 +588,10 @@ package body TakeCmd.Trace is
         (E       => Raising,
          Message => Message & " Entity :" & Entity & "." & " Source :" & Source & ".");
       --
-      --  GNAT designer forgot to add pragma No_Return to Ada.Exceptions.Raise_Exception.
+      --  If Raising is null-exception then we could reach here. But we schould not raise the
+      --  null-exception.
       --
-      raise Constraint_Error;
+      raise Program_Error;
    end Raise_Exception;
 
    ---------------------------------------------------------------------------
@@ -604,8 +623,6 @@ package body TakeCmd.Trace is
    --
    function V_To (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
    begin
-      TakeCmd.Trace.Write (Wide_String'("XXX"));
-      TakeCmd.Trace.Write (Destination'Wide_Image (Cl.Get_Trace_Location));
       Arguments.all :=
          TakeCmd.Strings.To_Win (Destination'Wide_Image (Cl.Get_Trace_Location));
 
@@ -615,6 +632,20 @@ package body TakeCmd.Trace is
          TakeCmd.Trace.Write_Error (An_Exception);
          return -2;
    end V_To;
+
+   ---------------------------------------------------------------------------
+   --
+   --  Get Filename for Trace File
+   --
+   function V_Trace_File (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
+   begin
+      Arguments.all := TakeCmd.Strings.To_Win (Cl.Get_Filename);
+      return 0;
+   exception
+      when An_Exception : others =>
+         TakeCmd.Trace.Write_Error (An_Exception);
+         return -2;
+   end V_Trace_File;
 
    ---------------------------------------------------------------------------
    --
@@ -715,7 +746,7 @@ package body TakeCmd.Trace is
    --
    --  A_String : String to be written
    --
-   procedure Write (A_String : in Wide_String; An_Address : in Sys.Address) is
+   procedure Write (A_String : in Wide_String; An_Address : in System.Address) is
    begin
       if Cl.Get_On then
          Write_Address : declare
@@ -723,7 +754,7 @@ package body TakeCmd.Trace is
          begin
             Address_IO.Put
               (To   => Address_Text,
-               Item => Sys_SE.To_Integer (An_Address),
+               Item => System.Storage_Elements.To_Integer (An_Address),
                Base => 16);
 
             Cl.Write_Formatted_String
@@ -732,17 +763,6 @@ package body TakeCmd.Trace is
          end Write_Address;
       end if;
    end Write;
-
-   ---------------------------------------------------------------------------
-   --
-   --  Write an IString using Write_Formatted_String after adding the appropriate padding for
-   --  indentation.
-   --
-   --  A_Unbounded : String to be written
-   --
-   --  procedure Write (A_Unbounded : in S_U.Unbounded_String) is use Ada.Strings.Unbounded;
-   --  begin if Cl.Get_On then Cl.Write_Formatted_String (Text => To_String (A_Unbounded),
-   --  Marker => Marker_Std); end if; end Write;
 
    ---------------------------------------------------------------------------
    --
@@ -792,9 +812,6 @@ package body TakeCmd.Trace is
          Cl.Write_Formatted_String
            (Text   => "Source: " & Ada.Characters.Conversions.To_Wide_String (A_Source),
             Marker => Marker_Special);
-         --       Cl.Write_Formatted_String (
-         --          Text   => G_TB.Symbolic_Traceback (An_Exception),
-         --          Marker => Marker_Special);
       end if;
    end Write;
 
@@ -854,17 +871,20 @@ package body TakeCmd.Trace is
    --
    --  String to be written
    --
-   procedure Write_Dump (An_Address : in Sys.Address; A_Size : in Sys_SE.Storage_Count) is
+   procedure Write_Dump
+     (An_Address : in System.Address;
+      A_Size     : in System.Storage_Elements.Storage_Count)
+   is
    begin
       Write ("Address         : ", An_Address);
-      Write ("Lenght          :" & Sys_SE.Storage_Count'Image (A_Size));
+      Write ("Lenght          :" & System.Storage_Elements.Storage_Count'Image (A_Size));
 
       if Cl.Get_On then
          Dump : declare
             package Byte_IO is new Ada.Wide_Text_IO.Modular_IO (
-               Num => Sys_SE.Storage_Element);
+               Num => System.Storage_Elements.Storage_Element);
 
-            Data : Sys_SE.Storage_Array (0 .. A_Size - 1);
+            Data : System.Storage_Elements.Storage_Array (0 .. A_Size - 1);
             for Data'Address use An_Address;
             pragma Import (Ada, Data);
 
@@ -878,15 +898,15 @@ package body TakeCmd.Trace is
             Byte_Text    : Wide_String (1 .. 3 + Byte_Len + 1);
             Address_Text : Wide_String (1 .. 3 + Address_Len + 1);
             Text         : Wide_String (1 .. Text_Len);
-            Line         : Sys_SE.Storage_Offset := Data'First;
-            Col          : Sys_SE.Storage_Offset := Data'First;
+            Line         : System.Storage_Elements.Storage_Offset := Data'First;
+            Col          : System.Storage_Elements.Storage_Offset := Data'First;
             Char         : Wide_Character;
             Byte_Col     : Integer;
          begin
             Dump_Line : while Line <= Data'Last loop
                Address_IO.Put
                  (To   => Address_Text,
-                  Item => Sys_SE.To_Integer (An_Address + Line),
+                  Item => System.Storage_Elements.To_Integer (An_Address + Line),
                   Base => 16);
 
                if Address_Text (4) = '#' then
@@ -936,9 +956,10 @@ package body TakeCmd.Trace is
    --  A_Size     :  Size in Storage_Elements.
    --
    procedure Write_Dump (An_Address : in System.Address; A_Size : in Integer) is
-      Size : Sys_SE.Storage_Count := Sys_SE.Storage_Count (A_Size / Sys.Storage_Unit);
+      Size : System.Storage_Elements.Storage_Count :=
+         System.Storage_Elements.Storage_Count (A_Size / System.Storage_Unit);
    begin
-      if (A_Size mod Sys.Storage_Unit) /= 0 then
+      if (A_Size mod System.Storage_Unit) /= 0 then
          Size := Size + 1;
       end if;
 
@@ -1046,23 +1067,5 @@ package body TakeCmd.Trace is
          Cl.Write_Formatted_String (Text => A_String, Marker => Marker_Std);
       end if;
    end Write_Info;
-
-   ---------------------------------------------------------------------------
-   --
-   --  Write an IString using writeFormattedString after adding the appropriate padding for
-   --  indentation.
-   --
-   --  When verbose is aktivated then the string is written to Standart_Output as well.
-   --
-   --  A_Unbounded : String to be written
-   --
-   --  procedure Write_Info (A_Unbounded : in S_U.Unbounded_String) is use
-   --  Ada.Strings.Unbounded; begin if Cl.Get_Verbose and then (not Cl.Get_On or else
-   --  Trace_Destination /= Standard_Output) then IO.Put_Line (IO.Standard_Output, To_String
-   --  (A_Unbounded)); end if;
-
-   --  if Cl.Get_On then
-   --  Cl.Write_Formatted_String (Text => To_String (A_Unbounded), Marker => Marker_Std); end
-   --  if; end Write_Info;
 
 end TakeCmd.Trace;
