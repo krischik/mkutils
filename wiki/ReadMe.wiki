@@ -1,0 +1,8 @@
+#labels Featured,Phase-Support
+#read me first
+
+Documentation of this project is done as part of the JP-Soft Wiki. See:
+
+: [http://www.jpsoftwiki.com/wiki/index.php?title=Ada_Demo_%28plugin%29 Ada Demo (plugin)] : About the Ada_Demo plug-in.
+: [http://www.jpsoftwiki.com/wiki/index.php?title=MkUtils_%28plugin%29 MkUtils (plugin)] : About the MK_Demo plug-in.
+: [http://www.jpsoftwiki.com/wiki/index.php?title=Plugin/Ada Plugin/Ada] : How to write plug-ins.
