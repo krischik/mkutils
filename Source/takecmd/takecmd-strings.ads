@@ -102,6 +102,8 @@ package TakeCmd.Strings is
 
    pragma Pure_Function (To_Win);
 
+   function To_Win (Arguments : in String) return TakeCmd.Plugin.Buffer;
+
 private
 
 end TakeCmd.Strings;

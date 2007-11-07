@@ -19,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3
---  of the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3 of
+--  the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -53,8 +53,7 @@ package body Ada_Demo is
    use type Interfaces.C.int;
 
    DLL_Name       : aliased constant Win32.WCHAR_Array := "Ada_Demo" & Win32.Wide_Nul;
-   Author         : aliased constant Win32.WCHAR_Array := "Martin Krischik" &
-                                                          Win32.Wide_Nul;
+   Author         : aliased constant Win32.WCHAR_Array := "Martin Krischik" & Win32.Wide_Nul;
    Author_Email   : aliased constant Win32.WCHAR_Array :=
       "krischik@users.sourceforge.net" & Win32.Wide_Nul;
    Author_WebSite : aliased constant Win32.WCHAR_Array :=
@@ -96,6 +95,8 @@ package body Ada_Demo is
       ",_" &
       TakeCmd.Trace.To &
       ",_" &
+      TakeCmd.Trace.Trace_File &
+      ",_" &
       TakeCmd.Trace.Verbose &
       ",_" &
       TakeCmd.Trace.Write_Line_Number &
@@ -108,8 +109,8 @@ package body Ada_Demo is
 
    ---------------------------------------------------------------------------
    --  You can use Ada tasking facilities inside a plug-in. Just be aware that library level
-   --  task won't work and that most - if not all - command from the TakeCmd library can not
-   --  be used.
+   --  task won't work and that most - if not all - command from the TakeCmd library can not be
+   --  used.
    --
    task body Remark_Task is
    begin
@@ -140,8 +141,7 @@ package body Ada_Demo is
       end Get_Remark;
 
       procedure Set_Remark (New_Remark : in Wide_String) is
-         Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (
-            TakeCmd.Trace.Entity);
+         Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
          pragma Unreferenced (Trace);
       begin
          Ada.Strings.Wide_Fixed.Move
@@ -155,11 +155,11 @@ package body Ada_Demo is
    end Remark_Value;
 
    ---------------------------------------------------------------------------
-   --  This function shows how you can modify the behaviour of a 4NT/TC command. If you use
-   --  the DIR command this function will be called, and a check is made of the current time.
-   --  If the value of the "Minutes" is even then a message will be displayed telling you that
-   --  you can't use DIR at the moment. If the value is odd the "DID_NOT_PROCESS" value is
-   --  returned and 4NT/TC will execute the DIR command as normal.
+   --  This function shows how you can modify the behaviour of a 4NT/TC command. If you use the
+   --  DIR command this function will be called, and a check is made of the current time. If the
+   --  value of the "Minutes" is even then a message will be displayed telling you that you
+   --  can't use DIR at the moment. If the value is odd the "DID_NOT_PROCESS" value is returned
+   --  and 4NT/TC will execute the DIR command as normal.
    --
    function C_Dir (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
       Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
@@ -298,9 +298,9 @@ package body Ada_Demo is
 
    ---------------------------------------------------------------------------
    --  Called by 4NT/TC (after the call to "InitializePlugin") to get information from the
-   --  plugin, primarily for the names of functions, variables & commands. All that is
-   --  necessary is to return a pointer to the PluginInfo structure that was populated when
-   --  the Plugin loaded.
+   --  plugin, primarily for the names of functions, variables & commands. All that is necessary
+   --  is to return a pointer to the PluginInfo structure that was populated when the Plugin
+   --  loaded.
    --
    function Get_Plugin_Info return  TakeCmd.Plugin.LP_Plugin_Info is
       use type TakeCmd.Plugin.LP_Plugin_Info;
@@ -314,8 +314,8 @@ package body Ada_Demo is
             pszWWW         => Win32.Addr (Author_WebSite),
             pszDescription => Win32.Addr (Description),
             pszFunctions   => Win32.Addr (Implements),
-            nMajor         => 1,
-            nMinor         => 0,
+            nMajor         => 2,
+            nMinor         => 1,
             nBuild         => 0,
             hModule        => 0,
             pszModule      => null);
@@ -334,16 +334,19 @@ package body Ada_Demo is
 
    ---------------------------------------------------------------------------
    --  Called by 4NT/TC after loading the plugin. The API requires a return of 0, but as the
-   --  function is declared as a boolean we must, somewhat counter-intuitively, return
-   --  "false".
+   --  function is declared as a boolean we must, somewhat counter-intuitively, return "false".
    --
    function Initialize_Plugin return  Win32.BOOL is
    begin
+      TakeCmd.Trace.Initialize_Plugin;
+
       if My_Remark = null then
          My_Remark := new Remark_Task;
       end if;
+
       TakeCmd.Q_Put_String (Win32.WCHAR_Array'("Ada_Demo: DLL initialized OK!"));
       TakeCmd.CrLf;
+
       return Win32.FALSE;
    exception
       when An_Exception : others =>
@@ -352,10 +355,10 @@ package body Ada_Demo is
    end Initialize_Plugin;
 
    ---------------------------------------------------------------------------
-   --  This function illustrates how to use keystroke monitoring and modification. This
-   --  function is prefixed with a "*" in the "Implements" field of the PLUGININFO record, and
-   --  so 4NT/TC calls it every time a keystroke is entered. This function simply replaces any
-   --  lower case letter "a" with an upper case letter "A".
+   --  This function illustrates how to use keystroke monitoring and modification. This function
+   --  is prefixed with a "*" in the "Implements" field of the PLUGININFO record, and so 4NT/TC
+   --  calls it every time a keystroke is entered. This function simply replaces any lower case
+   --  letter "a" with an upper case letter "A".
    --
    function K_Key (Arguments : access TakeCmd.Plugin.Key_Info) return Interfaces.C.int is
    begin
@@ -371,10 +374,10 @@ package body Ada_Demo is
    end K_Key;
 
    ---------------------------------------------------------------------------
-   --  Called by 4NT/TC when shutting down, if EndProcess = 0, only the plugin is being
-   --  closed; if EndProcess = 1, then 4NT/TC is shutting down. The API requires a return of
-   --  0, but as the function is declared as a boolean we must, somewhat counter-intuitively,
-   --  return "false".
+   --  Called by 4NT/TC when shutting down, if EndProcess = 0, only the plugin is being closed;
+   --  if EndProcess = 1, then 4NT/TC is shutting down. The API requires a return of 0, but as
+   --  the function is declared as a boolean we must, somewhat counter-intuitively, return
+   --  "false".
    function Shutdown_Plugin (End_Process : in Win32.BOOL) return Win32.BOOL is
       procedure Deallocate is new Ada.Unchecked_Deallocation (
          Object => TakeCmd.Plugin.Plugin_Info,
@@ -428,10 +431,7 @@ package body Ada_Demo is
    ---------------------------------------------------------------------------
    --  This is an Internal Variable called from 4NT/TC
    --
-   function V_Task_Remark
-     (Arguments : access TakeCmd.Plugin.Buffer)
-      return      Interfaces.C.int
-   is
+   function V_Task_Remark (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
       Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
       pragma Unreferenced (Trace);
 
