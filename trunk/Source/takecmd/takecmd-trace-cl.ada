@@ -20,8 +20,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -38,6 +38,7 @@ with Ada.Strings.Wide_Maps;
 with TakeCmd.Strings;
 with Ada.Task_Identification;
 with Ada.Strings.Wide_Unbounded;
+with Win32.Winbase;
 
 ---------------------------------------------------------------------------
 --
@@ -148,12 +149,72 @@ protected body Cl is
    --  Initialize_Plugin: Read initial setup from environment
    --
    procedure Initialize_Plugin is
-   --  use type Win32.WCHAR_Array;
-   --  Value : Win32.PCWSTR;
-   --  Dummy : Interfaces.C.int;
+      use type Win32.WCHAR_Array;
+      use type Interfaces.C.unsigned_long;
+
+      Buffer : aliased TakeCmd.Plugin.Buffer := (others => Win32.Wide_Nul);
+      Result : Interfaces.C.unsigned_long;
+      Dummy  : Interfaces.C.int;
+
+      pragma Warnings (Off, Dummy);
+      pragma Warnings (Off, Buffer);
    begin
-      --  := GetEnvironmentVariablePtr (Win32.Addr (Write_Line_Number & Win32.Wide_Nul)); :=
-      --  C_Write_Prefix (Value);
+      Result :=
+         Win32.Winbase.GetEnvironmentVariableW
+           (lpName   => Win32.Addr (X_Write_Line_Number & Win32.Wide_Nul),
+            lpBuffer => Win32.Addr (Buffer),
+            nSize    => Buffer'Length);
+      if Result > 0 then
+         Dummy := C_Write_Line_Number (Win32.Addr (Buffer));
+      end if;
+
+      Result :=
+         Win32.Winbase.GetEnvironmentVariableW
+           (lpName   => Win32.Addr (X_Write_Prefix & Win32.Wide_Nul),
+            lpBuffer => Win32.Addr (Buffer),
+            nSize    => Buffer'Length);
+      if Result > 0 then
+         Dummy := C_Write_Prefix (Win32.Addr (Buffer));
+      end if;
+
+      Result :=
+         Win32.Winbase.GetEnvironmentVariableW
+           (lpName   => Win32.Addr (X_Enable & Win32.Wide_Nul),
+            lpBuffer => Win32.Addr (Buffer),
+            nSize    => Buffer'Length);
+      if Result > 0 then
+         Dummy := C_Enable (Win32.Addr (Buffer));
+      end if;
+
+      Result :=
+         Win32.Winbase.GetEnvironmentVariableW
+           (lpName   => Win32.Addr (X_Verbose & Win32.Wide_Nul),
+            lpBuffer => Win32.Addr (Buffer),
+            nSize    => Buffer'Length);
+      if Result > 0 then
+         Dummy := C_Verbose (Win32.Addr (Buffer));
+      end if;
+
+      Result :=
+         Win32.Winbase.GetEnvironmentVariableW
+           (lpName   => Win32.Addr (X_File & Win32.Wide_Nul),
+            lpBuffer => Win32.Addr (Buffer),
+            nSize    => Buffer'Length);
+      if Result > 0 then
+         Dummy := C_File (Win32.Addr (Buffer));
+      else
+         Filename := Ada.Strings.Unbounded.To_Unbounded_String ("Trace.Out");
+      end if;
+
+      Result :=
+         Win32.Winbase.GetEnvironmentVariableW
+           (lpName   => Win32.Addr (X_To & Win32.Wide_Nul),
+            lpBuffer => Win32.Addr (Buffer),
+            nSize    => Buffer'Length);
+      if Result > 0 then
+         Dummy := C_To (Win32.Addr (Buffer));
+      end if;
+
       return;
    end Initialize_Plugin;
 
@@ -239,6 +300,10 @@ protected body Cl is
       if Ada.Wide_Text_IO.Is_Open (Filehandle) then
          Ada.Wide_Text_IO.Close (Filehandle);
       end if;
+
+      --  Free internal memory of unbounded string.
+      Filename := Ada.Strings.Unbounded.Null_Unbounded_String;
+
       return;
    end Shutdown_Plugin;
 
@@ -312,6 +377,7 @@ protected body Cl is
       case State.Location is
          when Console =>
             Q_Put_String (Text);
+            CrLf;
          when Standard_Error =>
             Put_Line (Standard_Error, Text);
          when Standard_Output =>

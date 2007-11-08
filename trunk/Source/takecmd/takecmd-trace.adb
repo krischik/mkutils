@@ -19,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3
---  of the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3 of
+--  the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -57,6 +57,7 @@ package body TakeCmd.Trace is
    use type System.Storage_Elements.Storage_Offset;
    use type System.Storage_Elements.Storage_Element;
    use type Interfaces.C.int;
+   use type Win32.WCHAR_Array;
 
    ---------------------------------------------------------------------------
    --
@@ -72,7 +73,7 @@ package body TakeCmd.Trace is
    --  Verbose           : Verbose operation.
    --
    type States is record
-      Location          : Destination := Standard_Error;
+      Location          : Destination := Console;
       On                : Boolean     := False;
       Write_Line_Number : Boolean     := True;
       Write_Prefix      : Boolean     := True;
@@ -89,6 +90,10 @@ package body TakeCmd.Trace is
       Indent    : Natural := Natural'First;
    end record;
 
+   ---------------------------------------------------------------------------
+   --
+   --  Liste aller Threads - well, those which have ever called on of the Write functions.
+   --
    package Thread_ID_Map is new Ada.Containers.Indefinite_Hashed_Maps (
       Key_Type => String,
       Element_Type => Thread_ID,
@@ -236,13 +241,12 @@ package body TakeCmd.Trace is
       --
       --  Filename of Trace if Destination ist File
       --
-      Filename : Ada.Strings.Unbounded.Unbounded_String :=
-         Ada.Strings.Unbounded.To_Unbounded_String ("Trace.Out");
+      Filename : Ada.Strings.Unbounded.Unbounded_String;
 
       ------------------------------------------------------------------------
       --
-      --  The original IBM design opened and closed the File all the time. However,
-      --  Ada.Text_IO won't allow that and of course, it is slow.
+      --  The original IBM design opened and closed the File all the time. However, Ada.Text_IO
+      --  won't allow that and of course, it is slow.
       --
       Filehandle : Ada.Wide_Text_IO.File_Type;
 
@@ -283,7 +287,13 @@ package body TakeCmd.Trace is
    --  Check if parameter is on of off
    --
    function Is_On_Off (Arguments : in Win32.PCWSTR) return Boolean;
-   function Is_On_Off (Value : in Boolean) return TakeCmd.Plugin.Buffer;
+   function Is_On_Off (Value : in Boolean) return Plugin.Buffer;
+
+   ------------------------------------------------------------------------
+   --
+   --  Determine the thread number of the current thread
+   --
+   function Get_Thread_Number return Natural;
 
    ---------------------------------------------------------------------------
    --
@@ -369,9 +379,101 @@ package body TakeCmd.Trace is
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end C_Enable;
+
+   ---------------------------------------------------------------------------
+   --
+   --  Set Filename for Trace File
+   --
+   function C_File (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
+      Buffer : constant Wide_String :=
+         Strings.To_Ada
+           (Arguments   => Arguments,
+            Keep_Null   => False,
+            To_Upper    => False,
+            Trim_Spaces => True);
+   begin
+      Cl.Set_Filename (Ada.Characters.Conversions.To_String (Buffer));
+      Cl.Set_Trace_Location (File);
+      return 0;
+   exception
+      when An_Exception : others =>
+         Trace.Write_Error (An_Exception);
+         return -2;
+   end C_File;
+
+   ---------------------------------------------------------------------------
+   --
+   --  Write Help for Commandline Options parsed from Trace
+   --
+   function C_Help (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
+      pragma Unreferenced (Arguments);
+   begin
+      CrLf;
+      CrLf;
+      Q_Put_String (Win32.WCHAR_Array'("Trace Commands:"));
+      CrLf;
+      CrLf;
+      Q_Put_String ("   " & X_Verbose & "         (TRUE|FALSE)   enable verbose operation.");
+      CrLf;
+      Q_Put_String ("   " & X_Enable & "          (TRUE|FALSE)   activate trace.");
+      CrLf;
+      Q_Put_String ("   " & X_Write_Prefix & "     (TRUE|FALSE)   enable trace prefix.");
+      CrLf;
+      Q_Put_String
+        ("   " & X_Write_Line_Number & " (TRUE|FALSE)   enable trace line numbers.");
+      CrLf;
+      Q_Put_String
+        ("   " & X_To & "              (CONSOLE|FILE) set trace to file or console.");
+      CrLf;
+      Q_Put_String ("   " & X_File & "            (Filename)     set trace file name.");
+      CrLf;
+      CrLf;
+      Q_Put_String (Win32.WCHAR_Array'("Trace internal Variables:"));
+      CrLf;
+      CrLf;
+      Q_Put_String ("  _" & X_Verbose & "         (TRUE|FALSE)   verbose operation?");
+      CrLf;
+      Q_Put_String ("  _" & X_Enable & "          (TRUE|FALSE)   trace activated?");
+      CrLf;
+      Q_Put_String ("  _" & X_Write_Prefix & "     (TRUE|FALSE)   trace prefix enabled?");
+      CrLf;
+      Q_Put_String
+        ("  _" & X_Write_Line_Number & " (TRUE|FALSE)   trace line numbers enabled?");
+      CrLf;
+      Q_Put_String ("  _" & X_To & "              (CONSOLE|FILE) trace to file or console?");
+      CrLf;
+      Q_Put_String ("  _" & X_File & "            (Filename)     current trace file name?");
+      CrLf;
+      CrLf;
+      Q_Put_String (Win32.WCHAR_Array'("When the plugin is loaded the following"));
+      CrLf;
+      Q_Put_String (Win32.WCHAR_Array'("environment variables are read for inital setup:"));
+      CrLf;
+      CrLf;
+      Q_Put_String ("  %" & X_Verbose & "         (TRUE|FALSE)   enable verbose operation.");
+      CrLf;
+      Q_Put_String ("  %" & X_Enable & "          (TRUE|FALSE)   activate trace.");
+      CrLf;
+      Q_Put_String ("  %" & X_Write_Prefix & "     (TRUE|FALSE)   enable trace prefix.");
+      CrLf;
+      Q_Put_String
+        ("   " & X_Write_Line_Number & " (TRUE|FALSE)   enable trace line numbers.");
+      CrLf;
+      Q_Put_String
+        ("  %" & X_To & "              (CONSOLE|FILE) set trace to file or console.");
+      CrLf;
+      Q_Put_String ("  %" & X_File & "            (Filename)     set trace file name.");
+      CrLf;
+      CrLf;
+      return 0;
+   exception
+      when An_Exception : others =>
+         Trace.Write_Error (An_Exception);
+         return -2;
+   end C_Help;
 
    ---------------------------------------------------------------------------
    --
@@ -379,7 +481,7 @@ package body TakeCmd.Trace is
    --
    function C_To (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
       Buffer : constant Wide_String :=
-         TakeCmd.Strings.To_Ada
+         Strings.To_Ada
            (Arguments   => Arguments,
             Keep_Null   => False,
             To_Upper    => True,
@@ -402,27 +504,6 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Set Filename for Trace File
-   --
-   function C_Trace_File (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
-      Buffer : constant Wide_String :=
-         TakeCmd.Strings.To_Ada
-           (Arguments   => Arguments,
-            Keep_Null   => False,
-            To_Upper    => False,
-            Trim_Spaces => True);
-   begin
-      Cl.Set_Filename (Ada.Characters.Conversions.To_String (Buffer));
-      Cl.Set_Trace_Location (File);
-      return 0;
-   exception
-      when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
-         return -2;
-   end C_Trace_File;
-
-   ---------------------------------------------------------------------------
-   --
    --  Enable Trace
    --
    function C_Verbose (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
@@ -432,24 +513,25 @@ package body TakeCmd.Trace is
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end C_Verbose;
 
    ---------------------------------------------------------------------------
    --
-   --  Write an Wide_String using writeFormattedString after adding the appropriate padding
-   --  for indentation.
+   --  Write an Wide_String using writeFormattedString after adding the appropriate padding for
+   --  indentation.
    --
    function C_Write (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    begin
       if Cl.Get_On then
          Write (Arguments);
       end if;
+
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end C_Write;
 
@@ -464,7 +546,7 @@ package body TakeCmd.Trace is
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end C_Write_Line_Number;
 
@@ -479,7 +561,7 @@ package body TakeCmd.Trace is
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end C_Write_Prefix;
 
@@ -495,14 +577,16 @@ package body TakeCmd.Trace is
            (Text   => Ada.Characters.Conversions.To_Wide_String (This.Trace_Name),
             Marker => Marker_Outdent);
       end if;
+
+      return;
    end Finalize;
 
    ---------------------------------------------------------------------------
    --
    --  Functrace is not quite as usefull as the C++ version. The reason are the missing
    --  constructors and destructors in Ada. With Controlled types you can't limit to just one
-   --  call to Initialize and one to Finalize There are allways some extra Adjust with
-   --  matching. Finalize.
+   --  call to Initialize and one to Finalize There are allways some extra Adjust with matching.
+   --  Finalize.
    --
    --  Name : Name of the function calls to be traced.
    function Function_Trace (Name : String) return Object is
@@ -523,6 +607,17 @@ package body TakeCmd.Trace is
       return Retval;
    end Function_Trace;
 
+   ------------------------------------------------------------------------
+   --
+   --  Determine the thread number of the current thread
+   --
+   function Get_Thread_Number return Natural is
+      Thread : Thread_ID;
+   begin
+      Cl.Get_Thread_ID (Thread);
+      return Thread.Thread_No;
+   end Get_Thread_Number;
+
    ---------------------------------------------------------------------------
    --
    --  Initialize_Plugin: Read initial setup from environment
@@ -530,6 +625,10 @@ package body TakeCmd.Trace is
    procedure Initialize_Plugin is
    begin
       Cl.Initialize_Plugin;
+
+      TakeCmd.Trace.Write (Wide_String'("Trace: initialized OK!"));
+
+      return;
    end Initialize_Plugin;
 
    ---------------------------------------------------------------------------
@@ -538,7 +637,7 @@ package body TakeCmd.Trace is
    --
    function Is_On_Off (Arguments : in Win32.PCWSTR) return Boolean is
       Buffer : constant Wide_String :=
-         TakeCmd.Strings.To_Ada
+         Strings.To_Ada
            (Arguments   => Arguments,
             Keep_Null   => False,
             To_Upper    => True,
@@ -556,10 +655,10 @@ package body TakeCmd.Trace is
       return Result;
    end Is_On_Off;
 
-   function Is_On_Off (Value : in Boolean) return TakeCmd.Plugin.Buffer is
+   function Is_On_Off (Value : in Boolean) return Plugin.Buffer is
    begin
-      return Arguments : TakeCmd.Plugin.Buffer do
-         Arguments := TakeCmd.Strings.To_Win (Boolean'Wide_Image (Value));
+      return Arguments : Plugin.Buffer do
+         Arguments := Strings.To_Win (Boolean'Wide_Image (Value));
       end return;
    end Is_On_Off;
 
@@ -568,8 +667,8 @@ package body TakeCmd.Trace is
    --  Trace the given exeption details and then raise the exception.
    --
    --  Raising : Exeption which is raised Message : Free form Message Entity : Location
-   --  destriptor. Suggested content: AdaCL.Trace.Entity Source : Location destriptor.
-   --  Suggested content: AdaCL.Trace.Source
+   --  destriptor. Suggested content: AdaCL.Trace.Entity Source : Location destriptor. Suggested
+   --  content: AdaCL.Trace.Source
    --
    procedure Raise_Exception
      (Raising : in Ada.Exceptions.Exception_Id;
@@ -601,63 +700,65 @@ package body TakeCmd.Trace is
    procedure Shutdown_Plugin is
    begin
       Cl.Shutdown_Plugin;
+
+      return;
    end Shutdown_Plugin;
 
    ---------------------------------------------------------------------------
    --
    --  check is trace is Enabled
    --
-   function V_Enable (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
+   function V_Enable (Arguments : access Plugin.Buffer) return Interfaces.C.int is
    begin
       Arguments.all := Is_On_Off (Cl.Get_On);
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end V_Enable;
 
    ---------------------------------------------------------------------------
    --
+   --  Get Filename for Trace File
+   --
+   function V_File (Arguments : access Plugin.Buffer) return Interfaces.C.int is
+   begin
+      Arguments.all := Strings.To_Win (Cl.Get_Filename);
+      return 0;
+   exception
+      when An_Exception : others =>
+         Trace.Write_Error (An_Exception);
+         return -2;
+   end V_File;
+
+   ---------------------------------------------------------------------------
+   --
    --  Check the Trace Destination
    --
-   function V_To (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
+   function V_To (Arguments : access Plugin.Buffer) return Interfaces.C.int is
    begin
-      Arguments.all :=
-         TakeCmd.Strings.To_Win (Destination'Wide_Image (Cl.Get_Trace_Location));
+      Arguments.all := Strings.To_Win (Destination'Wide_Image (Cl.Get_Trace_Location));
 
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end V_To;
 
    ---------------------------------------------------------------------------
    --
-   --  Get Filename for Trace File
-   --
-   function V_Trace_File (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
-   begin
-      Arguments.all := TakeCmd.Strings.To_Win (Cl.Get_Filename);
-      return 0;
-   exception
-      when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
-         return -2;
-   end V_Trace_File;
-
-   ---------------------------------------------------------------------------
-   --
    --  check is trace is Enabled
    --
-   function V_Verbose (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int is
+   function V_Verbose (Arguments : access Plugin.Buffer) return Interfaces.C.int is
    begin
       Arguments.all := Is_On_Off (Cl.Get_Verbose);
+
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end V_Verbose;
 
@@ -665,16 +766,14 @@ package body TakeCmd.Trace is
    --
    --  check if Line numbers are written
    --
-   function V_Write_Line_Number
-     (Arguments : access TakeCmd.Plugin.Buffer)
-      return      Interfaces.C.int
-   is
+   function V_Write_Line_Number (Arguments : access Plugin.Buffer) return Interfaces.C.int is
    begin
       Arguments.all := Is_On_Off (Cl.Get_Write_Line_Number);
+
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end V_Write_Line_Number;
 
@@ -682,16 +781,14 @@ package body TakeCmd.Trace is
    --
    --  Check the Write prefix flag
    --
-   function V_Write_Prefix
-     (Arguments : access TakeCmd.Plugin.Buffer)
-      return      Interfaces.C.int
-   is
+   function V_Write_Prefix (Arguments : access Plugin.Buffer) return Interfaces.C.int is
    begin
       Arguments.all := Is_On_Off (Cl.Get_Write_Prefix);
+
       return 0;
    exception
       when An_Exception : others =>
-         TakeCmd.Trace.Write_Error (An_Exception);
+         Trace.Write_Error (An_Exception);
          return -2;
    end V_Write_Prefix;
 
@@ -720,24 +817,28 @@ package body TakeCmd.Trace is
    begin
       if Cl.Get_On then
          Write
-           (TakeCmd.Strings.To_Ada
+           (Strings.To_Ada
                (Arguments   => A_String,
                 Keep_Null   => False,
                 To_Upper    => False,
                 Trim_Spaces => False));
       end if;
+
+      return;
    end Write;
 
-   procedure Write (A_String : in TakeCmd.Plugin.Buffer) is
+   procedure Write (A_String : in Plugin.Buffer) is
    begin
       if Cl.Get_On then
          Write
-           (TakeCmd.Strings.To_Ada
+           (Strings.To_Ada
                (Arguments   => A_String,
                 Keep_Null   => False,
                 To_Upper    => False,
                 Trim_Spaces => False));
       end if;
+
+      return;
    end Write;
 
    ---------------------------------------------------------------------------
@@ -757,11 +858,11 @@ package body TakeCmd.Trace is
                Item => System.Storage_Elements.To_Integer (An_Address),
                Base => 16);
 
-            Cl.Write_Formatted_String
-              (Text   => A_String & Address_Text,
-               Marker => Marker_Std);
+            Cl.Write_Formatted_String (Text => A_String & Address_Text, Marker => Marker_Std);
          end Write_Address;
       end if;
+
+      return;
    end Write;
 
    ---------------------------------------------------------------------------
@@ -783,6 +884,8 @@ package body TakeCmd.Trace is
          --  Text   => G_TB.Symbolic_Traceback (An_Exception),
          --  Marker => Marker_Special);
       end if;
+
+      return;
    end Write;
 
    ---------------------------------------------------------------------------
@@ -813,57 +916,9 @@ package body TakeCmd.Trace is
            (Text   => "Source: " & Ada.Characters.Conversions.To_Wide_String (A_Source),
             Marker => Marker_Special);
       end if;
-   end Write;
 
-   ---------------------------------------------------------------------------
-   --
-   --  Write Help for Commandline Options parsed from Trace
-   --
-   procedure Write_Commandline_Help is
-   begin
-      --  IO.New_Line;
-      --  IO.Put_Line ("Trace options:");
-      --  IO.New_Line;
-      --  IO.Put_Line
-      --  ("    --" & Trace_Verbose & "            verbose operation.");
-
-      --  IO.Put_Line
-      --  ("    --" &
-      --  Trace_Opt &
-      --  "=" &
-      --  Trace_Opt_On &
-      --  "           activate trace.");
-      --  IO.Put_Line
-      --  ("    --" &
-      --  Trace_Opt &
-      --  "=" &
-      --  Trace_Opt_NoPrefix &
-      --  "     activate trace without prefix.");
-      --  IO.New_Line;
-      --  IO.Put_Line
-      --  ("    --" &
-      --  Trace_Opt_To &
-      --  "=" &
-      --  Trace_Opt_To_Err1 &
-      --  "     trace in stderr.");
-      --  IO.Put_Line
-      --  ("    --" &
-      --  Trace_Opt_To &
-      --  "=" &
-      --  Trace_Opt_To_Std1 &
-      --  "     trace in stdout.");
-      --  IO.Put_Line
-      --  ("    --" &
-      --  Trace_Opt_To &
-      --  "=" &
-      --  Trace_Opt_To_File &
-      --  "       trace to file.");
-      --  IO.New_Line;
-      --  IO.Put_Line
-      --  ("    --" & Trace_Opt_File & "=" & "Filename" & " trace file.");
-      --  IO.New_Line;
       return;
-   end Write_Commandline_Help;
+   end Write;
 
    ---------------------------------------------------------------------------
    --
@@ -946,6 +1001,8 @@ package body TakeCmd.Trace is
             end loop Dump_Line;
          end Dump;
       end if;
+
+      return;
    end Write_Dump;
 
    ---------------------------------------------------------------------------
@@ -964,6 +1021,8 @@ package body TakeCmd.Trace is
       end if;
 
       Write_Dump (An_Address, Size);
+
+      return;
    end Write_Dump;
 
    ---------------------------------------------------------------------------
@@ -975,13 +1034,15 @@ package body TakeCmd.Trace is
    --
    procedure Write_Error (A_String : in Wide_String) is
    begin
-      if not Cl.Get_On or else Cl.Get_Trace_Location /= Standard_Error then
-         Ada.Wide_Text_IO.Put_Line (Ada.Wide_Text_IO.Standard_Error, A_String);
-      end if;
-
       if Cl.Get_On then
          Cl.Write_Formatted_String (Text => A_String, Marker => Marker_Std);
       end if;
+
+      if not Cl.Get_On or else Cl.Get_Trace_Location /= Console then
+         Q_Put_String (A_String);
+      end if;
+
+      return;
    end Write_Error;
 
    ---------------------------------------------------------------------------
@@ -993,12 +1054,16 @@ package body TakeCmd.Trace is
    procedure Write_Error (An_Exception : in Ada.Exceptions.Exception_Occurrence) is
       use Ada.Exceptions;
    begin
-      if not Cl.Get_On or else Cl.Get_Trace_Location /= Console then
-         TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
-         TakeCmd.CrLf;
+      Write (An_Exception);
+
+      if (not Cl.Get_On or else Cl.Get_Trace_Location /= Console)
+        and then Get_Thread_Number = 0
+      then
+         Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
+         CrLf;
       end if;
 
-      Write (An_Exception);
+      return;
    end Write_Error;
 
    ---------------------------------------------------------------------------
@@ -1016,23 +1081,21 @@ package body TakeCmd.Trace is
    is
       use Ada.Exceptions;
    begin
-      if not Cl.Get_On or else Cl.Get_Trace_Location /= Standard_Error then
-         Ada.Wide_Text_IO.New_Line (Ada.Wide_Text_IO.Standard_Error);
-         Ada.Wide_Text_IO.Put
-           (Ada.Wide_Text_IO.Standard_Error,
-            Ada.Characters.Conversions.To_Wide_String (Exception_Information (An_Exception)));
-         Ada.Wide_Text_IO.Put_Line
-           (Ada.Wide_Text_IO.Standard_Error,
-            "Function: " & Ada.Characters.Conversions.To_Wide_String (Entity));
-         Ada.Wide_Text_IO.Put_Line
-           (Ada.Wide_Text_IO.Standard_Error,
-            "Source: " & Ada.Characters.Conversions.To_Wide_String (Source));
-         --              Ada.Wide_Text_IO.Put_Line (Ada.Wide_Text_IO.Standard_Error,
-         --  G_TB.Symbolic_Traceback (An_Exception));
-      end if;
-
       Write (An_Exception => An_Exception, An_Entity => An_Entity, A_Source => A_Source);
 
+      if (not Cl.Get_On or else Cl.Get_Trace_Location /= Console)
+        and then Get_Thread_Number = 0
+      then
+         CrLf;
+         Q_Put_String
+           (Ada.Characters.Conversions.To_Wide_String (Exception_Information (An_Exception)));
+         CrLf;
+         Q_Put_String ("Function: " & Ada.Characters.Conversions.To_Wide_String (Entity));
+         CrLf;
+         Q_Put_String ("Source: " & Ada.Characters.Conversions.To_Wide_String (Source));
+      end if;
+
+      return;
    end Write_Error;
 
    ---------------------------------------------------------------------------
@@ -1041,9 +1104,11 @@ package body TakeCmd.Trace is
    --
    procedure Write_Info is
    begin
-      if Cl.Get_Verbose then
-         Ada.Wide_Text_IO.New_Line (Ada.Wide_Text_IO.Standard_Output);
+      if Cl.Get_Verbose and then Get_Thread_Number = 0 then
+         CrLf;
       end if;
+
+      return;
    end Write_Info;
 
    ---------------------------------------------------------------------------
@@ -1057,15 +1122,19 @@ package body TakeCmd.Trace is
    --
    procedure Write_Info (A_String : in Wide_String) is
    begin
-      if Cl.Get_Verbose
-        and then (not Cl.Get_On or else Cl.Get_Trace_Location /= Standard_Output)
-      then
-         Ada.Wide_Text_IO.Put_Line (Ada.Wide_Text_IO.Standard_Output, A_String);
-      end if;
-
       if Cl.Get_On then
          Cl.Write_Formatted_String (Text => A_String, Marker => Marker_Std);
       end if;
+
+      if Cl.Get_Verbose
+        and then (not Cl.Get_On or else Cl.Get_Trace_Location /= Console)
+        and then Get_Thread_Number = 0
+      then
+         Q_Put_String (A_String);
+         CrLf;
+      end if;
+
+      return;
    end Write_Info;
 
 end TakeCmd.Trace;
