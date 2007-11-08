@@ -237,6 +237,11 @@ package Ada_Demo is
    --
    function Initialize_Plugin return  Win32.BOOL;
 
+   pragma Export
+     (Convention => Stdcall,
+      Entity => Initialize_Plugin,
+      External_Name => "InitializePlugin");
+
    ---------------------------------------------------------------------------
    --  Called by 4NT/TC when shutting down, if EndProcess = 0, only the plugin is being closed;
    --  if EndProcess = 1, then 4NT/TC is shutting down. The API requires a return of 0, but as
@@ -244,6 +249,11 @@ package Ada_Demo is
    --  "false".
    --
    function Shutdown_Plugin (End_Process : in Win32.BOOL) return Win32.BOOL;
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => Shutdown_Plugin,
+      External_Name => "ShutdownPlugin");
 
    ---------------------------------------------------------------------------
    --  Called by 4NT/TC (after the call to "InitializePlugin") to get information from the
@@ -253,27 +263,48 @@ package Ada_Demo is
    --
    function Get_Plugin_Info return  TakeCmd.Plugin.LP_Plugin_Info;
 
+   pragma Export
+     (Convention => Stdcall,
+      Entity => Get_Plugin_Info,
+      External_Name => "GetPluginInfo");
+
    ---------------------------------------------------------------------------
    --  This is a Variable Function called from 4NT/TC
    --
    function F_Reverse (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int;
+
+   pragma Export (Convention => Stdcall, Entity => F_Reverse, External_Name => "f_REVERSE");
 
    ---------------------------------------------------------------------------
    --  This is an Internal Variable called from 4NT/TC
    --
    function V_Hello (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int;
 
+   pragma Export (Convention => Stdcall, Entity => V_Hello, External_Name => "_HELLO");
+
    ---------------------------------------------------------------------------
    --  This is an Internal Command called from 4NT/TC
    --
    function C_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
+
+   pragma Export (Convention => Stdcall, Entity => C_Remark, External_Name => "REMARK");
 
    ---------------------------------------------------------------------------
    --  This is an Internal Command called from 4NT/TC
    --
    function C_Task_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
 
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Task_Remark,
+      External_Name => "TASKREMARK");
+
    function V_Task_Remark (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int;
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => V_Task_Remark,
+      External_Name => "_TASKREMARK");
 
    ---------------------------------------------------------------------------
    --  This function shows how you can modify the behaviour of a 4NT/TC command. If you use the
@@ -284,6 +315,8 @@ package Ada_Demo is
 
    function C_Dir (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
 
+   pragma Export (Convention => Stdcall, Entity => C_Dir, External_Name => "DIR");
+
    ---------------------------------------------------------------------------
    --  This function illustrates how to use keystroke monitoring and modification. This function
    --  is prefixed with a "*" in the "Implements" field of the PLUGININFO record, and so 4NT/TC
@@ -291,6 +324,8 @@ package Ada_Demo is
    --  letter "a" with an upper case letter "A".
    --
    function K_Key (Arguments : access TakeCmd.Plugin.Key_Info) return Interfaces.C.int;
+
+   pragma Export (Convention => Stdcall, Entity => K_Key, External_Name => "KEY");
 
    ---------------------------------------------------------------------------
    --  This function illustrates how to call TakeCmd.dll functions which require a buffer in
@@ -303,39 +338,9 @@ package Ada_Demo is
    --
    function C_Use_Buffer (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
 
-private
-
-   ------------------------------------------------------------------------
-   --  Every function that you wish to make visible to 4NT/TC must be declared in the following
-   --  exports clause. The first three declarations are essential - add you own functions after
-   --  them. The case of the function names in the exports clause is not significant.
-   --
-   pragma Export
-     (Convention => Stdcall,
-      Entity => Initialize_Plugin,
-      External_Name => "InitializePlugin");
-   pragma Export
-     (Convention => Stdcall,
-      Entity => Shutdown_Plugin,
-      External_Name => "ShutdownPlugin");
-   pragma Export
-     (Convention => Stdcall,
-      Entity => Get_Plugin_Info,
-      External_Name => "GetPluginInfo");
-   pragma Export (Convention => Stdcall, Entity => F_Reverse, External_Name => "f_REVERSE");
-   pragma Export (Convention => Stdcall, Entity => V_Hello, External_Name => "_HELLO");
-   pragma Export (Convention => Stdcall, Entity => C_Remark, External_Name => "REMARK");
-   pragma Export
-     (Convention => Stdcall,
-      Entity => C_Task_Remark,
-      External_Name => "TASKREMARK");
-   pragma Export
-     (Convention => Stdcall,
-      Entity => V_Task_Remark,
-      External_Name => "_TASKREMARK");
-   pragma Export (Convention => Stdcall, Entity => C_Dir, External_Name => "DIR");
    pragma Export (Convention => Stdcall, Entity => C_Use_Buffer, External_Name => "USEBUFFER");
-   pragma Export (Convention => Stdcall, Entity => K_Key, External_Name => "KEY");
+
+private
 
 end Ada_Demo;
 

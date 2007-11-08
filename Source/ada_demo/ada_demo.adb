@@ -45,7 +45,6 @@ with TakeCmd.Strings;
 
 with Win32.Winbase;
 
-pragma Elaborate_All (TakeCmd);
 pragma Elaborate_All (TakeCmd.Trace);
 
 package body Ada_Demo is
@@ -69,17 +68,19 @@ package body Ada_Demo is
       "," &
       "USEBUFFER" &
       "," &
-      TakeCmd.Trace.Enable &
+      TakeCmd.Trace.X_Enable &
       "," &
-      TakeCmd.Trace.To &
+      TakeCmd.Trace.X_Help &
       "," &
-      TakeCmd.Trace.Trace_File &
+      TakeCmd.Trace.X_To &
       "," &
-      TakeCmd.Trace.Verbose &
+      TakeCmd.Trace.X_File &
       "," &
-      TakeCmd.Trace.Write_Line_Number &
+      TakeCmd.Trace.X_Verbose &
       "," &
-      TakeCmd.Trace.Write_Prefix &
+      TakeCmd.Trace.X_Write_Line_Number &
+      "," &
+      TakeCmd.Trace.X_Write_Prefix &
       "," &
       TakeCmd.Trace.X_Write &
       ",*" &
@@ -91,17 +92,17 @@ package body Ada_Demo is
       ",_" &
       "TASKREMARK" &
       ",_" &
-      TakeCmd.Trace.Enable &
+      TakeCmd.Trace.X_Enable &
       ",_" &
-      TakeCmd.Trace.To &
+      TakeCmd.Trace.X_To &
       ",_" &
-      TakeCmd.Trace.Trace_File &
+      TakeCmd.Trace.X_File &
       ",_" &
-      TakeCmd.Trace.Verbose &
+      TakeCmd.Trace.X_Verbose &
       ",_" &
-      TakeCmd.Trace.Write_Line_Number &
+      TakeCmd.Trace.X_Write_Line_Number &
       ",_" &
-      TakeCmd.Trace.Write_Prefix &
+      TakeCmd.Trace.X_Write_Prefix &
       Win32.Wide_Nul;
 
    Plugin_Info : TakeCmd.Plugin.LP_Plugin_Info := null;
@@ -130,8 +131,6 @@ package body Ada_Demo is
    exception
       when An_Exception : others =>
          TakeCmd.Trace.Write_Error (An_Exception);
-         Remark_Value.Set_Remark (Ada.Exceptions.Wide_Exception_Name (An_Exception));
-         TakeCmd.CrLf;
    end Remark_Task;
 
    protected body Remark_Value is
@@ -169,9 +168,9 @@ package body Ada_Demo is
          Ada.Calendar.Formatting.Minute (Ada.Calendar.Clock);
       Result : Interfaces.C.int                               :=
          TakeCmd.Plugin.Did_Not_Process;
-
    begin
       TakeCmd.Trace.Write (Arguments);
+
       if Minute mod 2 = 0 then
          TakeCmd.Q_Put_String
            (Win32.WCHAR_Array'("Sorry, the Minutes are even, " &
@@ -179,6 +178,7 @@ package body Ada_Demo is
          TakeCmd.CrLf;
          Result := 0;
       end if;
+
       return Result;
    exception
       when An_Exception : others =>
@@ -193,7 +193,6 @@ package body Ada_Demo is
    function C_Remark (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
       Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
       pragma Unreferenced (Trace);
-
    begin
       TakeCmd.Trace.Write (Arguments);
 
@@ -289,6 +288,7 @@ package body Ada_Demo is
 
          Result := 0;
       end if;
+
       return Result;
    exception
       when An_Exception : others =>
@@ -319,11 +319,9 @@ package body Ada_Demo is
             nBuild         => 0,
             hModule        => 0,
             pszModule      => null);
-         TakeCmd.Q_Put_String (Win32.WCHAR_Array'("Ada_Demo: Plugin Info created!"));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Info ("Ada_Demo: Plugin Info created!");
       else
-         TakeCmd.Q_Put_String (Win32.WCHAR_Array'("Ada_Demo: Plugin Info recycled!"));
-         TakeCmd.CrLf;
+         TakeCmd.Trace.Write_Info ("Ada_Demo: Plugin Info recycled!");
       end if;
       return Plugin_Info;
    exception
@@ -344,8 +342,7 @@ package body Ada_Demo is
          My_Remark := new Remark_Task;
       end if;
 
-      TakeCmd.Q_Put_String (Win32.WCHAR_Array'("Ada_Demo: DLL initialized OK!"));
-      TakeCmd.CrLf;
+      TakeCmd.Trace.Write_Info (Wide_String'("Ada_Demo: DLL initialized OK!"));
 
       return Win32.FALSE;
    exception
@@ -379,6 +376,8 @@ package body Ada_Demo is
    --  the function is declared as a boolean we must, somewhat counter-intuitively, return
    --  "false".
    function Shutdown_Plugin (End_Process : in Win32.BOOL) return Win32.BOOL is
+      use type TakeCmd.Plugin.LP_Plugin_Info;
+
       procedure Deallocate is new Ada.Unchecked_Deallocation (
          Object => TakeCmd.Plugin.Plugin_Info,
          Name => TakeCmd.Plugin.LP_Plugin_Info);
@@ -387,18 +386,11 @@ package body Ada_Demo is
          Name => Remark_Access);
 
       pragma Unreferenced (End_Process);
-      use type TakeCmd.Plugin.LP_Plugin_Info;
    begin
-      if My_Remark /= null then
-         Deallocate (My_Remark);
-      end if;
+      Deallocate (My_Remark);
+      Deallocate (Plugin_Info);
 
-      if Plugin_Info /= null then
-         Deallocate (Plugin_Info);
-      end if;
-
-      TakeCmd.Q_Put_String (Win32.WCHAR_Array'("Ada_Demo: DLL shut down OK!"));
-      TakeCmd.CrLf;
+      TakeCmd.Trace.Write_Info (Wide_String'("Ada_Demo: DLL shut down OK!"));
 
       TakeCmd.Trace.Shutdown_Plugin;
 
@@ -463,6 +455,7 @@ begin
 exception
    when An_Exception : others =>
       TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
+      TakeCmd.CrLf;
 end Ada_Demo;
 
 ------------------------------------------------------------- {{{1 ----------

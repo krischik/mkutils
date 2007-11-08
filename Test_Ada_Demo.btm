@@ -41,18 +41,16 @@ SETLOCAL
 ENDLOCAL
 
 SET TRACEWRITELINENUMBER=TRUE
+SET     TRACEWRITEPREFIX=TRUE
+SET          TRACEENABLE=TRUE
+SET         TRACEVERBOSE=TRUE
+SET            TRACEFILE=Test_Ada_Demo.trace
 
 SETLOCAL
     PLUGIN /L pentium4-Release\lib\ada_demo\ada_demo.dll
     PLUGIN /P
 
-    TraceFile            Test_Ada_Demo.trace
-    TraceWriteLineNumber ON
-    TraceWritePrefix     TRUE
-    TraceEnable          ON
-    TraceEnable          XXX
-    TraceVerbose         ON
-
+    TraceHelp
     TraceWrite  Test Trace.
 
     ECHO Trace Write LineNumber is %_TraceWriteLineNumber
