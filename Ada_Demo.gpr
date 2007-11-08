@@ -1,3 +1,4 @@
+
 ------------------------------------------------------------- {{{1 ----------
 --  Description: Demo of an 4NT/TakeCommand Plugin written in Ada
 --          $Id: ada_options.vim 774 2007-09-17 09:11:59Z krischik $
@@ -43,7 +44,7 @@ project Ada_Demo is
    type Target_Type is ("i686"   , "pentium4", "x86_64");
 
    Base := ".";
-   Version := "2.1.0";
+   Version := "2.2.0";
 
    Style  : Style_Type  := external ("style" , "Release");
    Target : Target_Type := external ("target", "pentium4");

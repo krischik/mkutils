@@ -315,7 +315,7 @@ package body Ada_Demo is
             pszDescription => Win32.Addr (Description),
             pszFunctions   => Win32.Addr (Implements),
             nMajor         => 2,
-            nMinor         => 1,
+            nMinor         => 2,
             nBuild         => 0,
             hModule        => 0,
             pszModule      => null);
