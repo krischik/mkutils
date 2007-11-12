@@ -434,7 +434,7 @@ EXPORTS
 	WhichCell
 	WhichVolume
 	Which_Cmd
-	WildcardComparison
+	WildcardComparison@16
 	?WinKeyHandler@@YAJIIJ@Z
 	WindowToClipboard
 	Window_Cmd

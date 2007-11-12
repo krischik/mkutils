@@ -186,7 +186,7 @@ package body TakeCmd.Strings is
    end To_Ada;
 
    function To_Ada
-     (Arguments   : in TakeCmd.Plugin.Buffer;
+     (Arguments   : in Win32.WCHAR_Array;
       Keep_Null   : in Boolean := False;
       To_Upper    : in Boolean := False;
       Trim_Spaces : in Boolean := False)
@@ -288,6 +288,22 @@ package body TakeCmd.Strings is
       return Result : aliased TakeCmd.Plugin.Buffer do
          Result := To_Win (Ada.Characters.Conversions.To_Wide_String (Arguments));
       end return;
+   end To_Win;
+
+   function To_Win
+     (Arguments   : in Win32.PCWSTR;
+      To_Upper    : in Boolean := False;
+      Trim_Spaces : in Boolean := False)
+      return        TakeCmd.Plugin.Buffer
+   is
+      Ada_String : constant Wide_String :=
+         To_Ada
+           (Arguments   => Arguments,
+            Keep_Null   => True,
+            To_Upper    => To_Upper,
+            Trim_Spaces => Trim_Spaces);
+   begin
+      return To_Win (Ada_String);
    end To_Win;
 
 end TakeCmd.Strings;

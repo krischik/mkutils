@@ -32,7 +32,9 @@
 -- This file is not to be edited thrue the project poroperties in GPS.
 --
 
-with "TakeCmd-ada.gpr";
+with "win32ada.gpr";
+with "ADVAPI32.gpr";
+with "TakeCmd.gpr";
 
 project MK_Utils is
    type Style_Type  is ("Debug"  , "Release");
@@ -42,14 +44,22 @@ project MK_Utils is
    Version      := "1.0.0";
    Source_Files := (
       "mk_utils.adb",
-      "mk_utils.ads");
+      "mk_utils.ads",
+      "takecmd-plugin.ads",
+      "takecmd-trace.ada",
+      "takecmd-trace.adb",
+      "takecmd-trace.ads",
+      "takecmd.adb",
+      "takecmd.ads",
+      "win32-advapi.ads");
 
    Style  : Style_Type  := external ("style" , "Release");
    Target : Target_Type := external ("target", "pentium4");
 
    for Exec_Dir            use  Base & "/" & Target & "-" & Style;
    for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj/mk_utils";
-   for Source_Dirs         use (Base & "/Source/mk_utils");
+   for Source_Dirs         use (Base & "/Source/mk_utils",
+                                Base & "/Source/takecmd");
    for Languages           use ("Ada");
    for Library_Name        use "mk_utils";
    for Library_Src_Dir     use  Base & "/" & Target & "-" & Style & "/lib/mk_utils";
@@ -58,10 +68,13 @@ project MK_Utils is
    for Library_Version     use "libmk_utils.so." & Version;
    for Library_Auto_Init   use "true";
    for Library_Interface   use (
-      "mk_utils");
+      "mk_utils",
+      "takecmd",
+      "takecmd.plugin",
+      "takecmd.strings",
+      "takecmd.trace");
    for Library_Options     use (
          "-Wl,--kill-at");        -- Remove @nn from exported symbols
-
 
    package Finder is
       for Switches ("ada") use ("-a");
@@ -181,7 +194,7 @@ project MK_Utils is
          "-c4",      -- reformat comment blocks
          "-cl3",     -- indentation level for continuation lines, nnn from 1 .. 9
          "-dd",      -- progress indicator verbose mode
-         "-M94",     -- set maximum line length,
+         "-M96",     -- set maximum line length,
          "-pM",      -- set pragma casing mixed case
          "-rf",      -- replace the argument source with the pretty-printed source
          "-v",       -- verbose mode

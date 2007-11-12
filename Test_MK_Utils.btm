@@ -32,10 +32,27 @@
 @ECHO OFF
 
 SETLOCAL
+    SET             HOME=%[HOMEDRIVE]%[HOMEPATH]
+    SET     Project_Home=%@PATH[%_batchname]
+
+    PUSHD %[Project_Home]
+        gnat make -P MK_Utils -XStyle=Release -XTarget=pentium4
+    POPD
+ENDLOCAL
+
+SET TRACEWRITELINENUMBER=TRUE
+SET     TRACEWRITEPREFIX=TRUE
+SET          TRACEENABLE=TRUE
+SET         TRACEVERBOSE=TRUE
+SET            TRACEFILE=Test_MK_Utils.trace
+
+SETLOCAL
     PLUGIN /L pentium4-Release\lib\mk_utils\mk_utils.dll
     PLUGIN /P
 
-::    SHOWOWNER Test_MK_Utils.btm
+    MKHELP
+    MKSHOWOWNER     *.btm
+    MKCHANGEOWNER   Test_MK_Utils.btm %[USERNAME]
 
     PLUGIN /U MK_Utils
 ENDLOCAL

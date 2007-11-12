@@ -43,8 +43,18 @@ project Ada_Demo is
    type Style_Type  is ("Debug"  , "Release");
    type Target_Type is ("i686"   , "pentium4", "x86_64");
 
-   Base := ".";
-   Version := "2.2.0";
+   Base         := ".";
+   Version      := "2.2.0";
+   Source_Files := (
+      "ada_demo.adb",
+      "ada_demo.ads",
+      "takecmd-plugin.ads",
+      "takecmd-trace.ada",
+      "takecmd-trace.adb",
+      "takecmd-trace.ads",
+      "takecmd.adb",
+      "takecmd.ads",
+      "win32-advapi.ads");
 
    Style  : Style_Type  := external ("style" , "Release");
    Target : Target_Type := external ("target", "pentium4");
@@ -193,17 +203,6 @@ project Ada_Demo is
          "-W8",      -- sets the wide character encoding of the result file UTF-8 encoding
          "--eol=lf");
    end Pretty_Printer;
-
-   Source_Files := (
-      "ada_demo.adb",
-      "ada_demo.ads",
-      "takecmd-plugin.ads",
-      "takecmd-trace.ada",
-      "takecmd-trace.adb",
-      "takecmd-trace.ads",
-      "takecmd.adb",
-      "takecmd.ads",
-      "win32-advapi.ads");
 
 end Ada_Demo;
 

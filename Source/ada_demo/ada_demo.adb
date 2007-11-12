@@ -39,9 +39,9 @@ with Ada.Exceptions;
 with Ada.Strings.Wide_Fixed;
 with Ada.Unchecked_Deallocation;
 
-with TakeCmd;
-with TakeCmd.Trace;
 with TakeCmd.Strings;
+with TakeCmd.Trace;
+with TakeCmd;
 
 with Win32.Winbase;
 
@@ -391,7 +391,6 @@ package body Ada_Demo is
       Deallocate (Plugin_Info);
 
       TakeCmd.Trace.Write_Info (Wide_String'("Ada_Demo: DLL shut down OK!"));
-
       TakeCmd.Trace.Shutdown_Plugin;
 
       return Win32.FALSE;
