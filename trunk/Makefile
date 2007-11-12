@@ -32,11 +32,10 @@
 .PHONY: pretty
 .PHONY: all
 
-Project_Files	:= ADVAPI32.gpr				\
-		   TakeCmd.gpr
+Project_Files	:= ADVAPI32.gpr				
 Source_Files	:= $(wildcard Source/takecmd/*.ad?)
-Library_Files	:= SDK/libTakeCmd.a			\
-		   SDK/libADVAPI32.a
+Library_Files	:= SDK/libADVAPI32.a			\
+    		   SDK/libTakeCmd.a
 
 all:							\
 	pentium4-Release/lib/ada_demo/ada_demo.dll	\
@@ -47,12 +46,10 @@ all:							\
 pretty:
 	gnat pretty -P Ada_Demo.gpr
 	gnat pretty -P MK_Utils.gpr
-	gnat pretty -P TakeCmd-ada.gpr
 
 clean:
 	gnat clean -P Ada_Demo.gpr
 	gnat clean -P MK_Utils.gpr
-	gnat clean -P TakeCmd-ada.gpr
 
 #SDK/TakeCmd.def: ${JPPATH}/TakeCmd.dll
 	#dll2def ${JPPATH}/TakeCmd.dll >SDK/TakeCmd.def
@@ -66,7 +63,6 @@ SDK/libADVAPI32.a: SDK/ADVAPI32.def
 pentium4-Release/lib/ada_demo/ada_demo.dll:		\
 	Ada_Demo.gpr					\
 	Source/ada_demo/*.ad?				\
-	pentium4-Release/lib/takecm/libtakecmd_ada.a	\
 	${Project_Files}				\
 	${Source_Files}					\
 	${Library_Files}
@@ -75,7 +71,6 @@ pentium4-Release/lib/ada_demo/ada_demo.dll:		\
 pentium4-Debug/lib/ada_demo/ada_demo.dll:		\
 	Ada_Demo.gpr					\
 	Source/ada_demo/*.ad?				\
-	pentium4-Debug/lib/takecmd/libtakecmd_ada.a	\
 	${Project_Files}				\
 	${Source_Files}					\
 	${Library_Files}
@@ -84,7 +79,6 @@ pentium4-Debug/lib/ada_demo/ada_demo.dll:		\
 pentium4-Release/lib/mk_utils/mk_utils.dll:		\
 	mk_utils.gpr					\
 	Source/mk_utils/*.ad?				\
-	pentium4-Release/lib/takecm/libtakecmd_ada.a	\
 	${Project_Files}				\
 	${Source_Files}					\
 	${Library_Files}
@@ -93,24 +87,9 @@ pentium4-Release/lib/mk_utils/mk_utils.dll:		\
 pentium4-Debug/lib/mk_utils/mk_utils.dll:		\
 	mk_utils.gpr					\
 	Source/mk_utils/*.ad?				\
-	pentium4-Debug/lib/takecmd/libtakecmd_ada.a	\
 	${Project_Files}				\
 	${Source_Files}					\
 	${Library_Files}
-	gnat make -P ${<} -XStyle=Debug -XTarget=pentium4
-
-pentium4-Release/lib/takecm/libtakecmd_ada.a:		\
-	TakeCmd-ada.gpr					\
-	Source/takecmd/*.ad?				\
-	${Project_Files}				\
-	${Source_Files}
-	gnat make -P ${<} -XStyle=Debug -XTarget=pentium4
-
-pentium4-Debug/lib/takecmd/libtakecmd_ada.a:		\
-	TakeCmd-ada.gpr					\
-	Source/takecmd/*.ad?				\
-	${Project_Files}				\
-	${Source_Files}
 	gnat make -P ${<} -XStyle=Debug -XTarget=pentium4
 
 #------------------------------------------------------------ {{{1 ----------

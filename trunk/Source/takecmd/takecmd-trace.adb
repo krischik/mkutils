@@ -19,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -44,9 +44,6 @@ with Ada.Strings.Unbounded;
 with Win32;
 with TakeCmd;
 with TakeCmd.Strings;
-
-pragma Elaborate_All (Win32);
-pragma Elaborate_All (TakeCmd);
 
 --
 --  4NT / Take Commmand Plugin Library Trace
@@ -245,8 +242,8 @@ package body TakeCmd.Trace is
 
       ------------------------------------------------------------------------
       --
-      --  The original IBM design opened and closed the File all the time. However, Ada.Text_IO
-      --  won't allow that and of course, it is slow.
+      --  The original IBM design opened and closed the File all the time. However,
+      --  Ada.Text_IO won't allow that and of course, it is slow.
       --
       Filehandle : Ada.Wide_Text_IO.File_Type;
 
@@ -519,8 +516,8 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an Wide_String using writeFormattedString after adding the appropriate padding for
-   --  indentation.
+   --  Write an Wide_String using writeFormattedString after adding the appropriate padding
+   --  for indentation.
    --
    function C_Write (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    begin
@@ -585,8 +582,8 @@ package body TakeCmd.Trace is
    --
    --  Functrace is not quite as usefull as the C++ version. The reason are the missing
    --  constructors and destructors in Ada. With Controlled types you can't limit to just one
-   --  call to Initialize and one to Finalize There are allways some extra Adjust with matching.
-   --  Finalize.
+   --  call to Initialize and one to Finalize There are allways some extra Adjust with
+   --  matching. Finalize.
    --
    --  Name : Name of the function calls to be traced.
    function Function_Trace (Name : String) return Object is
@@ -667,8 +664,8 @@ package body TakeCmd.Trace is
    --  Trace the given exeption details and then raise the exception.
    --
    --  Raising : Exeption which is raised Message : Free form Message Entity : Location
-   --  destriptor. Suggested content: AdaCL.Trace.Entity Source : Location destriptor. Suggested
-   --  content: AdaCL.Trace.Source
+   --  destriptor. Suggested content: AdaCL.Trace.Entity Source : Location destriptor.
+   --  Suggested content: AdaCL.Trace.Source
    --
    procedure Raise_Exception
      (Raising : in Ada.Exceptions.Exception_Id;
@@ -685,7 +682,7 @@ package body TakeCmd.Trace is
 
       Raise_Exception
         (E       => Raising,
-         Message => Message & " Entity :" & Entity & "." & " Source :" & Source & ".");
+         Message => Message & " Entity: " & Entity & "." & " Source: " & Source & ".");
       --
       --  If Raising is null-exception then we could reach here. But we schould not raise the
       --  null-exception.
@@ -827,7 +824,7 @@ package body TakeCmd.Trace is
       return;
    end Write;
 
-   procedure Write (A_String : in Plugin.Buffer) is
+   procedure Write (A_String : in Win32.WCHAR_Array) is
    begin
       if Cl.Get_On then
          Write
@@ -858,7 +855,9 @@ package body TakeCmd.Trace is
                Item => System.Storage_Elements.To_Integer (An_Address),
                Base => 16);
 
-            Cl.Write_Formatted_String (Text => A_String & Address_Text, Marker => Marker_Std);
+            Cl.Write_Formatted_String
+              (Text   => A_String & Address_Text,
+               Marker => Marker_Std);
          end Write_Address;
       end if;
 
@@ -1088,7 +1087,8 @@ package body TakeCmd.Trace is
       then
          CrLf;
          Q_Put_String
-           (Ada.Characters.Conversions.To_Wide_String (Exception_Information (An_Exception)));
+           (Ada.Characters.Conversions.To_Wide_String
+               (Exception_Information (An_Exception)));
          CrLf;
          Q_Put_String ("Function: " & Ada.Characters.Conversions.To_Wide_String (Entity));
          CrLf;

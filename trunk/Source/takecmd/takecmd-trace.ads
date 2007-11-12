@@ -290,7 +290,7 @@ package TakeCmd.Trace is
 
    pragma Inline (Write);
 
-   procedure Write (A_String : in TakeCmd.Plugin.Buffer);
+   procedure Write (A_String : in Win32.WCHAR_Array);
 
    pragma Inline (Write);
 

@@ -64,6 +64,7 @@ package TakeCmd.Strings is
    --  string can be converted to upper case if casing is not important
    --
    --  Arguments   : String to be converted
+   --  Keep_Null   : Keep the null character at the end of the string
    --  To_Upper    : Convert to upper case
    --  Trim_Spaces : remove unneded spaces.
    --
@@ -77,7 +78,7 @@ package TakeCmd.Strings is
    pragma Pure_Function (To_Ada);
 
    function To_Ada
-     (Arguments   : in TakeCmd.Plugin.Buffer;
+     (Arguments   : in Win32.WCHAR_Array;
       Keep_Null   : in Boolean := False;
       To_Upper    : in Boolean := False;
       Trim_Spaces : in Boolean := False)
@@ -96,13 +97,21 @@ package TakeCmd.Strings is
    --
    --  Convert the string to Win 32.
    --
-   --  Arguments   : String to be converted
+   --  Arguments   : String to be converted.
+   --  To_Upper    : Convert to upper case
+   --  Trim_Spaces : remove unneded spaces.
    --
    function To_Win (Arguments : in Wide_String) return TakeCmd.Plugin.Buffer;
 
    pragma Pure_Function (To_Win);
 
    function To_Win (Arguments : in String) return TakeCmd.Plugin.Buffer;
+
+   function To_Win
+     (Arguments   : in Win32.PCWSTR;
+      To_Upper    : in Boolean := False;
+      Trim_Spaces : in Boolean := False)
+      return        TakeCmd.Plugin.Buffer;
 
 private
 

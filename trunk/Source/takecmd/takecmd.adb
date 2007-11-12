@@ -19,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3
---  of the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3 of
+--  the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -34,12 +34,18 @@ pragma License (Gpl);
 pragma Ada_05;
 
 with Win32.Winnls;
+with Win32.Winbase;
+with Win32.Winnt;
+with Win32.Winerror;
+
+with TakeCmd.Trace;
 
 package body TakeCmd is
 
    use type Win32.WCHAR_Array;
    use type Interfaces.C.size_t;
    use type Interfaces.C.int;
+   use type Interfaces.C.unsigned_long;
 
    ------------------
    -- Q_Put_String --
@@ -109,6 +115,57 @@ package body TakeCmd is
       Q_Put_String (C_Text);
       return;
    end Q_Put_String;
+
+   procedure Wildcard_Search
+     (Directory : in Win32.WCHAR_Array;
+      Pattern   : in Win32.WCHAR_Array;
+      Process   : not null access procedure (Directory_Entry : in Win32.WCHAR_Array))
+   is
+      use type Win32.Winnt.HANDLE;
+      use type Win32.BOOL;
+
+      Data   : aliased Win32.Winbase.WIN32_FIND_DATAW;
+      Handle : constant Win32.Winnt.HANDLE :=
+         Win32.Winbase.FindFirstFileW
+           (lpFileName     => Win32.Addr (Win32.WCHAR_Array'("*")),
+            lpFindFileData => Data'Unchecked_Access);
+   begin
+      if Handle = Win32.Winbase.INVALID_HANDLE_VALUE then
+         Handle_Error : declare
+            Error : constant Win32.DWORD := (Win32.Winbase.GetLastError);
+         begin
+            if Error = Win32.Winerror.ERROR_FILE_NOT_FOUND then
+               goto Exit_Function;
+            else
+               Trace.Raise_Exception
+                 (Raising => Win32_Error'Identity,
+                  Message => ": FindFirstFileW: " &
+                             Win32.DWORD'Image (Win32.Winbase.GetLastError) &
+                             ".",
+                  Entity  => TakeCmd.Trace.Entity,
+                  Source  => TakeCmd.Trace.Source);
+            end if;
+         end Handle_Error;
+      else
+         Process_Files : loop
+            if WildcardComparison
+                  (pszWildName => Win32.Addr (Pattern),
+                   pszFileName => Win32.Addr (Data.cFileName),
+                   fExtension  => 0,
+                   fBrackets   => 1) =
+               0
+            then
+               Process (Data.cFileName);
+            end if;
+            exit Process_Files when Win32.Winbase.FindNextFileW
+                                       (hFindFile      => Handle,
+                                        lpFindFileData => Data'Unchecked_Access) /=
+                                    Win32.TRUE;
+         end loop Process_Files;
+      end if;
+
+      <<Exit_Function>>return;
+   end Wildcard_Search;
 
 end TakeCmd;
 

@@ -103,9 +103,6 @@ package TakeCmd.Plugin is
    --  is 2K (2047 characters + null byte).
    --
    subtype Buffer is Win32.WCHAR_Array (1 .. 2 ** 11);
-   type LP_Buffer is access Buffer;
-
-   pragma Convention (Convention => C, Entity => LP_Buffer);
 
    ---------------------------------------------------------------------------
    --
