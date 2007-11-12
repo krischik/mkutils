@@ -37,8 +37,8 @@ setopt Err_Exit;
 setopt CSH_Null_Glob;
 
 declare SVN_Server="https://mkutils.googlecode.com/svn";
-declare Module="Ada_Demo";
-declare Version="2.2.0";
+declare Module="MK_Utils-src";
+declare Version="1.0.0";
 
 svn copy											\
 	"${SVN_Server}/trunk"							\
@@ -49,14 +49,8 @@ pushd /tmp
 	svn export										\
 		"${SVN_Server}/tags/${Module}-${Version}"	\
 		"${Module}-${Version}"						;
-	tar --create --bzip2							\
-		--file="${Module}-${Version}.tar.bz2"		\
-		"${Module}-${Version}"						;
 	7z a -t7z										\
 		"${Module}-${Version}.7z"					\
-		"${Module}-${Version}"						;
-	7z a -tzip										\
-		"${Module}-${Version}.zip"					\
 		"${Module}-${Version}"						;
 	rm --recursive --force "${Module}-${Version}"	;
 popd

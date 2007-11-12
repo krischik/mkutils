@@ -37,37 +37,15 @@ setopt Err_Exit;
 setopt CSH_Null_Glob;
 
 declare SVN_Server="https://mkutils.googlecode.com/svn";
-declare Module="MK_Demo";
+declare Module="MK_Utils-pentium4";
 declare Version="1.0.0";
 
 pushd /tmp
 	mkdir 
-
- C:\MinGW\opt\gnat\gpl\bin\libgcc_s.dll                       
- C:\MinGW\opt\gnat\gpl\bin\libgnat-2007.dll                      
- C:\MinGW\opt\gnat\gpl\bin\libgnarl-2007.dll
+	C:\MinGW\opt\gnat\gpl\bin\libgcc_s.dll                       
+	C:\MinGW\opt\gnat\gpl\bin\libgnat-2007.dll                      
+	C:\MinGW\opt\gnat\gpl\bin\libgnarl-2007.dll
 	
-popd
-
-svn copy											\
-	"${SVN_Server}/trunk"							\
-	"${SVN_Server}/tags/${Module}-${Version}"		\
-	-m"tag release ${Module} ${Version}"			;
-
-pushd /tmp
-	svn export										\
-		"${SVN_Server}/tags/${Module}-${Version}"	\
-		"${Module}-${Version}"						;
-	tar --create --bzip2							\
-		--file="${Module}-${Version}.tar.bz2"		\
-		"${Module}-${Version}"						;
-	7z a -t7z										\
-		"${Module}-${Version}.7z"					\
-		"${Module}-${Version}"						;
-	7z a -tzip										\
-		"${Module}-${Version}.zip"					\
-		"${Module}-${Version}"						;
-	rm --recursive --force "${Module}-${Version}"	;
 popd
 
 ############################################################# {{{1 ##########
