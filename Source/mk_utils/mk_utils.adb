@@ -180,8 +180,10 @@ package body MK_Utils is
                   peUse                  => Name_Use'Unchecked_Access);
             if Success /= 0 then
                declare
-                  Padding : Win32.WCHAR_Array (1 .. 32 - Directory_Entry'Length) :=
-                    (others => ' ');
+                  Directory_Entry_Length : constant Natural :=
+                     Natural (Win32.Winbase.lstrlenW (Win32.Addr (Directory_Entry)));
+                  Padding                : constant Win32.WCHAR_Array (
+                     1 .. 32 - Directory_Entry_Length) := (others => ' ');
                begin
                   TakeCmd.Q_Put_String (Directory_Entry);
                   TakeCmd.Q_Put_String (Padding);
