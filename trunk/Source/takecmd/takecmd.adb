@@ -117,52 +117,79 @@ package body TakeCmd is
    end Q_Put_String;
 
    procedure Wildcard_Search
-     (Directory : in Win32.WCHAR_Array;
-      Pattern   : in Win32.WCHAR_Array;
-      Process   : not null access procedure (Directory_Entry : in Win32.WCHAR_Array))
+     (Directory_Pattern : in Win32.WCHAR_Array;
+      Process           : not null access procedure (Directory_Entry : in Win32.WCHAR_Array))
    is
-      use type Win32.Winnt.HANDLE;
-      use type Win32.BOOL;
+      Trace : constant TakeCmd.Trace.Object :=
+         TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
+      pragma Unreferenced (Trace);
 
-      Data   : aliased Win32.Winbase.WIN32_FIND_DATAW;
-      Handle : constant Win32.Winnt.HANDLE :=
-         Win32.Winbase.FindFirstFileW
-           (lpFileName     => Win32.Addr (Win32.WCHAR_Array'("*")),
-            lpFindFileData => Data'Unchecked_Access);
+      Directory_Length : constant Interfaces.C.int := PathLength (Directory_Pattern);
+      Directory        : aliased Win32.WCHAR_Array (1 .. Integer (Directory_Length) + 1);
+      Pattern          : aliased File_Name;
+      Dummy            : Win32.PWSTR;
+
+      pragma Warnings (Off, Dummy);
+      pragma Warnings (Off, Directory);
+      pragma Warnings (Off, Pattern);
    begin
-      if Handle = Win32.Winbase.INVALID_HANDLE_VALUE then
-         Handle_Error : declare
-            Error : constant Win32.DWORD := (Win32.Winbase.GetLastError);
-         begin
-            if Error = Win32.Winerror.ERROR_FILE_NOT_FOUND then
-               goto Exit_Function;
-            else
-               Trace.Raise_Exception
-                 (Raising => Win32_Error'Identity,
-                  Message => ": FindFirstFileW: " &
-                             Win32.DWORD'Image (Win32.Winbase.GetLastError) &
-                             ".",
-                  Entity  => TakeCmd.Trace.Entity,
-                  Source  => TakeCmd.Trace.Source);
-            end if;
-         end Handle_Error;
-      else
-         Process_Files : loop
-            if WildcardComparison
-                  (pszWildName => Win32.Addr (Pattern),
-                   pszFileName => Win32.Addr (Data.cFileName),
-                   fExtension  => 0,
-                   fBrackets   => 1) =
-               0
-            then
-               Process (Data.cFileName);
-            end if;
-            exit Process_Files when Win32.Winbase.FindNextFileW
-                                       (hFindFile      => Handle,
-                                        lpFindFileData => Data'Unchecked_Access) /=
-                                    Win32.TRUE;
-         end loop Process_Files;
-      end if;
+      Dummy := PathPart (pszName => Directory_Pattern, pszPath => Win32.Addr (Directory));
+      Dummy :=
+         FilenamePart (pszName => Directory_Pattern, pszFilenamePart => Win32.Addr (Pattern));
+
+      Fix_Pattern : declare
+         Pattern_Length : constant Interfaces.C.int :=
+            Win32.Winbase.lstrlenW (Win32.Addr (Pattern));
+      begin
+         if Pattern_Length = 0 then
+            Pattern := (1 => '*', others => Win32.Wide_Nul);
+         end if;
+      end Fix_Pattern;
+
+      Find_Files : declare
+         use type Win32.Winnt.HANDLE;
+         use type Win32.BOOL;
+
+         Data   : aliased Win32.Winbase.WIN32_FIND_DATAW;
+         Handle : constant Win32.Winnt.HANDLE :=
+            Win32.Winbase.FindFirstFileW
+              (lpFileName     => Win32.Addr (Directory (1 .. Directory'Last - 1) & Pattern),
+               lpFindFileData => Data'Unchecked_Access);
+      begin
+         if Handle = Win32.Winbase.INVALID_HANDLE_VALUE then
+            Handle_Error : declare
+               Error : constant Win32.DWORD := (Win32.Winbase.GetLastError);
+            begin
+               if Error = Win32.Winerror.ERROR_FILE_NOT_FOUND then
+                  goto Exit_Function;
+               else
+                  TakeCmd.Trace.Raise_Exception
+                    (Raising => Win32_Error'Identity,
+                     Message => ": FindFirstFileW: " &
+                                Win32.DWORD'Image (Win32.Winbase.GetLastError) &
+                                ".",
+                     Entity  => TakeCmd.Trace.Entity,
+                     Source  => TakeCmd.Trace.Source);
+               end if;
+            end Handle_Error;
+         else
+            Process_Files : loop
+               if WildcardComparison
+                     (pszWildName => Win32.Addr (Pattern),
+                      pszFileName => Win32.Addr (Data.cFileName),
+                      fExtension  => 0,
+                      fBrackets   => 1) =
+                  0
+               then
+                  Process (Directory (1 .. Directory'Last - 1) & Data.cFileName);
+               end if;
+               exit Process_Files when Win32.Winbase.FindNextFileW
+                                          (hFindFile      => Handle,
+                                           lpFindFileData => Data'Unchecked_Access) /=
+                                       Win32.TRUE;
+            end loop Process_Files;
+         end if;
+      end Find_Files;
 
       <<Exit_Function>>return;
    end Wildcard_Search;
@@ -171,4 +198,4 @@ end TakeCmd;
 
 ----------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
---  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:
+--  vim: set textwidth=96 filetype=ada foldmethod=expr spell spelllang=en_GB:

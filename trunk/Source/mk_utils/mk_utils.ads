@@ -1,4 +1,4 @@
-------------------------------------------------------------- {{{1 ----------
+------------------------------------------------------------------------------
 --  Description: Options setable by the Ada plugin
 --          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
@@ -29,7 +29,7 @@
 --
 --  You should have received a copy of the GNU General Public License along with MK_Utils. If
 --  not, see <http://www.gnu.org/licenses/>.
-------------------------------------------------------------- }}}1 ----------
+------------------------------------------------------------------------------
 
 pragma License (Gpl);
 
@@ -116,6 +116,6 @@ private
 
 end MK_Utils;
 
-------------------------------------------------------------- {{{1 ----------
+------------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
 --  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:

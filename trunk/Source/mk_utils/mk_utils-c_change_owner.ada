@@ -29,43 +29,30 @@
 
 pragma License (Gpl);
 
----------------------------------------------------------------------------
+with Win32.Winerror;
+
+--------------------------------------------------------------------------
 --
---  Write Help for Commandline Options parsed from Trace
+--  Change Owner of a File
 --
 separate (MK_Utils)
-function C_Help (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
+function C_Change_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    Trace : constant TakeCmd.Trace.Object :=
       TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
    pragma Unreferenced (Trace);
+
+   Buffer : aliased constant TakeCmd.Plugin.Buffer :=
+      TakeCmd.Strings.To_Win (Arguments => Arguments, To_Upper => False, Trim_Spaces => True);
 begin
    TakeCmd.Trace.Write (Arguments);
-   TakeCmd.CrLf;
-   TakeCmd.CrLf;
-   TakeCmd.Q_Put_String (Win32.WCHAR_Array'("MK_Utils internal commands:"));
-   TakeCmd.CrLf;
-   TakeCmd.CrLf;
-   TakeCmd.Q_Put_String ("   " & X_Help & "                                  This help.");
-   TakeCmd.CrLf;
-   TakeCmd.Q_Put_String
-     ("   " & X_Change_Owner & "            (Filename)     change owner of a file");
-   TakeCmd.CrLf;
-   TakeCmd.Q_Put_String
-     ("   " & X_Show_Owner & "              (Filename)     display owner of a file.");
-   TakeCmd.CrLf;
-   TakeCmd.CrLf;
-   TakeCmd.Q_Put_String (Win32.WCHAR_Array'("MK_Utils internal variables:"));
-   TakeCmd.CrLf;
-   TakeCmd.CrLf;
-   TakeCmd.Q_Put_String (Win32.WCHAR_Array'("MK_Utils internal functions:"));
-   TakeCmd.CrLf;
-   TakeCmd.CrLf;
-   return 0;
+   TakeCmd.Trace.Write (Buffer);
+   return Win32.Winerror.NO_ERROR;
 exception
    when An_Exception : others =>
-      TakeCmd.Trace.Write_Error (An_Exception);
+      TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
+      TakeCmd.CrLf;
       return -2;
-end C_Help;
+end C_Change_Owner;
 
 ------------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
