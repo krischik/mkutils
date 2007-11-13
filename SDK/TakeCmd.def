@@ -104,7 +104,7 @@ EXPORTS
 	ExtractFileSummary
 	?FFindDlgProc@@YGHPAUHWND__@@IIJ@Z
 	Ffind_Cmd
-	FilenamePart
+	FilenamePart@8
 	FindProcess
 	FmtMsgBox
 	For_Cmd
@@ -224,8 +224,8 @@ EXPORTS
 	?OurDdeInitiate@@YAXXZ
 	PDir_Cmd
 	ParseColors
-	PathLength
-	PathPart
+	PathLength@4
+	PathPart@8
 	Path_Cmd
 	PauseKeys
 	Pause_Cmd

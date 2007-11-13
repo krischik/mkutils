@@ -19,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3
---  of the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3 of
+--  the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -242,8 +242,8 @@ package body TakeCmd.Trace is
 
       ------------------------------------------------------------------------
       --
-      --  The original IBM design opened and closed the File all the time. However,
-      --  Ada.Text_IO won't allow that and of course, it is slow.
+      --  The original IBM design opened and closed the File all the time. However, Ada.Text_IO
+      --  won't allow that and of course, it is slow.
       --
       Filehandle : Ada.Wide_Text_IO.File_Type;
 
@@ -330,11 +330,8 @@ package body TakeCmd.Trace is
    --
    procedure Adjust (This : in out Object) is
    begin
-      if Cl.Get_On then
-         Cl.Write_Formatted_String
-           (Text   => Ada.Characters.Conversions.To_Wide_String (This.Trace_Name),
-            Marker => Marker_Indent);
-      end if;
+      This.Index := Integer'Succ (This.Index);
+      return;
    end Adjust;
 
    ---------------------------------------------------------------------------
@@ -457,7 +454,7 @@ package body TakeCmd.Trace is
       Q_Put_String ("  %" & X_Write_Prefix & "     (TRUE|FALSE)   enable trace prefix.");
       CrLf;
       Q_Put_String
-        ("   " & X_Write_Line_Number & " (TRUE|FALSE)   enable trace line numbers.");
+        ("  %" & X_Write_Line_Number & " (TRUE|FALSE)   enable trace line numbers.");
       CrLf;
       Q_Put_String
         ("  %" & X_To & "              (CONSOLE|FILE) set trace to file or console.");
@@ -516,8 +513,8 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an Wide_String using writeFormattedString after adding the appropriate padding
-   --  for indentation.
+   --  Write an Wide_String using writeFormattedString after adding the appropriate padding for
+   --  indentation.
    --
    function C_Write (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    begin
@@ -567,9 +564,10 @@ package body TakeCmd.Trace is
    --  Trace end of function
    --
    --  This : Object itself.
+   --
    procedure Finalize (This : in out Object) is
    begin
-      if Cl.Get_On then
+      if This.Index = 2 and then Cl.Get_On then
          Cl.Write_Formatted_String
            (Text   => Ada.Characters.Conversions.To_Wide_String (This.Trace_Name),
             Marker => Marker_Outdent);
@@ -582,15 +580,17 @@ package body TakeCmd.Trace is
    --
    --  Functrace is not quite as usefull as the C++ version. The reason are the missing
    --  constructors and destructors in Ada. With Controlled types you can't limit to just one
-   --  call to Initialize and one to Finalize There are allways some extra Adjust with
-   --  matching. Finalize.
+   --  call to Initialize and one to Finalize There are allways some extra Adjust with matching.
+   --  Finalize.
    --
    --  Name : Name of the function calls to be traced.
+   --
    function Function_Trace (Name : String) return Object is
       Retval : constant Object (Name'Length) :=
         (Inherited.Controlled with
          Name_Length => Name'Length,
-         Trace_Name  => Name);
+         Trace_Name  => Name,
+         Index       => 0);
    begin
       --
       --  The Initialize method is not realy a replacement for a proper contructor.
@@ -664,8 +664,8 @@ package body TakeCmd.Trace is
    --  Trace the given exeption details and then raise the exception.
    --
    --  Raising : Exeption which is raised Message : Free form Message Entity : Location
-   --  destriptor. Suggested content: AdaCL.Trace.Entity Source : Location destriptor.
-   --  Suggested content: AdaCL.Trace.Source
+   --  destriptor. Suggested content: AdaCL.Trace.Entity Source : Location destriptor. Suggested
+   --  content: AdaCL.Trace.Source
    --
    procedure Raise_Exception
      (Raising : in Ada.Exceptions.Exception_Id;
@@ -855,9 +855,7 @@ package body TakeCmd.Trace is
                Item => System.Storage_Elements.To_Integer (An_Address),
                Base => 16);
 
-            Cl.Write_Formatted_String
-              (Text   => A_String & Address_Text,
-               Marker => Marker_Std);
+            Cl.Write_Formatted_String (Text => A_String & Address_Text, Marker => Marker_Std);
          end Write_Address;
       end if;
 
@@ -923,23 +921,21 @@ package body TakeCmd.Trace is
    --
    --  Create a memory dump
    --
-   --  String to be written
-   --
    procedure Write_Dump
-     (An_Address : in System.Address;
-      A_Size     : in System.Storage_Elements.Storage_Count)
+     (Address       : in System.Address;
+      Element_Count : in System.Storage_Elements.Storage_Count)
    is
+      use System.Storage_Elements;
    begin
-      Write ("Address         : ", An_Address);
-      Write ("Lenght          :" & System.Storage_Elements.Storage_Count'Image (A_Size));
-
       if Cl.Get_On then
-         Dump : declare
-            package Byte_IO is new Ada.Wide_Text_IO.Modular_IO (
-               Num => System.Storage_Elements.Storage_Element);
+         Write ("Lenght          :" & Storage_Count'Image (Element_Count));
+         Write ("Address         : ", Address);
 
-            Data : System.Storage_Elements.Storage_Array (0 .. A_Size - 1);
-            for Data'Address use An_Address;
+         Dump : declare
+            package Byte_IO is new Ada.Wide_Text_IO.Modular_IO (Num => Storage_Element);
+
+            Data : Storage_Array (0 .. Element_Count - 1);
+            for Data'Address use Address;
             pragma Import (Ada, Data);
 
             Line_Len     : constant := 16;
@@ -947,20 +943,21 @@ package body TakeCmd.Trace is
             Byte_Len     : constant := 2;
             Byte_Offset  : constant := 18;   --  Dump  [01234567]
             ASCII_Offset : constant := Byte_Offset + Line_Len * (Byte_Len + 1) + 1;
-            Text_Len     : constant := ASCII_Offset + Line_Len;
+            UTF_Offset   : constant := ASCII_Offset + Line_Len + 1;
+            Text_Len     : constant := UTF_Offset + Line_Len / 2;
 
             Byte_Text    : Wide_String (1 .. 3 + Byte_Len + 1);
             Address_Text : Wide_String (1 .. 3 + Address_Len + 1);
             Text         : Wide_String (1 .. Text_Len);
-            Line         : System.Storage_Elements.Storage_Offset := Data'First;
-            Col          : System.Storage_Elements.Storage_Offset := Data'First;
+            Line         : Storage_Offset := Data'First;
+            Col          : Storage_Offset := Data'First;
             Char         : Wide_Character;
             Byte_Col     : Integer;
          begin
             Dump_Line : while Line <= Data'Last loop
                Address_IO.Put
                  (To   => Address_Text,
-                  Item => System.Storage_Elements.To_Integer (An_Address + Line),
+                  Item => To_Integer (Address + Line),
                   Base => 16);
 
                if Address_Text (4) = '#' then
@@ -974,7 +971,7 @@ package body TakeCmd.Trace is
                Col      := 0;
                Byte_Col := Byte_Offset;
 
-               Dump_Column : while Col < Line_Len and then Col + Line < A_Size loop
+               Dump_Column : while Col < Line_Len and then Col + Line < Element_Count loop
                   Byte_IO.Put (To => Byte_Text, Item => Data (Line + Col), Base => 16);
 
                   if Byte_Text (4) = '#' then
@@ -989,6 +986,18 @@ package body TakeCmd.Trace is
                      Text (Natural (ASCII_Offset + Col))  := '.';
                   else
                      Text (Natural (ASCII_Offset + Col))  := Char;
+                  end if;
+
+                  if Col mod 2 /= 0 then
+                     Char :=
+                        Wide_Character'Val
+                          (Integer (Data (Line + Col - 1)) +
+                           256 * Integer (Data (Line + Col)));
+                     if Ada.Wide_Characters.Unicode.Is_Non_Graphic (Char) then
+                        Text (Natural (UTF_Offset + Col / 2))  := Char;
+                     else
+                        Text (Natural (UTF_Offset + Col / 2))  := Char;
+                     end if;
                   end if;
 
                   Col      := Col + 1;
@@ -1011,16 +1020,20 @@ package body TakeCmd.Trace is
    --  An_Address :  String to be written
    --  A_Size     :  Size in Storage_Elements.
    --
-   procedure Write_Dump (An_Address : in System.Address; A_Size : in Integer) is
-      Size : System.Storage_Elements.Storage_Count :=
-         System.Storage_Elements.Storage_Count (A_Size / System.Storage_Unit);
+   procedure Write_Dump (Address : in System.Address; Size : in Integer) is
+      use System.Storage_Elements;
+
+      Element_Count : Storage_Count := Storage_Count (Size / System.Storage_Unit);
    begin
-      if (A_Size mod System.Storage_Unit) /= 0 then
-         Size := Size + 1;
+      if Cl.Get_On then
+         Write ("Size            :" & Integer'Image (Size));
+
+         if (Size mod System.Storage_Unit) /= 0 then
+            Element_Count := Element_Count + 1;
+         end if;
+
+         Write_Dump (Address, Element_Count);
       end if;
-
-      Write_Dump (An_Address, Size);
-
       return;
    end Write_Dump;
 
@@ -1087,8 +1100,7 @@ package body TakeCmd.Trace is
       then
          CrLf;
          Q_Put_String
-           (Ada.Characters.Conversions.To_Wide_String
-               (Exception_Information (An_Exception)));
+           (Ada.Characters.Conversions.To_Wide_String (Exception_Information (An_Exception)));
          CrLf;
          Q_Put_String ("Function: " & Ada.Characters.Conversions.To_Wide_String (Entity));
          CrLf;
@@ -1138,3 +1150,7 @@ package body TakeCmd.Trace is
    end Write_Info;
 
 end TakeCmd.Trace;
+
+----------------------------------------------------------------------------
+--  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
+--  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:

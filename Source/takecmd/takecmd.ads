@@ -1,8 +1,6 @@
 --------------------------------------------------------------------------
-----
 --  Description: Options setable by the Ada plugin
---          $Id: takecmd.ads 15 2007-10-31 08:27:40Z
---  krischik@users.sourceforge.net $
+--          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -10,8 +8,7 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL:
---  https://mkutils.googlecode.com/svn/trunk/Source/takecmd/takecmd.ads $
+--     $HeadURL$
 --      History: 25.10.2007 MK Initial Release
 --               29.10.2007 MK Added Threading, parameter names closer to
 --                             C original
@@ -112,6 +109,7 @@ pragma Ada_05;
 
 with Interfaces.C;
 with Win32;
+with Win32.Advapi;
 
 package TakeCmd is
    pragma Linker_Options ("-lTakeCmd");
@@ -119,7 +117,8 @@ package TakeCmd is
    Win32_Error : exception;
 
    subtype Function_Buffer is Win32.WCHAR_Array (1 .. 2 ** 11);
-   subtype File_Name is Win32.WCHAR_Array (1 .. 2 ** 15);
+   subtype File_Name is Win32.WCHAR_Array (1 .. Win32.Advapi.UNAMEMAXSIZE);
+   subtype Path_Name is Win32.WCHAR_Array (1 .. 2 ** 15);
 
    --  /*******************************************************************
    --   * Prototypes for internal commands
@@ -621,6 +620,9 @@ package TakeCmd is
    --   *
    --   ********************************************************************/
    --
+
+   ------------------------------------------------------------------------
+   --
    --  int WINAPI error( int nErrorCode, LPTSTR pszArg );
    --  /*
    --   Display a formatted Windows error message w/optional argument
@@ -760,6 +762,9 @@ package TakeCmd is
    --   if pszDir is a directory, appends "\*" to the name
    --  */
    --
+
+   ------------------------------------------------------------------------
+   --
    --  LPTSTR WINAPI PathPart(  LPTSTR pszName, LPTSTR pszPath  );
    --  /*
    --   Saves the path for pszName into pszPath
@@ -768,10 +773,26 @@ package TakeCmd is
    --     path (i.e., just checking for the existence of a path)
    --  */
    --
+
+   function PathPart
+     (pszName : in Win32.WCHAR_Array;
+      pszPath : Win32.PWSTR)
+      return    Win32.PWSTR;
+
+   pragma Import (Convention => Stdcall, Entity => PathPart, External_Name => "PathPart");
+
+   ------------------------------------------------------------------------
+   --
    --  int WINAPI PathLength( LPTSTR pszPath );
-   --  /*
+   --
    --   Returns the length of the path part of pszPath.
-   --  */
+   --
+
+   function PathLength (pszPath : in Win32.WCHAR_Array) return Interfaces.C.int;
+
+   pragma Import (Convention => Stdcall, Entity => PathLength, External_Name => "PathLength");
+
+   ------------------------------------------------------------------------
    --
    --  LPTSTR WINAPI FilenamePart( LPTSTR pszName, LPTSTR pszFilenamePart );
    --  /*
@@ -780,6 +801,17 @@ package TakeCmd is
    --   If pszFilenamePart == NULL, just returns pointer in pszName
    --     to beginning of filename part.
    --  */
+
+   function FilenamePart
+     (pszName         : in Win32.WCHAR_Array;
+      pszFilenamePart : Win32.PWSTR)
+      return            Win32.PWSTR;
+
+   pragma Import
+     (Convention => Stdcall,
+      Entity => FilenamePart,
+      External_Name => "FilenamePart");
+
    --
    --  LPTSTR WINAPI ExtensionPart( LPTSTR pszFileName, LPTSTR pszExt );
    --  /*
@@ -848,6 +880,9 @@ package TakeCmd is
    --   Builds a target name using the source name and a template
    --  */
    --
+
+   ------------------------------------------------------------------------
+   --
    --  int WINAPI WildcardComparison( LPTSTR pszWildName, LPTSTR pszFileName,
    --  int fExtension, int fBrackets );
    --  /*
@@ -878,9 +913,8 @@ package TakeCmd is
       External_Name => "WildcardComparison");
 
    procedure Wildcard_Search
-     (Directory : in Win32.WCHAR_Array;
-      Pattern   : in Win32.WCHAR_Array;
-      Process   : not null access procedure (Directory_Entry : in Win32.WCHAR_Array));
+     (Directory_Pattern : in Win32.WCHAR_Array;
+      Process           : not null access procedure (Directory_Entry : in Win32.WCHAR_Array));
 
    --
    --
@@ -1536,6 +1570,8 @@ package TakeCmd is
    --   *
    --   ********************************************************************/
 
+   ------------------------------------------------------------------------
+   --
    --  int WINAPI QueryOptionValue( LPTSTR pszOption, LPTSTR pszValue );
    --  /*
    --   Return the value of the .INI parameter pszOption as a string in
@@ -2087,4 +2123,4 @@ end TakeCmd;
 
 ----------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
---  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:
+--  vim: set textwidth=96 filetype=ada foldmethod=expr spell spelllang=en_GB:

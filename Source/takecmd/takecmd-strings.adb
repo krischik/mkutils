@@ -1,6 +1,4 @@
 --------------------------------------------------------------------------
-----
----
 --  Description: Trace facility for 4NT / Take Command Plugins
 --          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
@@ -21,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3
---  of the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3 of
+--  the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -150,8 +148,7 @@ package body TakeCmd.Strings is
       Trim_Spaces : in Boolean := False)
       return        Wide_String
    is
-      Arguments_Length : constant Natural     :=
-         Natural (Win32.Winbase.lstrlenW (Arguments));
+      Arguments_Length : constant Natural     := Natural (Win32.Winbase.lstrlenW (Arguments));
       Buffer           : Wide_String (1 .. Arguments_Length + 1);
       Dummy            : constant Win32.PWSTR :=
          Win32.Winbase.lstrcpynW
@@ -307,3 +304,7 @@ package body TakeCmd.Strings is
    end To_Win;
 
 end TakeCmd.Strings;
+
+----------------------------------------------------------------------------
+--  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
+--  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:
