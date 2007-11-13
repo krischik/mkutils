@@ -1,0 +1,77 @@
+::!C:\Bin\4Portable\App\4\4nt.EXE
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
+::  Description: Options setable by the Ada plugin
+::	    $Id$
+::    Copyright: Copyright (C) 2007 Martin Krischik
+::	Licence: GNU General Public License
+::   Maintainer: Martin Krischik
+::	$Author$
+::	  $Date$
+::	Version: 4.5
+::    $Revision$
+::     $HeadURL$
+::	History: 25.10.2007 MK
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::  Copyright (C) 2007	Martin Krischik
+::
+::  This file is part of Ada_Demo.
+::
+::  Ada_Demo is free software: you can redistribute it and/or modify
+::  it under the terms of the GNU General Public License as published by
+::  the Free Software Foundation, either version 3 of the License, or
+::  (at your option) any later version.
+::
+::  Ada_Demo is distributed in the hope that it will be useful,
+::  but WITHOUT ANY WARRANTY; without even the implied warranty of
+::  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+::  GNU General Public License for more details.
+::
+::  You should have received a copy of the GNU General Public License
+::  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: }}}1 ::::::::::
+
+ECHO ON
+
+SETLOCAL
+    SET Module=MK_Utils-pentium4
+    SET Version=1.1.0
+    SET My_Dir=%_CWD
+
+    ON Error GOTO Catch
+
+    PUSHD "%[TEMP]"
+	IFF NOT ISDIR %Module%-%Version% THEN
+	    MKDIR /S "%[Module]-%[Version]\PLUGINS"
+	ENDIFF
+
+	IFF ISFILE %Module%-%Version%.exe THEN
+	    DEL /E %[Module]-%[Version].exe
+	ENDIFF
+
+	COPY								^
+	    %[GNAT_GPL_HOME]\bin\libgcc_s.dll				^
+	    %[GNAT_GPL_HOME]\bin\libgnat-2007.dll			^
+	    %[GNAT_GPL_HOME]\bin\libgnarl-2007.dll			^
+	    "%[Module]-%[Version]\"
+	COPY								^
+	    %[My_Dir]\..\pentium4-Release\lib\mk_utils\mk_utils.dll	^
+	    "%[Module]-%[Version]\PLUGINS\"
+
+	PUSHD %[Module]-%[Version]
+	    7z a -sfx ..\%[Module]-%[Version].exe *
+	POPD
+
+	DEL /s /x /z /y %[Module]-%[Version]
+    POPD
+ENDLOCAL
+CANCEL 0
+
+:Catch
+    ECHO %_?, %_SYSERR
+    CANCEL %_?
+ENDLOCAL
+
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
+:: vim: textwidth=0 nowrap tabstop=4 shiftwidth=4 softtabstop=4 noexpandtab
+:: vim: filetype=btm encoding=utf-8 fileformat=unix
