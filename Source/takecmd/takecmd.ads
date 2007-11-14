@@ -115,6 +115,7 @@ package TakeCmd is
    pragma Linker_Options ("-lTakeCmd");
 
    Win32_Error : exception;
+   Name_Error : exception;
 
    subtype Function_Buffer is Win32.WCHAR_Array (1 .. 2 ** 11);
    subtype File_Name is Win32.WCHAR_Array (1 .. Win32.Advapi.UNAMEMAXSIZE);
@@ -624,9 +625,9 @@ package TakeCmd is
    ------------------------------------------------------------------------
    --
    --  int WINAPI error( int nErrorCode, LPTSTR pszArg );
-   --  /*
+   --
    --   Display a formatted Windows error message w/optional argument
-   --  */
+   --
 
    function Error
      (nErrorCode : in Interfaces.C.int;
@@ -766,12 +767,10 @@ package TakeCmd is
    ------------------------------------------------------------------------
    --
    --  LPTSTR WINAPI PathPart(  LPTSTR pszName, LPTSTR pszPath  );
-   --  /*
-   --   Saves the path for pszName into pszPath
-   --   Returns pszPath for success or NULL for failure (no path)
-   --   If pszPath == NULL, just returns pointer to beginning of
-   --     path (i.e., just checking for the existence of a path)
-   --  */
+   --
+   --  Saves the path for pszName into pszPath Returns pszPath for success or NULL for failure
+   --  (no path) If pszPath == NULL, just returns pointer to beginning of path (i.e., just
+   --  checking for the existence of a path)
    --
 
    function PathPart
@@ -795,13 +794,11 @@ package TakeCmd is
    ------------------------------------------------------------------------
    --
    --  LPTSTR WINAPI FilenamePart( LPTSTR pszName, LPTSTR pszFilenamePart );
-   --  /*
-   --   Saves the filename part (no path) of pszName into pszFilenamePart.
-   --   Returns pszFilenamePart for success or NULL for failure.
-   --   If pszFilenamePart == NULL, just returns pointer in pszName
-   --     to beginning of filename part.
-   --  */
-
+   --
+   --  Saves the filename part (no path) of pszName into pszFilenamePart. Returns
+   --  pszFilenamePart for success or NULL for failure. If pszFilenamePart == NULL, just returns
+   --  pointer in pszName to beginning of filename part.
+   --
    function FilenamePart
      (pszName         : in Win32.WCHAR_Array;
       pszFilenamePart : Win32.PWSTR)
@@ -883,23 +880,23 @@ package TakeCmd is
 
    ------------------------------------------------------------------------
    --
-   --  int WINAPI WildcardComparison( LPTSTR pszWildName, LPTSTR pszFileName,
-   --  int fExtension, int fBrackets );
-   --  /*
-   --   Compare filenames for wildcard matches
-   --   Returns 0 for match; <> 0 for no match
-   --   *s  matches any collection of characters in the string
-   --      up to (but not including) the s.
-   --   ? matches any single character in the other string. [!abc-m] match a character to the
-   --   set in the brackets (if fBrackets!=0);
-   --      ! means reverse the test; - means match if included in the range.
+   --  int WINAPI WildcardComparison( LPTSTR pszWildName, LPTSTR pszFileName, int fExtension,
+   --  int fBrackets );
+   --
+   --  Compare filenames for wildcard matches Returns 0 for match; <> 0 for no match
+   --
+   --    *s        matches any collection of characters in the string
+   --              up to (but not including) the s.
+   --    ?         matches any single character in the other string.
+   --    [!abc-m]  match a character to the
+   --              set in the brackets (if fBrackets!=0);
+   --    !         means reverse the test;
+   --    -         means match if included in the range.
    --
    --   if fExtension != 0, interpret a '.' as a filename extension separator
    --
    --   if fBrackets != 0, enable [ ] support
-   --  */
    --
-
    function WildcardComparison
      (pszWildName : in Win32.PCWSTR;
       pszFileName : in Win32.PCWSTR;
@@ -916,8 +913,6 @@ package TakeCmd is
      (Directory_Pattern : in Win32.WCHAR_Array;
       Process           : not null access procedure (Directory_Entry : in Win32.WCHAR_Array));
 
-   --
-   --
    --  /********************************************************************
    --   *
    --   * File and directory functions
@@ -1373,7 +1368,6 @@ package TakeCmd is
    --
    --   Displays pszString
    --
-   --
    procedure QPuts (pszString : in Win32.PCWSTR);
 
    pragma Import (Convention => Stdcall, Entity => QPuts, External_Name => "QPuts");
@@ -1407,7 +1401,6 @@ package TakeCmd is
    --
    --   Writes a CR/LF pair to the display
    --
-
    procedure CrLf;
 
    pragma Import (Convention => Stdcall, Entity => CrLf, External_Name => "CrLf");
@@ -1573,11 +1566,9 @@ package TakeCmd is
    ------------------------------------------------------------------------
    --
    --  int WINAPI QueryOptionValue( LPTSTR pszOption, LPTSTR pszValue );
-   --  /*
-   --   Return the value of the .INI parameter pszOption as a string in
-   --  pszValue
-   --  */
-
+   --
+   --  Return the value of the .INI parameter pszOption as a string in pszValue
+   --
    function QueryOptionValue
      (pszOption : in Win32.PCWSTR;
       pszValue  : access Function_Buffer)
@@ -1588,8 +1579,6 @@ package TakeCmd is
       Entity => QueryOptionValue,
       External_Name => "QueryOptionValue");
 
-   --
-   --
    --  /********************************************************************
    --   *
    --   * Window functions
@@ -1641,6 +1630,7 @@ package TakeCmd is
    --
 
    ------------------------------------------------------------------------
+   --
    --  void WINAPI AddCommas(LPTSTR pszNumber );
    --
    --  Insert thousands separators in pszNumber

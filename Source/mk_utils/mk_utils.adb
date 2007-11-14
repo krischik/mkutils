@@ -133,7 +133,7 @@ package body MK_Utils is
             pszFunctions   => Win32.Addr (Implements),
             nMajor         => 1,
             nMinor         => 1,
-            nBuild         => 0,
+            nBuild         => 1,
             hModule        => 0,
             pszModule      => null);
          TakeCmd.Trace.Write_Info ("MK_Utils: Plugin Info created!");
@@ -190,12 +190,6 @@ package body MK_Utils is
          return Win32.TRUE;
    end Shutdown_Plugin;
 
-begin
-   TakeCmd.Q_Put_String (Win32.WCHAR_Array'("Ada_Demo: DLL loaded OK!"));
-   TakeCmd.CrLf;
-exception
-   when An_Exception : others =>
-      TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
 end MK_Utils;
 
 ------------------------------------------------------------------------------

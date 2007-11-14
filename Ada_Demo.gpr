@@ -74,7 +74,8 @@ project Ada_Demo is
       "takecmd",
       "takecmd.trace",
       "takecmd.strings",
-      "takecmd.plugin");
+      "takecmd.plugin",
+      "Win32.advapi");
    for Library_Options     use (
          "-Wl,--kill-at");        -- Remove @nn from exported symbols
 

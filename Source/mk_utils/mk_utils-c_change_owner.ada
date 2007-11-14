@@ -1,6 +1,7 @@
 ------------------------------------------------------------------------------
 --  Description: Options setable by the Ada plugin
---          $Id$
+--          $Id: mk_utils-c_change_owner.ada 38 2007-11-13 19:01:29Z
+--  krischik@users.sourceforge.net $
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -8,7 +9,8 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/mk_utils/mk_utils-c_change_owner.ada $
 --      History: 30.10.2007 MK Initial Release
 ------------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
