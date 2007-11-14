@@ -1,0 +1,72 @@
+::!C:\Bin\4Portable\App\4\4nt.EXE
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
+::  Description: Options setable by the Ada plugin
+::	    $Id$
+::    Copyright: Copyright (C) 2007 Martin Krischik
+::	Licence: GNU General Public License
+::   Maintainer: Martin Krischik
+::	$Author$
+::	  $Date$
+::	Version: 4.5
+::    $Revision$
+::     $HeadURL$
+::	History: 25.10.2007 MK
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::  Copyright (C) 2007	Martin Krischik
+::
+::  This file is part of Ada_Demo.
+::
+::  Ada_Demo is free software: you can redistribute it and/or modify
+::  it under the terms of the GNU General Public License as published by
+::  the Free Software Foundation, either version 3 of the License, or
+::  (at your option) any later version.
+::
+::  Ada_Demo is distributed in the hope that it will be useful,
+::  but WITHOUT ANY WARRANTY; without even the implied warranty of
+::  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+::  GNU General Public License for more details.
+::
+::  You should have received a copy of the GNU General Public License
+::  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: }}}1 ::::::::::
+
+ECHO OFF
+
+SETLOCAL
+    PLUGIN /U MK_Utils
+
+    ON Error GOTO Catch
+
+    SET Project_Dir=%@TRUENAME[%@PATH[%[_BATCHNAME]]\..]
+	SET      JP_Dir=%@PATH[%[_cmdspec]]
+
+	COPY /U															^
+	    %[GNAT_GPL_HOME]\bin\libgcc_s.dll							^
+	    %[GNAT_GPL_HOME]\bin\libgnat-2007.dll						^
+	    %[GNAT_GPL_HOME]\bin\libgnarl-2007.dll						^
+	    "%[JP_Dir]\"
+
+	COPY															^
+	    %[Project_Dir]\pentium4-Release\lib\mk_utils\mk_utils.dll	^
+	    "%[JP_Dir]\PLUGINS\"
+
+	SET          TRACEENABLE=FALSE
+	SET            TRACEFILE=%[TEMP]\MK_Utils.trace
+	SET         TRACEVERBOSE=FALSE
+	SET TRACEWRITELINENUMBER=TRUE
+	SET     TRACEWRITEPREFIX=TRUE
+
+    PLUGIN /L "%[JP_Dir]\PLUGINS\mk_utils.dll"
+	PLUGIN /I MK_Utils 
+ENDLOCAL
+CANCEL 0
+
+:Catch
+    ECHO %_?, %_SYSERR
+    CANCEL %_?
+ENDLOCAL
+
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
+:: vim: textwidth=0 nowrap tabstop=4 shiftwidth=4 softtabstop=4 noexpandtab
+:: vim: filetype=btm encoding=utf-8 fileformat=unix

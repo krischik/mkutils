@@ -1,0 +1,77 @@
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
+::  Description: Options setable by the Ada plugin
+::          $Id$
+::    Copyright: Copyright (C) 2007 Martin Krischik
+::      Licence: GNU General Public License
+::   Maintainer: Martin Krischik
+::      $Author$
+::        $Date$
+::      Version: 4.5
+::    $Revision$
+::     $HeadURL$
+::      History: 25.10.2007 MK
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
+::  Copyright (C) 2007  Martin Krischik
+::
+::  This file is part of Ada_Demo.
+::
+::  Ada_Demo is free software: you can redistribute it and/or modify
+::  it under the terms of the GNU General Public License as published by
+::  the Free Software Foundation, either version 3 of the License, or
+::  (at your option) any later version.
+::
+::  Ada_Demo is distributed in the hope that it will be useful,
+::  but WITHOUT ANY WARRANTY; without even the implied warranty of
+::  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+::  GNU General Public License for more details.
+::
+::  You should have received a copy of the GNU General Public License
+::  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: }}}1 ::::::::::
+
+@ECHO OFF
+
+SETLOCAL
+    SET             HOME=%[HOMEDRIVE]%[HOMEPATH]
+    SET     Project_Home=%@PATH[%_batchname]
+
+    PUSHD %[Project_Home]
+        gnat make -P Ada_Demo -XStyle=Release -XTarget=pentium4
+    POPD
+ENDLOCAL
+
+SET TRACEWRITELINENUMBER=TRUE
+SET     TRACEWRITEPREFIX=TRUE
+SET          TRACEENABLE=TRUE
+SET         TRACEVERBOSE=TRUE
+SET            TRACEFILE=Test_Ada_Demo.trace
+
+SETLOCAL
+    PLUGIN /L pentium4-Release\lib\ada_demo\ada_demo.dll
+    PLUGIN /P
+
+    TraceHelp
+    TraceWrite  Test Trace.
+
+    ECHO Trace Write LineNumber is %_TraceWriteLineNumber
+    ECHO Trace Write Prefix     is %_TraceWritePrefix
+    ECHO Trace Enable           is %_TraceEnable
+    ECHO Trace Verbose          is %_TraceVerbose
+    ECHO Trace To               is %_TraceTo
+    ECHO Trace File             is %_TraceFile
+
+    DIR *.btm
+    REMARK    Calling Remark
+    ECHO Task status is: %_Taskremark
+    TASKREMARK   Calling Task Remark
+    ECHO Task status is: %_Taskremark
+    USEBUFFER 123456789
+    ECHO Reverse ABCDE is: %@Reverse[ABCDE]
+    ECHO Hello is: %_Hello
+
+    PLUGIN /U Ada_Demo
+ENDLOCAL
+
+::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
+::vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=4 expandtab :
+::vim: set textwidth=0 filetype=btm foldmethod=marker nospell :
