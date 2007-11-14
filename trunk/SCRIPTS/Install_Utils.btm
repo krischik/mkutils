@@ -1,17 +1,18 @@
+::!C:\Bin\4Portable\App\4\4nt.EXE
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
 ::  Description: Options setable by the Ada plugin
-::          $Id$
+::	    $Id$
 ::    Copyright: Copyright (C) 2007 Martin Krischik
-::      Licence: GNU General Public License
+::	Licence: GNU General Public License
 ::   Maintainer: Martin Krischik
-::      $Author$
-::        $Date$
-::      Version: 4.5
+::	$Author$
+::	  $Date$
+::	Version: 4.5
 ::    $Revision$
 ::     $HeadURL$
-::      History: 25.10.2007 MK
+::	History: 25.10.2007 MK
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::
-::  Copyright (C) 2007  Martin Krischik
+::  Copyright (C) 2007	Martin Krischik
 ::
 ::  This file is part of Ada_Demo.
 ::
@@ -29,40 +30,43 @@
 ::  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: }}}1 ::::::::::
 
-@ECHO OFF
+ECHO OFF
 
 SETLOCAL
-    SET             HOME=%[HOMEDRIVE]%[HOMEPATH]
-    SET     Project_Home=%@PATH[%_batchname]
+    PLUGIN /U MK_Utils
 
-    PUSHD %[Project_Home]
-        gnat make -P MK_Utils -XStyle=Release -XTarget=pentium4
-    POPD
+    ON Error GOTO Catch
+
+    SET Project_Dir=%@TRUENAME[%@PATH[%[_BATCHNAME]]\..]
+	SET      JP_Dir=%@PATH[%[_cmdspec]]
+
+	COPY /U															^
+	    %[GNAT_GPL_HOME]\bin\libgcc_s.dll							^
+	    %[GNAT_GPL_HOME]\bin\libgnat-2007.dll						^
+	    %[GNAT_GPL_HOME]\bin\libgnarl-2007.dll						^
+	    "%[JP_Dir]\"
+
+	COPY															^
+	    %[Project_Dir]\pentium4-Release\lib\mk_utils\mk_utils.dll	^
+	    "%[JP_Dir]\PLUGINS\"
+
+	SET          TRACEENABLE=FALSE
+	SET            TRACEFILE=%[TEMP]\MK_Utils.trace
+	SET         TRACEVERBOSE=FALSE
+	SET TRACEWRITELINENUMBER=TRUE
+	SET     TRACEWRITEPREFIX=TRUE
+
+    PLUGIN /L "%[JP_Dir]\PLUGINS\mk_utils.dll"
+	PLUGIN /I MK_Utils 
+ENDLOCAL
+CANCEL 0
+
+:Catch
+    ECHO %_?, %_SYSERR
+    CANCEL %_?
 ENDLOCAL
 
-SETLOCAL
-    SET TRACEWRITELINENUMBER=TRUE
-    SET     TRACEWRITEPREFIX=TRUE
-    SET          TRACEENABLE=TRUE
-    SET         TRACEVERBOSE=TRUE
-    SET            TRACEFILE=Test_MK_Utils.trace
-
-    PLUGIN /U MK_Utils
-    PLUGIN /L pentium4-Release\lib\mk_utils\mk_utils.dll
-    PLUGIN /I MK_Utils
-
-    MKHELP
-    MKSHOWOWNER     *.btm
-    MKSHOWOWNER     %_cwd\*.btm
-    MKSHOWOWNER     %_cwd
-    MKSHOWOWNER
-    MKSHOWOWNER     XXXX
-
-    ::  MKCHANGEOWNER   Test_MK_Utils.btm %[USERNAME]
-
-    PLUGIN /U MK_Utils
-ENDLOCAL
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
-::vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=4 expandtab :
-::vim: set textwidth=0 filetype=btm foldmethod=marker nospell :
+:: vim: textwidth=0 nowrap tabstop=4 shiftwidth=4 softtabstop=4 noexpandtab
+:: vim: filetype=btm encoding=utf-8 fileformat=unix

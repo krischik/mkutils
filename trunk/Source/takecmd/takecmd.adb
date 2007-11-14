@@ -36,7 +36,6 @@ pragma Ada_05;
 with Win32.Winnls;
 with Win32.Winbase;
 with Win32.Winnt;
-with Win32.Winerror;
 
 with TakeCmd.Trace;
 
@@ -120,14 +119,14 @@ package body TakeCmd is
      (Directory_Pattern : in Win32.WCHAR_Array;
       Process           : not null access procedure (Directory_Entry : in Win32.WCHAR_Array))
    is
-      Trace : constant TakeCmd.Trace.Object :=
-         TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
-      pragma Unreferenced (Trace);
+      --  Trace : constant TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace
+      --  (TakeCmd.Trace.Entity); pragma Unreferenced (Trace);
 
       Directory_Length : constant Interfaces.C.int := PathLength (Directory_Pattern);
       Directory        : aliased Win32.WCHAR_Array (1 .. Integer (Directory_Length) + 1);
       Pattern          : aliased File_Name;
       Dummy            : Win32.PWSTR;
+      Files_Found      : Natural                   := 0;
 
       pragma Warnings (Off, Dummy);
       pragma Warnings (Off, Directory);
@@ -153,25 +152,18 @@ package body TakeCmd is
          Data   : aliased Win32.Winbase.WIN32_FIND_DATAW;
          Handle : constant Win32.Winnt.HANDLE :=
             Win32.Winbase.FindFirstFileW
-              (lpFileName     => Win32.Addr (Directory (1 .. Directory'Last - 1) & Pattern),
+              (lpFileName     =>
+                  Win32.Addr (Directory (1 .. Directory'Last - 1) & "*" & Win32.Wide_Nul),
                lpFindFileData => Data'Unchecked_Access);
       begin
          if Handle = Win32.Winbase.INVALID_HANDLE_VALUE then
-            Handle_Error : declare
-               Error : constant Win32.DWORD := (Win32.Winbase.GetLastError);
-            begin
-               if Error = Win32.Winerror.ERROR_FILE_NOT_FOUND then
-                  goto Exit_Function;
-               else
-                  TakeCmd.Trace.Raise_Exception
-                    (Raising => Win32_Error'Identity,
-                     Message => ": FindFirstFileW: " &
-                                Win32.DWORD'Image (Win32.Winbase.GetLastError) &
-                                ".",
-                     Entity  => TakeCmd.Trace.Entity,
-                     Source  => TakeCmd.Trace.Source);
-               end if;
-            end Handle_Error;
+           TakeCmd.Trace.Raise_Exception
+              (Raising => Win32_Error'Identity,
+               Message => ": FindFirstFileW: " &
+                          Win32.DWORD'Image (Win32.Winbase.GetLastError) &
+                          ". ",
+               Entity  => TakeCmd.Trace.Entity,
+               Source  => TakeCmd.Trace.Source);
          else
             Process_Files : loop
                if WildcardComparison
@@ -182,6 +174,7 @@ package body TakeCmd is
                   0
                then
                   Process (Directory (1 .. Directory'Last - 1) & Data.cFileName);
+                  Files_Found := Files_Found + 1;
                end if;
                exit Process_Files when Win32.Winbase.FindNextFileW
                                           (hFindFile      => Handle,
@@ -191,7 +184,14 @@ package body TakeCmd is
          end if;
       end Find_Files;
 
-      <<Exit_Function>>return;
+      if Files_Found = 0 then
+         TakeCmd.Trace.Raise_Exception
+           (Raising => Name_Error'Identity,
+            Message => "No Files found.",
+            Entity  => TakeCmd.Trace.Entity,
+            Source  => TakeCmd.Trace.Source);
+      end if;
+      return;
    end Wildcard_Search;
 
 end TakeCmd;

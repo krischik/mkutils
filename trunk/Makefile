@@ -44,15 +44,17 @@ all:							\
 	pentium4-Debug/lib/mk_utils/mk_utils.dll
 
 pretty:
-	gnat pretty -P Ada_Demo.gpr
-	gnat pretty -P MK_Utils.gpr
+	gnat pretty -P Ada_Demo.gpr -XStyle=Release -XTarget=pentium4
+	gnat pretty -P MK_Utils.gpr -XStyle=Release -XTarget=pentium4
 
 clean:
-	gnat clean -P Ada_Demo.gpr
-	gnat clean -P MK_Utils.gpr
+	gnat clean -P Ada_Demo.gpr -XStyle=Debug   -XTarget=pentium4
+	gnat clean -P Ada_Demo.gpr -XStyle=Release -XTarget=pentium4
+	gnat clean -P MK_Utils.gpr -XStyle=Debug   -XTarget=pentium4
+	gnat clean -P MK_Utils.gpr -XStyle=Release -XTarget=pentium4
 
 #SDK/TakeCmd.def: ${JPPATH}/TakeCmd.dll
-	#dll2def ${JPPATH}/TakeCmd.dll >SDK/TakeCmd.def
+#	dll2def ${JPPATH}/TakeCmd.dll >SDK/TakeCmd.def
 
 SDK/libTakeCmd.a: SDK/TakeCmd.def
 	cd SDK && gnatdll -k -e TakeCmd.def -d TakeCmd.dll

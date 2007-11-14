@@ -72,7 +72,8 @@ project MK_Utils is
       "takecmd",
       "takecmd.plugin",
       "takecmd.strings",
-      "takecmd.trace");
+      "takecmd.trace",
+      "Win32.advapi");
    for Library_Options     use (
          "-Wl,--kill-at");        -- Remove @nn from exported symbols
 
