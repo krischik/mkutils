@@ -34,7 +34,13 @@ SETLOCAL
     SET     Project_Home=%@PATH[%_batchname]
 
     PUSHD %[Project_Home] 
-        gnumake-3.79.1-nt clean
+	gnat clean -P Ada_Demo.gpr -XStyle=Debug   -XTarget=pentium4
+	gnat clean -P Ada_Demo.gpr -XStyle=Release -XTarget=pentium4
+	gnat clean -P MK_Utils.gpr -XStyle=Debug   -XTarget=pentium4
+	gnat clean -P MK_Utils.gpr -XStyle=Release -XTarget=pentium4
+        DEL /S /E *.ali
+        DEL /S /E *.o
+        DEL /S /E *.npp
     POPD
 ENDLOCAL
 

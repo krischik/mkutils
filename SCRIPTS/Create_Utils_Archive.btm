@@ -34,7 +34,7 @@ ECHO ON
 
 SETLOCAL
     SET Module=MK_Utils-pentium4
-    SET Version=1.1.1
+    SET Version=1.2.0
     SET Project_Dir=%@TRUENAME[%@PATH[%[_BATCHNAME]]\..]
 
     ON Error GOTO Catch
@@ -48,12 +48,12 @@ SETLOCAL
 			DEL /E %[Module]-%[Version].exe
 		ENDIFF
 
-		COPY								^
+		COPY								                ^
 			%[GNAT_GPL_HOME]\bin\libgcc_s.dll				^
 			%[GNAT_GPL_HOME]\bin\libgnat-2007.dll			^
 			%[GNAT_GPL_HOME]\bin\libgnarl-2007.dll			^
 			"%[Module]-%[Version]\"
-		COPY								^
+		COPY								                            ^
 			%[Project_Dir]\pentium4-Release\lib\mk_utils\mk_utils.dll	^
 			"%[Module]-%[Version]\PLUGINS\"
 

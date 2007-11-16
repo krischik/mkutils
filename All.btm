@@ -34,11 +34,12 @@ SETLOCAL
     SET     Project_Home=%@PATH[%_batchname]
 
     PUSHD %[Project_Home] 
-        START %[GNAT_GPL_HOME]\bin\gps.exe -P Ada_Demo.gpr
+	gnat make -P Ada_Demo.gpr -XStyle=Debug   -XTarget=pentium4
+	gnat make -P Ada_Demo.gpr -XStyle=Release -XTarget=pentium4
+	gnat make -P MK_Utils.gpr -XStyle=Debug   -XTarget=pentium4
+	gnat make -P MK_Utils.gpr -XStyle=Release -XTarget=pentium4
     POPD
 ENDLOCAL
-
-EXIT
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
 ::vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=4 expandtab :

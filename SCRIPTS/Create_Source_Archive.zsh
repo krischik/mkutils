@@ -38,7 +38,7 @@ setopt CSH_Null_Glob;
 
 declare SVN_Server="https://mkutils.googlecode.com/svn";
 declare Module="MK_Utils-src";
-declare Version="1.1.0";
+declare Version="1.2.0";
 
 svn copy											\
 	"${SVN_Server}/trunk"							\

@@ -34,7 +34,8 @@ SETLOCAL
     SET     Project_Home=%@PATH[%_batchname]
 
     PUSHD %[Project_Home] 
-        gnumake-3.79.1-nt pretty  
+	gnat pretty -P Ada_Demo.gpr -XStyle=Release -XTarget=pentium4
+	gnat pretty -P MK_Utils.gpr -XStyle=Release -XTarget=pentium4
     POPD
 ENDLOCAL
 

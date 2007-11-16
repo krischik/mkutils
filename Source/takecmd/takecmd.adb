@@ -19,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -117,7 +117,8 @@ package body TakeCmd is
 
    procedure Wildcard_Search
      (Directory_Pattern : in Win32.WCHAR_Array;
-      Process           : not null access procedure (Directory_Entry : in Win32.WCHAR_Array))
+      Process           : not null access procedure
+        (Directory_Entry : in Win32.WCHAR_Array))
    is
       --  Trace : constant TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace
       --  (TakeCmd.Trace.Entity); pragma Unreferenced (Trace);
@@ -134,7 +135,9 @@ package body TakeCmd is
    begin
       Dummy := PathPart (pszName => Directory_Pattern, pszPath => Win32.Addr (Directory));
       Dummy :=
-         FilenamePart (pszName => Directory_Pattern, pszFilenamePart => Win32.Addr (Pattern));
+         FilenamePart
+           (pszName         => Directory_Pattern,
+            pszFilenamePart => Win32.Addr (Pattern));
 
       Fix_Pattern : declare
          Pattern_Length : constant Interfaces.C.int :=
@@ -149,15 +152,16 @@ package body TakeCmd is
          use type Win32.Winnt.HANDLE;
          use type Win32.BOOL;
 
-         Data   : aliased Win32.Winbase.WIN32_FIND_DATAW;
-         Handle : constant Win32.Winnt.HANDLE :=
+         Data       : aliased Win32.Winbase.WIN32_FIND_DATAW;
+         Search_All : aliased constant Win32.WCHAR_Array :=
+            Directory (1 .. Directory'Last - 1) & "*" & Win32.Wide_Nul;
+         Handle     : constant Win32.Winnt.HANDLE        :=
             Win32.Winbase.FindFirstFileW
-              (lpFileName     =>
-                  Win32.Addr (Directory (1 .. Directory'Last - 1) & "*" & Win32.Wide_Nul),
+              (lpFileName     => Win32.Addr (Search_All),
                lpFindFileData => Data'Unchecked_Access);
       begin
          if Handle = Win32.Winbase.INVALID_HANDLE_VALUE then
-           TakeCmd.Trace.Raise_Exception
+            TakeCmd.Trace.Raise_Exception
               (Raising => Win32_Error'Identity,
                Message => ": FindFirstFileW: " &
                           Win32.DWORD'Image (Win32.Winbase.GetLastError) &
@@ -173,8 +177,13 @@ package body TakeCmd is
                       fBrackets   => 1) =
                   0
                then
-                  Process (Directory (1 .. Directory'Last - 1) & Data.cFileName);
-                  Files_Found := Files_Found + 1;
+                  Process_File : declare
+                     File : aliased constant Win32.WCHAR_Array :=
+                        Directory (1 .. Directory'Last - 1) & Data.cFileName;
+                  begin
+                     Process (File);
+                     Files_Found := Files_Found + 1;
+                  end Process_File;
                end if;
                exit Process_Files when Win32.Winbase.FindNextFileW
                                           (hFindFile      => Handle,

@@ -16,8 +16,8 @@
 --  This file is part of MK_Utils.
 --
 --  MK_Utils is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  MK_Utils is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -49,7 +49,8 @@ package body MK_Utils is
    --------------------------------------------------------------------------
    --
    DLL_Name       : aliased constant Win32.WCHAR_Array := "MK_Utils" & Win32.Wide_Nul;
-   Author         : aliased constant Win32.WCHAR_Array := "Martin Krischik" & Win32.Wide_Nul;
+   Author         : aliased constant Win32.WCHAR_Array := "Martin Krischik" &
+                                                          Win32.Wide_Nul;
    Author_Email   : aliased constant Win32.WCHAR_Array :=
       "krischik@users.sourceforge.net" & Win32.Wide_Nul;
    Author_WebSite : aliased constant Win32.WCHAR_Array :=
@@ -62,6 +63,8 @@ package body MK_Utils is
       X_Change_Owner &
       "," &
       X_Show_Owner &
+      "," &
+      X_Show_Group &
       "," &
       TakeCmd.Trace.X_Enable &
       "," &
@@ -114,10 +117,16 @@ package body MK_Utils is
 
    ---------------------------------------------------------------------------
    --
+   --  Show Group of a File
+   --
+   function C_Show_Group (Arguments : in Win32.PCWSTR) return Interfaces.C.int is separate;
+
+   ---------------------------------------------------------------------------
+   --
    --  Called by 4NT/TC (after the call to "InitializePlugin") to get information from the
-   --  plugin, primarily for the names of functions, variables & commands. All that is necessary
-   --  is to return a pointer to the PluginInfo structure that was populated when the Plugin
-   --  loaded.
+   --  plugin, primarily for the names of functions, variables & commands. All that is
+   --  necessary is to return a pointer to the PluginInfo structure that was populated when
+   --  the Plugin loaded.
    --
    function Get_Plugin_Info return  TakeCmd.Plugin.LP_Plugin_Info is
       use type TakeCmd.Plugin.LP_Plugin_Info;
@@ -132,8 +141,8 @@ package body MK_Utils is
             pszDescription => Win32.Addr (Description),
             pszFunctions   => Win32.Addr (Implements),
             nMajor         => 1,
-            nMinor         => 1,
-            nBuild         => 1,
+            nMinor         => 2,
+            nBuild         => 0,
             hModule        => 0,
             pszModule      => null);
          TakeCmd.Trace.Write_Info ("MK_Utils: Plugin Info created!");
@@ -148,7 +157,8 @@ package body MK_Utils is
    ---------------------------------------------------------------------------
    --
    --  Called by 4NT/TC after loading the plugin. The API requires a return of 0, but as the
-   --  function is declared as a boolean we must, somewhat counter-intuitively, return "false".
+   --  function is declared as a boolean we must, somewhat counter-intuitively, return
+   --  "false".
    --
    function Initialize_Plugin return  Win32.BOOL is
    begin
@@ -163,10 +173,10 @@ package body MK_Utils is
 
    ---------------------------------------------------------------------------
    --
-   --  Called by 4NT/TC when shutting down, if EndProcess = 0, only the plugin is being closed;
-   --  if EndProcess = 1, then 4NT/TC is shutting down. The API requires a return of 0, but as
-   --  the function is declared as a boolean we must, somewhat counter-intuitively, return
-   --  "false".
+   --  Called by 4NT/TC when shutting down, if EndProcess = 0, only the plugin is being
+   --  closed; if EndProcess = 1, then 4NT/TC is shutting down. The API requires a return of
+   --  0, but as the function is declared as a boolean we must, somewhat counter-intuitively,
+   --  return "false".
    --
    function Shutdown_Plugin (End_Process : in Win32.BOOL) return Win32.BOOL is
       procedure Deallocate is new Ada.Unchecked_Deallocation (

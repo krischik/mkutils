@@ -9,24 +9,26 @@
 --      Version: 4.5
 --    $Revision: 774 $
 --     $HeadURL: https://gnuada.svn.sourceforge.net/svnroot/gnuada/trunk/tools/vim/ada_options.vim $
---      History: 30.10.2007 MK Initial Release
+--      History: 25.10.2007 MK Initial Release
+--               29.10.2007 MK Added Threading, parameter names closer to
+--                             C original
 ----------------------------------------------------------------------------
 --  Copyright (C) 2007  Martin Krischik
 --
---  This file is part of MK_Utils.
+--  This file is part of TakeCommand Plugin Library for Ada.
 --
---  MK_Utils is free software: you can redistribute it and/or modify
+--  TakeCommand Plugin Library for Ada is free software: you can redistribute it and/or modify
 --  it under the terms of the GNU General Public License as published by
 --  the Free Software Foundation, either version 3 of the License, or
 --  (at your option) any later version.
 --
---  MK_Utils is distributed in the hope that it will be useful,
+--  TakeCommand Plugin Library for Ada is distributed in the hope that it will be useful,
 --  but WITHOUT ANY WARRANTY; without even the implied warranty of
 --  MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
 --  GNU General Public License for more details.
 --
 --  You should have received a copy of the GNU General Public License
---  along with MK_Utils.  If not, see <http://www.gnu.org/licenses/>.
+--  along with TakeCommand Plugin Library for Ada.  If not, see <http://www.gnu.org/licenses/>.
 ------------------------------------------------------------- }}}1 ----------
 --
 -- This file is not to be edited thrue the project poroperties in GPS.
@@ -36,50 +38,41 @@ with "win32ada.gpr";
 with "ADVAPI32.gpr";
 with "TakeCmd.gpr";
 
-project MK_Utils is
+project TakeCmd.Ada is
    type Style_Type  is ("Debug"  , "Release");
    type Target_Type is ("i686"   , "pentium4", "x86_64");
 
-   Base         := ".";
-   Version      := "1.2.0";
+   Base := ".";
+   Version := "1.2.0";
    Source_Files := (
-      "mk_utils.adb",
-      "mk_utils.ads",
-      "mk_utils-c_change_owner.ada",
-      "mk_utils-c_help.ada",
-      "mk_utils-c_show_owner.ada",
-      "takecmd-plugin.ads",
-      "takecmd-trace.ada",
-      "takecmd-trace.adb",
-      "takecmd-trace.ads",
-      "takecmd.adb",
       "takecmd.ads",
+      "takecmd.adb",
+      "takecmd-trace-cl.ada",
+      "takecmd-trace.ads",
+      "takecmd-trace.adb",
+      "takecmd-strings.ads",
+      "takecmd-strings.adb",
+      "takecmd-plugin.ads",
       "win32-advapi.ads");
 
    Style  : Style_Type  := external ("style" , "Release");
    Target : Target_Type := external ("target", "pentium4");
 
    for Exec_Dir            use  Base & "/" & Target & "-" & Style;
-   for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj/mk_utils";
-   for Source_Dirs         use (Base & "/Source/mk_utils",
-                                Base & "/Source/takecmd");
+   for Object_Dir          use  Base & "/" & Target & "-" & Style & "/obj/takecmd";
+   for Source_Dirs         use (Base & "/Source/takecmd",
+                                Base & "/Source");
    for Languages           use ("Ada");
-   for Library_Name        use "mk_utils";
-   for Library_Src_Dir     use  Base & "/" & Target & "-" & Style & "/lib/mk_utils";
-   for Library_Dir         use  Base & "/" & Target & "-" & Style & "/lib/mk_utils";
-   for Library_Kind        use "dynamic";
-   for Library_Version     use "libmk_utils.so." & Version;
-   for Library_Auto_Init   use "true";
+   for Library_Name        use "takecmd_ada";
+   for Library_Dir         use  Base & "/" & Target & "-" & Style & "/lib/takecmd";
+   for Library_Kind        use "static";
    for Library_Interface   use (
-      "mk_utils",
       "takecmd",
-      "takecmd.plugin",
       "takecmd.strings",
       "takecmd.trace",
-      "Win32.advapi");
+      "takecmd.plugin",
+      "win32.advapi");
    for Library_Options     use (
-         "-Wl,../../../MK_Utils.def",
-         "-Wl,--enable-stdcall-fixup",
          "-Wl,--kill-at");        -- Remove @nn from exported symbols
 
    package Finder is
@@ -179,6 +172,8 @@ project MK_Utils is
    end Linker;
 
    package Naming is
+      for Specification_Suffix ("c") use ".h";
+      for Implementation_Suffix ("c") use ".c";
       for Specification_Suffix ("ada") use ".ads";
       for Implementation_Suffix ("ada") use ".adb";
       for Separate_Suffix use ".ada";
@@ -208,7 +203,7 @@ project MK_Utils is
          "--eol=lf");
    end Pretty_Printer;
 
-end MK_Utils;
+end TakeCmd.Ada;
 
 ------------------------------------------------------------------------
 --vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab :

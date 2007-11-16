@@ -139,8 +139,8 @@ EXPORTS
 	GetParentProcessName
 	GetRandom
 	GetRowOffset
-	GetScrCols
-	GetScrRows
+	GetScrCols@0
+	GetScrRows@0
 	GetShortName
 	GetSymlink
 	GetTempDirectory

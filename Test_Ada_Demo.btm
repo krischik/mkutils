@@ -48,7 +48,7 @@ SET            TRACEFILE=Test_Ada_Demo.trace
 
 SETLOCAL
     PLUGIN /L pentium4-Release\lib\ada_demo\ada_demo.dll
-    PLUGIN /P
+    PLUGIN /I
 
     TraceHelp
     TraceWrite  Test Trace.

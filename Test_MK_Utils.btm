@@ -53,7 +53,7 @@ SETLOCAL
 
     MKHELP
     MKSHOWOWNER     *.btm
-    MKSHOWOWNER     %_cwd\*.btm
+    MKSHOWGROUP     %_cwd\*.btm
     MKSHOWOWNER     %_cwd
     MKSHOWOWNER
     MKSHOWOWNER     XXXX

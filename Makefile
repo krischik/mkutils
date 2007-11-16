@@ -64,6 +64,7 @@ SDK/libADVAPI32.a: SDK/ADVAPI32.def
 
 pentium4-Release/lib/ada_demo/ada_demo.dll:		\
 	Ada_Demo.gpr					\
+	Ada_Demo.def					\
 	Source/ada_demo/*.ad?				\
 	${Project_Files}				\
 	${Source_Files}					\
@@ -72,6 +73,7 @@ pentium4-Release/lib/ada_demo/ada_demo.dll:		\
 
 pentium4-Debug/lib/ada_demo/ada_demo.dll:		\
 	Ada_Demo.gpr					\
+	Ada_Demo.def					\
 	Source/ada_demo/*.ad?				\
 	${Project_Files}				\
 	${Source_Files}					\
@@ -80,6 +82,7 @@ pentium4-Debug/lib/ada_demo/ada_demo.dll:		\
 
 pentium4-Release/lib/mk_utils/mk_utils.dll:		\
 	mk_utils.gpr					\
+	mk_utils.def					\
 	Source/mk_utils/*.ad?				\
 	${Project_Files}				\
 	${Source_Files}					\
@@ -88,6 +91,7 @@ pentium4-Release/lib/mk_utils/mk_utils.dll:		\
 
 pentium4-Debug/lib/mk_utils/mk_utils.dll:		\
 	mk_utils.gpr					\
+	mk_utils.def					\
 	Source/mk_utils/*.ad?				\
 	${Project_Files}				\
 	${Source_Files}					\

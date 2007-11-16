@@ -583,6 +583,11 @@ package TakeCmd is
    --  /*
    --   Returns the number of columns in the window (0 based)
    --  */
+
+   function GetScrCols return  Interfaces.C.int;
+
+   pragma Import (Convention => Stdcall, Entity => GetScrCols, External_Name => "GetScrCols");
+
    --
    --
    --  /********************************************************************
@@ -633,6 +638,7 @@ package TakeCmd is
      (nErrorCode : in Interfaces.C.int;
       pszArg     : in Win32.PCWSTR := null)
       return       Interfaces.C.int;
+
    pragma Import (Convention => Stdcall, Entity => Error, External_Name => "error");
 
    --
