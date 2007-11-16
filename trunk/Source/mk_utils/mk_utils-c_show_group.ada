@@ -43,10 +43,10 @@ with Win32.Winbase;
 
 ---------------------------------------------------------------------------
 --
---  Show Owner of a File
+--  Show Group of a File
 --
 separate (MK_Utils)
-function C_Show_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
+function C_Show_Group (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    Trace : constant TakeCmd.Trace.Object :=
       TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
    pragma Unreferenced (Trace);
@@ -76,12 +76,12 @@ function C_Show_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
          Name_Use      : access Win32.Winnt.SID_NAME_USE);
 
       Result              : Win32.DWORD;
-      Owner               : aliased Win32.Winnt.PSID := System.Null_Address;
-      Owner_Name          : aliased Win32.Advapi.UNAME;
-      Owner_Name_Length   : aliased Win32.DWORD      := Owner_Name'Length;
-      Owner_Domain        : aliased Win32.Advapi.UNAME;
-      Owner_Domain_Length : aliased Win32.DWORD      := Owner_Domain'Length;
-      Owner_Type          : aliased Win32.Winnt.SID_NAME_USE;
+      Group               : aliased Win32.Winnt.PSID := System.Null_Address;
+      Group_Name          : aliased Win32.Advapi.UNAME;
+      Group_Name_Length   : aliased Win32.DWORD      := Group_Name'Length;
+      Group_Domain        : aliased Win32.Advapi.UNAME;
+      Group_Domain_Length : aliased Win32.DWORD      := Group_Domain'Length;
+      Group_Type          : aliased Win32.Winnt.SID_NAME_USE;
       Security_Descriptor : aliased Win32.Winnt.PSECURITY_DESCRIPTOR;
       Dummy_Handle        : Win32.Windef.HLOCAL;
 
@@ -121,8 +121,8 @@ function C_Show_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
          return;
       end Lookup_Account_Sid;
 
-      pragma Warnings (Off, Owner_Name);
-      pragma Warnings (Off, Owner_Domain);
+      pragma Warnings (Off, Group_Name);
+      pragma Warnings (Off, Group_Domain);
       pragma Warnings (Off, Dummy_Handle);
    begin
       TakeCmd.Trace.Write (Directory_Entry);
@@ -130,23 +130,23 @@ function C_Show_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
          Win32.Advapi.GetNamedSecurityInfoW
            (pObjectName          => Win32.Addr (Directory_Entry),
             ObjectType           => Win32.Advapi.SE_FILE_OBJECT,
-            SecurityInfo         => Win32.Winnt.OWNER_SECURITY_INFORMATION,
-            ppsidOwner           => Owner'Access,
-            ppsidGroup           => null,
+            SecurityInfo         => Win32.Winnt.GROUP_SECURITY_INFORMATION,
+            ppsidOwner           => null,
+            ppsidGroup           => Group'Access,
             ppDacl               => null,
             ppSacl               => null,
             ppSecurityDescriptor => Security_Descriptor'Access);
 
-      TakeCmd.Trace.Write_Dump (Address => Owner'Address, Size => Owner'Size);
+      TakeCmd.Trace.Write_Dump (Address => Group'Address, Size => Group'Size);
       if Result = Win32.Winerror.NO_ERROR then
          Dummy_Handle := Win32.Winbase.LocalFree (Security_Descriptor);
          Lookup_Account_Sid
-           (Sid           => Owner,
-            Name          => Owner_Name'Access,
-            Name_Length   => Owner_Name_Length'Access,
-            Domain        => Owner_Domain'Access,
-            Domain_Length => Owner_Domain_Length'Access,
-            Name_Use      => Owner_Type'Access);
+           (Sid           => Group,
+            Name          => Group_Name'Access,
+            Name_Length   => Group_Name_Length'Access,
+            Domain        => Group_Domain'Access,
+            Domain_Length => Group_Domain_Length'Access,
+            Name_Use      => Group_Type'Access);
          declare
             Directory_Entry_Length : constant Natural :=
                Natural (Win32.Winbase.lstrlenW (Win32.Addr (Directory_Entry)));
@@ -154,11 +154,11 @@ function C_Show_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
             TakeCmd.Q_Put_String (Directory_Entry);
             TakeCmd.Q_Put_String
               (Max ((Screen_Width / 2) - Directory_Entry_Length, 1) * " ");
-            TakeCmd.Q_Put_String (Owner_Domain);
+            TakeCmd.Q_Put_String (Group_Domain);
             TakeCmd.Q_Put_String (Win32.WCHAR_Array'("\"));
-            TakeCmd.Q_Put_String (Owner_Name);
+            TakeCmd.Q_Put_String (Group_Name);
             TakeCmd.Q_Put_String (Win32.WCHAR_Array'(" ("));
-            TakeCmd.Q_Put_String (Win32.Winnt.SID_NAME_USE'Image (Owner_Type));
+            TakeCmd.Q_Put_String (Win32.Winnt.SID_NAME_USE'Image (Group_Type));
             TakeCmd.Q_Put_String (Win32.WCHAR_Array'(")"));
             TakeCmd.CrLf;
          end;
@@ -183,7 +183,7 @@ exception
       TakeCmd.Q_Put_String (Ada.Exceptions.Exception_Information (An_Exception));
       TakeCmd.CrLf;
       return -2;
-end C_Show_Owner;
+end C_Show_Group;
 
 ------------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :

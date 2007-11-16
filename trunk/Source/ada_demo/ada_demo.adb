@@ -316,7 +316,7 @@ package body Ada_Demo is
             pszFunctions   => Win32.Addr (Implements),
             nMajor         => 2,
             nMinor         => 2,
-            nBuild         => 0,
+            nBuild         => 1,
             hModule        => 0,
             pszModule      => null);
          TakeCmd.Trace.Write_Info ("Ada_Demo: Plugin Info created!");

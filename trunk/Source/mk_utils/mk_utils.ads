@@ -104,6 +104,19 @@ package MK_Utils is
 
    ---------------------------------------------------------------------------
    --
+   --  Show Group of a File
+   --
+   function C_Show_Group (Arguments : in Win32.PCWSTR) return Interfaces.C.int;
+
+   X_Show_Group : aliased constant Win32.WCHAR_Array := "MKSHOWGROUP";
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Show_Group,
+      External_Name => "MKSHOWGROUP");
+
+   ---------------------------------------------------------------------------
+   --
    --  Write Help for Commandline Options parsed from Trace
    --
    function C_Help (Arguments : in Win32.PCWSTR) return Interfaces.C.int;

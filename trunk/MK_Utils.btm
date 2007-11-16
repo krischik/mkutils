@@ -34,9 +34,11 @@ SETLOCAL
     SET     Project_Home=%@PATH[%_batchname]
 
     PUSHD %[Project_Home] 
-        gnumake-3.79.1-nt all
+        START %[GNAT_GPL_HOME]\bin\gps.exe -P MK_Utils
     POPD
 ENDLOCAL
+
+EXIT
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
 ::vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=4 expandtab :
