@@ -1,0 +1,32 @@
+LIBRARY Ada_Demo
+DESCRIPTION "A demonstration Plugin for 4NT/TC, written with Ada."
+VERSION 2.2
+
+EXPORTS
+	DIR
+	GetPluginInfo
+	InitializePlugin
+	KEY
+	REMARK
+	ShutdownPlugin
+	TASKREMARK
+	TRACEENABLE
+	TRACEFILE
+	TRACEHELP
+	TRACETO
+	TRACEVERBOSE
+	TRACEWRITE
+	TRACEWRITELINENUMBER
+	TRACEWRITEPREFIX
+	USEBUFFER
+	_HELLO
+	_TASKREMARK
+	_TRACEENABLE
+	_TRACEFILE
+	_TRACETO
+	_TRACEVERBOSE
+	_TRACEWRITELINENUMBER
+	_TRACEWRITEPREFIX
+
+;vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=4 expandtab :
+;vim: set textwidth=0 filetype=def foldmethod=marker nospell :

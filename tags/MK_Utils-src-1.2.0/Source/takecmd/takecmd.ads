@@ -1,0 +1,2122 @@
+--------------------------------------------------------------------------
+--  Description: Options setable by the Ada plugin
+--          $Id$
+--    Copyright: Copyright (C) 2007 Martin Krischik
+--      Licence: GNU General Public License
+--   Maintainer: Martin Krischik
+--      $Author$
+--        $Date$
+--      Version: 4.5
+--    $Revision$
+--     $HeadURL$
+--      History: 25.10.2007 MK Initial Release
+--               29.10.2007 MK Added Threading, parameter names closer to
+--                             C original
+--         Help: http://www.jpsoftwiki.com/wiki/index.php?title=Plugin/Ada
+----------------------------------------------------------------------------
+--  Copyright (C) 2007 Martin Krischik
+--
+--  This file is part of Ada_Demo.
+--
+--  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
+--  GNU General Public License as published by the Free Software Foundation, either version 3 of
+--  the License, or (at your option) any later version.
+--
+--  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
+--  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
+--  See the GNU General Public License for more details.
+--
+--  You should have received a copy of the GNU General Public License along with Ada_Demo. If
+--  not, see <http://www.gnu.org/licenses/>.
+------------------------------------------------------------- }}}1 ----------
+--  Using TakeCmd.dll functions with Ada
+--  -------------------------------------
+--
+--  I have not translated the entire TakeCmd.h into Ada functions and procedures because it
+--  would take a long time and be prone to error. If you need to call a function(s) in
+--  TakeCmd.dll the simplest way is to add then here.
+--
+--  This is an example of how to translate a TakeCmd.dll function to Ada. I'm using the HEAD
+--  command as an example. In TakeCmd.h the command is defined as:
+--
+--        int WINAPI HeadCmd( LPTSTR pszArguments )
+--
+--  which means that the function "Head_Cmd" is called using the "WINAPI" calling convention
+--  (equivalent to "stdcall") and is passed a pointer to a null terminated string containing the
+--  command's arguments, and the command returns an integer value on completion.
+--
+--  To use the above command from within your Ada plugin you would make the following
+--  declaration:
+--
+--    function Head_Cmd (Arguments: in Win32.PCWSTR) return Interfaces.C.int;
+--    pragma Import
+--      (Convention    => Stdcall,
+--       Entity        => HeadCmd,
+--       External_Name => "HeadCmd");
+--
+--  If the declaration in TakeCmd.h begins with "void" it means there is no return value, which
+--  is equivalent to a "Procedure" declaration in Ada. For example, the TakeCmd.h declaration:
+--
+--    void WINAPI CrLf( void );
+--
+--  translates to the Ada declaration:
+--
+--    procedure CrLf;
+--    pragma Import
+--      (Convention    => Stdcall,
+--       Entity        => CrLf,
+--       External_Name => "CrLf");
+--
+--  This plugin contains an example of calling TakeCmd.dll functions in the command "Remark".
+--
+--  Some functions in TakeCmd.dll manipulate the string that you pass to them within the buffer
+--  in which the string resides. Therefore, if the TakeCmd.dll function can return a longer
+--  string than is passed to it, you must make sure that you pass the string in a buffer that is
+--  large enough to provide working space and to hold the returned string if appropriate.
+--
+--  An example of such a function is:
+--
+--    void WINAPI AddCommas( LPTSTR pszNumber );
+--
+--  which inserts the thousands separator into the supplied number. In Delphi this would be
+--  declared as:
+--
+--    procedure AddCommas(Arguments: in Win32.PCWSTR);
+--    pragma Import
+--      (Convention    => Stdcall,
+--       Entity        => AddCommas,
+--       External_Name => "AddCommas");
+--
+--  When this procedure adds in the thousands separator the resulting string will be longer than
+--  the string that you started with, and so you must allow room for that expansion. The size of
+--  the buffer that you need cannot be precisely defined, and you may need to experiment.
+--  However, as a guideline I would suggest a buffer of at least three times the length of the
+--  string that you are passing to the function.
+--
+--  A working example of calling this kind of function is included in the "usebuffer" function
+--  below.
+--
+--  Note that if you use the following function from TakeCmd.dll:
+--
+--     int WINAPI Command( LPTSTR pszLine, int nReserved );
+--
+--  which calls the parser to expand and execute the supplied command then the buffer should be
+--  at least 2K and preferably 8K to 16K to allow for variable and alias expansion.
+--
+
+pragma License (Gpl);
+pragma Ada_05;
+
+with Interfaces.C;
+with Win32;
+with Win32.Advapi;
+
+package TakeCmd is
+   pragma Linker_Options ("-lTakeCmd");
+
+   Win32_Error : exception;
+   Name_Error : exception;
+
+   subtype Function_Buffer is Win32.WCHAR_Array (1 .. 2 ** 11);
+   subtype File_Name is Win32.WCHAR_Array (1 .. Win32.Advapi.UNAMEMAXSIZE);
+   subtype Path_Name is Win32.WCHAR_Array (1 .. 2 ** 15);
+
+   --  /*******************************************************************
+   --   * Prototypes for internal commands
+   --   * The internal commands all take an argument string as input; it does
+   --   *   NOT include the command name.
+   --   * Internal commands return 0 for success, or != 0 for an error
+   --   *       1 = Usage error
+   --   *       2 = Windows error
+   --   *       3 = Control-C or Control-Break
+   --   *******************************************************************/
+   --
+   --  int WINAPI Activate_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Assoc_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Alias_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Attrib_Cmd( LPTSTR pszArguments );
+   --  int WINAPI BatComp_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Battext_Cmd( LPTSTR pszArguments );
+   --  int WINAPI BDebugger_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Beep_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Break_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Breakpoint_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Call_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Cancel_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Case_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Cd_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Cdd_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Chcp_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Cls_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Cmds_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Color_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Copy_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Date_Cmd( LPTSTR pszArguments );
+   --  int WINAPI DDE_Cmd( LPTSTR pszArguments );
+   --  int WINAPI DebugString_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Del_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Delay_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Describe_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Detach_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Dir_Cmd( LPTSTR pszArguments );
+   --  int WINAPI DirHistory_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Dirs_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Do_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Drawbox_Cmd( LPTSTR pszArguments );
+   --  int WINAPI DrawHline_Cmd( LPTSTR pszArguments );
+   --  int WINAPI DrawVline_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Echo_Cmd( LPTSTR pszArguments );
+   --  int WINAPI EchoErr_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Echos_Cmd( LPTSTR pszArguments );
+   --  int WINAPI EchosErr_Cmd( LPTSTR pszArguments );
+   --  int WINAPI EjectMedia_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Endlocal_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Eset_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Eventlog_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Except_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Exit_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Ffind_Cmd( LPTSTR pszArguments );
+   --  int WINAPI For_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Free_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Ftype_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Function_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Global_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Gosub_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Goto_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Head_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Help_Cmd( LPTSTR pszArguments );
+   --  int WINAPI History_Cmd( LPTSTR pszArguments );
+   --  int WINAPI If_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Iff_Cmd( LPTSTR pszArguments );
+   --  int WINAPI IFTP_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Include_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Inkey_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Input_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Jabber_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Keybd_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Keys_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Keystack_Cmd( LPTSTR pszArguments );
+   --  int WINAPI List_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Loadbtm_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Log_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Md_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Memory_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Mklnk_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Msgbox_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Mv_Cmd( LPTSTR pszArguments ); MOVE command
+   --  int WINAPI On_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Option_Cmd( LPTSTR pszArguments );
+   --  int WINAPI OSD_Cmd( LPTSTR );
+   --  int WINAPI Path_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Pause_Cmd( LPTSTR pszArguments );
+   --  int WINAPI PDir_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Playavi_Cmd(LPTSTR );
+   --  int WINAPI Playsound_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Plugin_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Popd_Cmd( LPTSTR pszArguments );
+   --  int WINAPI PostMsg_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Print_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Priority_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Prompt_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Pushd_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Querybox_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Quit_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Rd_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Reboot_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Recycle_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Remark_Cmd( LPTSTR pszArguments );      REM
+   --  int WINAPI Ren_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Ret_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Rexec_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Rshell_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Scr_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Script_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Scrput_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Select_Cmd( LPTSTR pszArguments );
+   --  int WINAPI SendMail_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Set_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Setdos_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Setlocal_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Shift_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Shortcut_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Shralias_Cmd( LPTSTR pszArguments );
+   --  int WINAPI SMPP_Cmd( LPTSTR pszArguments );
+   --  int WINAPI SNMP_Cmd( LPTSTR pszArguments );
+   --  int WINAPI SNPP_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Start_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Switch_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Sync_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Tail_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Tasklist_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Taskend_Cmd( LPTSTR pszArguments );\
+   --  int WINAPI TCToolbar_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Tee_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Time_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Timer_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Title_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Touch_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Transient_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Tree_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Truename_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Type_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Unalias_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Unfunction_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Unset_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Ver_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Verify_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Volume_Cmd( LPTSTR pszArguments );
+   --  int WINAPI VScrput_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Which_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Window_Cmd( LPTSTR pszArguments );
+   --  int WINAPI WMIQuery_Cmd( LPTSTR pszArguments );
+   --  int WINAPI Y_Cmd( LPTSTR pszArguments );
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Parser functions
+   --   *
+   --   ********************************************************************/
+   --  int WINAPI Command( LPTSTR pszLine, int nReserved );
+   --  /*
+   --   Call the parser to expand and execute pszLine
+   --   nReserved - reserved, must be set to 0
+   --  */
+   --
+   --  int WINAPI PromptAliases( LPTSTR pszAlias );
+   --  /*
+   --   Look for & execute the command prompt aliases.  pszAlias is
+   --   a string containing one of the following:
+   --
+   --           PRE_INPUT
+   --           PRE_EXEC
+   --           POST_EXEC
+   --  */
+   --
+   --  void WINAPI tty_yield( int nWait );
+   --  /*
+   --   Retrieve messages & give some time to other apps.
+   --   If nWait != 0, wait for a message to arrive before returning
+   --  */
+   --
+   --  int WINAPI QueryIsGUI( void );
+   --  /*
+   --   Returns 1 if we're inside a Take Command (GUI) session; 0 if
+   --   we're in a 4NT (console) session.
+   --  */
+   --
+   --  int WINAPI QueryUnicodeOutput( void );
+   --  /*
+   --   Returns 1 if the command processor's output (pipes and
+   --   redirected files) is in Unicode.
+   --  */
+   --
+   --
+   --  DWORD WINAPI GetWOW64( void );
+   --  /*
+   --   Returns 1 if the process is running in 64-bit Windows
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Plugin functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI LoadOnePlugin( LPTSTR pszFilename );
+   --  /*
+   --   Load a plugin
+   --   pszFilename - file containing the plugin(s)
+   --  */
+   --
+   --  int WINAPI LoadAllPlugins( void );
+   --  /*
+   --   Load everything in the PLUGINS subdirectory
+   --  */
+   --
+   --
+   --  int WINAPI UnloadOnePlugin( LPTSTR pszPlugIn );
+   --  /*
+   --   Unload a plugin
+   --   pszPluginName - internal name of plugin (not the filename)
+   --  */
+   --
+   --  int WINAPI UnloadAllPlugins( BOOL bEndProcess );
+   --  /*
+   --   Unload a plugin
+   --   bEndProcess - 1 if the process is shutting down
+   --  */
+   --
+   --  int WINAPI QueryIsPluginCommand( LPTSTR pszCommand );
+   --  /*
+   --   returns 1 if pszCommand is a plugin internal command
+   --  */
+   --
+   --  int WINAPI QueryIsPluginFeature( LPTSTR pszArg );
+   --  /*
+   --   returns 1 if pszArg is a plugin internal command, internal
+   --     variable, or variable function
+   --  */
+   --
+   --  int WINAPI QueryPluginPathname( LPTSTR lpszPlugIn ); /*
+   --          returns full pathname for the specified plugin module name
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * ^C / ^Break handling functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  void WINAPI HoldSignals( void );
+   --  /*
+   --   Disable ^C / ^Break
+   --  */
+   --
+   --  void WINAPI EnableSignals( void );
+   --  /*
+   --   Enable ^C / ^Break
+   --  */
+   --
+   --  void WINAPI BreakHandler( void );
+   --  /*
+   --   Call the internal ^C / ^Break handler
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Clipboard functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI CopyToClipboard( HANDLE nFile );
+   --  /*
+   --   Copy the file referenced by the Windows file handle "nFile" to the
+   --  clipboard
+   --  */
+   --
+   --  int WINAPI CopyTextToClipboard( LPTSTR pszText, int nLength );
+   --  /*
+   --   Copy text (of length "nLength") to the clipboard
+   --  */
+   --
+   --  int WINAPI CopyFromClipboard( LPTSTR pszFileName );
+   --  /*
+   --   Copy the clipboard to the specified filename.
+   --  */
+   --
+   --  int WINAPI GetClipboardLine( int nLine, LPTSTR pszText, int
+   --  nMaxLength);
+   --  /*
+   --   Copy the specified line from the clipboard to the string pszText (of
+   --  maximum size nMaxLength).
+   --  */
+   --
+   --  int WINAPI WindowToClipboard( HWND hWnd, BOOL fFullWindow );
+   --  /*
+   --   Copy a window as a .BMP to the clipboard.
+   --
+   --           hWnd - window to copy
+   --           fFullWindow - if 0, copy client area only.  if 1, copy entire
+   --  window
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Color functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI GetColors( LPTSTR pszColors );
+   --  /*
+   --   Parse the input string for colors
+   --   Returns the attribute, and removes the colors from "pszColors"
+   --  */
+   --
+   --  void WINAPI SetColors( int nColor );
+   --  /*
+   --   If we're using ANSI, send an ANSI color set sequence to the display
+   --   Otherwise, set the screen attributes directly
+   --  */
+   --
+   --  LPTSTR WINAPI ParseColors( LPTSTR pszANSI, int *pnForeground, int
+   --  *pnBackground );
+   --  /*
+   --   Get foreground & background attributes from an ASCII string
+   --   (i.e., "Bright white on blue"
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Display I/O functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI QueryIsConsole( HANDLE hConsole );
+   --  /*
+   --   Returns 1 if hConsole is a console handle, 0 otherwise
+   --  */
+   --
+   --  void WINAPI GetCursorPosition( int *pnRow, int *pnColumn );
+   --  /*
+   --   Returns the current cursor position in the display window
+   --  */
+   --
+   --  void WINAPI GetAbsCursorPosition( int *pnRow, int *pnColumn );
+   --  /*
+   --   Returns the current cursor position in the screen buffer
+   --  */
+   --
+   --  void WINAPI GetAttribute( unsigned int *puNormalAttribute, unsigned
+   --  int *puInverseAttribute );
+   --  /*
+   --   Returns the color attribute (and its inverse) at the current cursor
+   --  position
+   --  */
+   --
+   --  void WINAPI SetCursorPosition( int nRow, int nColumn );
+   --  /*
+   --   Sets the cursor position in the display window
+   --  */
+   --
+   --  void WINAPI SetAbsCursorPosition( int nRow, int nColumn );
+   --  /*
+   --   Sets the cursor position in the screen buffer
+   --  */
+   --
+   --  int WINAPI GetCursorRange( LPTSTR pszCursor, int *puRow, int *puColumn
+   --  );
+   --  /*
+   --   Parse a cursor position request, adjust if relative, & check for
+   --  valid range
+   --   Returns 0 if it's a valid position, != 0 if it isn't
+   --   The format is:
+   --
+   --           [+|-]Row,[+|-]Column
+   --  */
+   --
+   --  void WINAPI Scroll( int  nULRow, int nULColumn, int nLRRow, int
+   --  nLRColumn, int nMode, int nAttribute );
+   --  /*
+   --   Scroll or clear the window.
+   --   If nMode = 1, scroll up
+   --   If nMode = -1, scroll down
+   --   if nMode = 0, clear window
+   --  */
+   --
+   --  void WINAPI ReadCellStr( PCHAR_INFO pciBlock, int nLength, int nRow,
+   --  int nColumn );
+   --  /*
+   --   Read the character & attribute array at the specified position
+   --  */
+   --
+   --  void WINAPI WriteCellStr( PCHAR_INFO pciBlock,   int nLength, int
+   --  nRow, int nColumn  );
+   --  /*
+   --   Write the character & attribute array to the specified position
+   --  */
+   --
+   --  void WINAPI WriteTTY( LPTSTR pszText );
+   --  /*
+   --   Write the specified text at the current cursor position
+   --  */
+   --
+   --  void WINAPI WriteChrAtt( int nRow, int nColumn, int nAttribute, int
+   --  nChar );
+   --  /*
+   --   Write the character nChar using the color nAttribute at the specified
+   --  cursor position
+   --  */
+   --
+   --  void WINAPI WriteStrAtt( int nRow, int nColumn, int nAttribute, LPTSTR
+   --  pszText );
+   --  /*
+   --   Write pszText using the color nAttribute starting at the specified
+   --  cursor position
+   --  */
+   --
+   --  void WINAPI WriteVStrAtt( int nRow, int nColumn, int nAttribute,
+   --  LPTSTR pszText );
+   --  /*
+   --   Write pszText vertically using the color nAttribute starting at the
+   --  specified cursor position
+   --  */
+   --
+   --  void WINAPI SetLineColor( int nRow, int nColumn, int nLength, int
+   --  nAttribute  );
+   --  /*
+   --   Change the display attributes on the specified row
+   --  */
+   --
+   --  int WINAPI QueryIsANSI( void );
+   --  /*
+   --   Returns 1 if ANSI colors are enabled; 0 if they are not
+   --  */
+   --
+   --  int WINAPI AnsiString( LPTSTR pszString, int nLength );
+   --  /*
+   --   Write pszString to the display, interpreting ANSI colors and cursor
+   --  positioning
+   --  */
+   --
+   --  unsigned int WINAPI GetAbsScrRows( void );
+   --  /*
+   --   Returns the number of rows in the display buffer
+   --  */
+   --
+   --  unsigned int WINAPI GetRowOffset( void );
+   --  /*
+   --   Returns the row in the display buffer for first row in the window
+   --  */
+   --
+   --  unsigned int WINAPI GetScrRows( void );
+   --  /*
+   --   Returns the number of rows in the window (0 based)
+   --  */
+   --
+   --  unsigned int WINAPI GetScrCols( void );
+   --  /*
+   --   Returns the number of columns in the window (0 based)
+   --  */
+
+   function GetScrCols return  Interfaces.C.int;
+
+   pragma Import (Convention => Stdcall, Entity => GetScrCols, External_Name => "GetScrCols");
+
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Description handling functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI CopyDescriptions( LPTSTR pszSourceFile, LPTSTR
+   --  pszTargetFile );
+   --  /*
+   --   Copy the description for the source file to the target file
+   --  */
+   --
+   --  int WINAPI ReadDescriptions( LPTSTR pszFileName, LPTSTR pszDescription
+   --  );
+   --  /*
+   --   Get the description for pszFileName
+   --  */
+   --
+   --  int WINAPI WriteDescriptions( LPTSTR pszFileName, LPTSTR
+   --  pszDescription );
+   --  /*
+   --   Write a new description for pszFileName
+   --  */
+   --
+   --  void DescribeDlg( void );
+   --  /*
+   --   Popup a dialog to create / edit descriptions
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Error handling functions
+   --   *
+   --   ********************************************************************/
+   --
+
+   ------------------------------------------------------------------------
+   --
+   --  int WINAPI error( int nErrorCode, LPTSTR pszArg );
+   --
+   --   Display a formatted Windows error message w/optional argument
+   --
+
+   function Error
+     (nErrorCode : in Interfaces.C.int;
+      pszArg     : in Win32.PCWSTR := null)
+      return       Interfaces.C.int;
+
+   pragma Import (Convention => Stdcall, Entity => Error, External_Name => "error");
+
+   --
+   --  int WINAPI ErrorMsgBox( int nErrorCode, LPTSTR pszArg );
+   --  /*
+   --   Display a popup window with a formatted Windows error message
+   --  */
+   --
+   --  void WINAPI honk( void );
+   --  /*
+   --   Beeps
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Alias and variable functions
+   --   *
+   --   ********************************************************************/
+   --  HWND AliasList( unsigned int uTransparency );
+   --  /*
+   --   Popup an editable window containing the alias list
+   --  */
+   --
+   --  HWND EnvironmentList( unsigned int uTransparency );
+   --  /*
+   --   Popup an editable window containing the environment variables
+   --  */
+   --
+   --  void WINAPI EscapeLine( LPTSTR pszLine );
+   --  /*
+   --   Substitute for escape characters in the line
+   --
+   --   Supported escape characters are:
+   --
+   --           b       backspace
+   --           c       comma
+   --           e       escape
+   --           f       form feed
+   --           k       single back quote
+   --           n       line feed
+   --           q       double quote
+   --           r       carriage return
+   --           s       space
+   --           t       tab
+   --  */
+   --
+   --  int WINAPI ExpandAliases( LPTSTR pszLine );
+   --  /*
+   --   Expand aliases for the first argument on the line
+   --  */
+   --
+   --  int WINAPI ExpandVariables( LPTSTR pszLine, int fRecurse );
+   --  /*
+   --   Expand variables (internal, functions, user functions, plugins)
+   --
+   --   fRecurse is a recursion counter so we can detect loops. If fRecurse
+   --           is != 0, ExpandVariables won't attempt to do alias expansion
+   --           when replacing the first argument.
+   --  */
+   --
+   --  HWND FunctionList( unsigned int uTransparency );
+   --  /*
+   --   Popup an editable window containing the user-defined functions
+   --  */
+   --
+   --
+   --  LPTSTR WINAPI GetAlias( LPTSTR pszAlias );
+   --  /*
+   --   Returns the alias
+   --  */
+   --
+   --  int  WINAPI SetEVariable( LPTSTR pszVariable );
+   --  /*
+   --   Set / delete an environment variable
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Dialog functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  BOOL WINAPI SelectFolder( LPTSTR pszStart, LPTSTR pszSelected );
+   --  /*
+   --   Selects a directory using the shell's browser, starting in the
+   --    pszStart directory.
+   --   Returns the selected directory in pszSelected
+   --  */
+   --
+   --  VOID WINAPI DoPropertySheet( HWND hParent );
+   --  /*
+   --   Displays the 4NT / Take Command Options dialog.
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Filename functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI QueryIsCON( LPTSTR pszConsole );
+   --  /*
+   --   Returns 1 if pszConsole == "CON"
+   --  */
+   --
+   --  int WINAPI ExpandFunctionsInFileName( LPTSTR pszTarget, LPTSTR
+   --  pszSource );
+   --  /*
+   --   Check for delayed function processing in a target filename.
+   --     pszTarget is the target with the embedded function (i.e.,
+   --     "abc@name[*]", and pszSource is the source name to insert
+   --     in place of the * before calling variable expansion.
+   --  */
+   --
+   --  LPTSTR WINAPI MakeFullName( LPTSTR pszFileName, int fFlags  );
+   --  /*
+   --   Expands a partial filename to the full path.
+   --   if fFlags == 1, don't display error messages
+   --   Returns the expanded name (in pszFileName) on success,
+   --     or NULL on failure.
+   --  */
+   --
+   --  int WINAPI AddWildcardIfDirectory( LPTSTR pszDir );
+   --  /*
+   --   if pszDir is a directory, appends "\*" to the name
+   --  */
+   --
+
+   ------------------------------------------------------------------------
+   --
+   --  LPTSTR WINAPI PathPart(  LPTSTR pszName, LPTSTR pszPath  );
+   --
+   --  Saves the path for pszName into pszPath Returns pszPath for success or NULL for failure
+   --  (no path) If pszPath == NULL, just returns pointer to beginning of path (i.e., just
+   --  checking for the existence of a path)
+   --
+
+   function PathPart
+     (pszName : in Win32.WCHAR_Array;
+      pszPath : Win32.PWSTR)
+      return    Win32.PWSTR;
+
+   pragma Import (Convention => Stdcall, Entity => PathPart, External_Name => "PathPart");
+
+   ------------------------------------------------------------------------
+   --
+   --  int WINAPI PathLength( LPTSTR pszPath );
+   --
+   --   Returns the length of the path part of pszPath.
+   --
+
+   function PathLength (pszPath : in Win32.WCHAR_Array) return Interfaces.C.int;
+
+   pragma Import (Convention => Stdcall, Entity => PathLength, External_Name => "PathLength");
+
+   ------------------------------------------------------------------------
+   --
+   --  LPTSTR WINAPI FilenamePart( LPTSTR pszName, LPTSTR pszFilenamePart );
+   --
+   --  Saves the filename part (no path) of pszName into pszFilenamePart. Returns
+   --  pszFilenamePart for success or NULL for failure. If pszFilenamePart == NULL, just returns
+   --  pointer in pszName to beginning of filename part.
+   --
+   function FilenamePart
+     (pszName         : in Win32.WCHAR_Array;
+      pszFilenamePart : Win32.PWSTR)
+      return            Win32.PWSTR;
+
+   pragma Import
+     (Convention => Stdcall,
+      Entity => FilenamePart,
+      External_Name => "FilenamePart");
+
+   --
+   --  LPTSTR WINAPI ExtensionPart( LPTSTR pszFileName, LPTSTR pszExt );
+   --  /*
+   --   Saves the file extension of pszFileName into pszExt.
+   --   Returns pszExt for success or NULL for failure.
+   --   If pszExt == NULL, just returns pointer in pszFileName
+   --     to beginning of extension.
+   --  */
+   --
+   --  int WINAPI QueryIsLFN( LPTSTR pszFileName );
+   --  /*
+   --   Returns 1 if pszFileName is an LFN (embedded whitespace, illegal FAT
+   --     characters, multiple extensions, etc.).
+   --  */
+   --
+   --  int WINAPI GetLongName( LPTSTR pszShortName );
+   --  /*
+   --   Writes the LFN for the SFN pszShortName into pszShortName.
+   --  */
+   --
+   --  int WINAPI GetShortName( LPTSTR pszLongName );
+   --  /*
+   --   Writes the 8.3 SFN for the LFN pszLongName into pszLongName
+   --  */
+   --
+   --  int WINAPI MakeDirectoryName( LPTSTR pszDirectoryName, LPTSTR
+   --  pszFileName );
+   --  /*
+   --   Create a new name from pszDirectoryName by appending '\' (if
+   --     necessary) and then appending pszFileName.
+   --   Returns the new name in pszDirectoryName.
+   --  */
+   --
+   --  void WINAPI InsertPathInFilename( LPTSTR pszTarget, LPTSTR pszSource,
+   --  LPTSTR pszPath );
+   --  /*
+   --   Create pszTarget by combining the filename in pszSource with the path
+   --     in pszPath. (pszSource and/or pszPath may be the same as pszTarget.)
+   --  */
+   --
+   --  int WINAPI UniqueFileName( LPTSTR pszFname, LPTSTR pszRoot );
+   --  /*
+   --   Create a unique filename (pszFname) in directory specified in
+   --     pszFname.  If pszFname == "", use the current directory.
+   --   pszRoot - use up to the first three characters as the prefix
+   --     unqiue name.
+   --   Returns the new filename in pszFname.
+   --  */
+   --
+   --  void WINAPI MakeVLFN( LPTSTR pszFileName );
+   --  /*
+   --   Make a VLFN -- if pszFileName >= 248 chars, inserts "\\?\" as a
+   --     prefix.  Note that only some of the Windows APIs recognize
+   --     VLFNs.
+   --  */
+   --
+   --  LPTSTR WINAPI QueryTrueName( LPTSTR pszFileName, LPTSTR pszOutput );
+   --  /*
+   --   Returns the "true" name of pszFileName (sees through SUBST and network
+   --     assignments) in pszOutput
+   --  */
+   --
+   --  void WINAPI MakeWildcardName( LPTSTR pszTarget, LPTSTR pszSource,
+   --  LPTSTR pszTemplate );
+   --  /*
+   --   Builds a target name using the source name and a template
+   --  */
+   --
+
+   ------------------------------------------------------------------------
+   --
+   --  int WINAPI WildcardComparison( LPTSTR pszWildName, LPTSTR pszFileName, int fExtension,
+   --  int fBrackets );
+   --
+   --  Compare filenames for wildcard matches Returns 0 for match; <> 0 for no match
+   --
+   --    *s        matches any collection of characters in the string
+   --              up to (but not including) the s.
+   --    ?         matches any single character in the other string.
+   --    [!abc-m]  match a character to the
+   --              set in the brackets (if fBrackets!=0);
+   --    !         means reverse the test;
+   --    -         means match if included in the range.
+   --
+   --   if fExtension != 0, interpret a '.' as a filename extension separator
+   --
+   --   if fBrackets != 0, enable [ ] support
+   --
+   function WildcardComparison
+     (pszWildName : in Win32.PCWSTR;
+      pszFileName : in Win32.PCWSTR;
+      fExtension  : in Interfaces.C.int;
+      fBrackets   : in Interfaces.C.int)
+      return        Interfaces.C.int;
+
+   pragma Import
+     (Convention => Stdcall,
+      Entity => WildcardComparison,
+      External_Name => "WildcardComparison");
+
+   procedure Wildcard_Search
+     (Directory_Pattern : in Win32.WCHAR_Array;
+      Process           : not null access procedure (Directory_Entry : in Win32.WCHAR_Array));
+
+   --  /********************************************************************
+   --   *
+   --   * File and directory functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI External( LPTSTR pszCmd, LPTSTR pszCmdLine, LPTSTR
+   --  pszExtLine );
+   --  /*
+   --   Execute an external application
+   --   pszCmd - external application
+   --   pszCmdLine - command line to pass (minus pszCmd)
+   --   pszExtLine - full command line (including pszCmd)
+   --  */
+   --
+   --  int WINAPI CompareFiles( LPTSTR szInputName, LPTSTR szOutputName, int
+   --  fDisplay );
+   --  /*
+   --   Compare two files and return 0 if they match.
+   --   fDisplay - if == 1, display the % verified.
+   --   Note that CompareFiles disables file caching, to ensure that the
+   --     test is comparing files on the disk, not files in the cache!
+   --     This means that CompareFiles will run somewhat slower than
+   --     other programs which use the cache contents.
+   --  */
+   --
+   --
+   --  int WINAPI HashFile( LPTSTR pszFile, int nHashType, LPTSTR pszHash );
+   --  /*
+   --   Returns the hash for pszFile in the string pszHash.
+   --   nHashType - type of hash to calculate:
+   --
+   --           1 - CRC32
+   --           2 - MD5
+   --           3 - SHA1
+   --           4 - SHA2-256
+   --           5 - SHA2-384
+   --           6 - SHA2-512
+   --  */
+   --
+   --  int WINAPI GetLine( HANDLE hFile, LPTSTR pszLine, int nMaxSize, int
+   --  nEditFlag );
+   --  /*
+   --   Return a single line in pszLine from a file or pipe
+   --
+   --           hFile - (already opened) handle to the file or pipe
+   --           nMaxSize - maximum buffer size for pszLine
+   --           nEditFlag - flags for input (OR'd):
+   --                           0x10000 - file or pipe is Unicode
+   --  */
+   --
+   --  int WINAPI GetFileLine( LPTSTR pszFileName, long *plOffset, LPTSTR
+   --  pszLine );
+   --  /*
+   --   Return a single line in pszLine from the file pszFileName, beginning
+   --     at plOffset.
+   --  */
+   --
+   --  __int64 WINAPI QueryFileSize( LPTSTR pszName, int fAllocated );
+   --  /*
+   --   Returns the file size for the file pszName, or -1 if it doesn't exist.
+   --   fAllocated = if != 0, return the allocated size.
+   --  */
+   --
+   --  BOOL WINAPI QueryIsFileUnicode( HANDLE hFile );
+   --  /*
+   --   Returns 1 if the file handle hFile refers to a is Unicode file.
+   --  */
+   --
+   --  int WINAPI QueryIsDevice( LPTSTR pszDevice );
+   --  /*
+   --   Returns 1 if pszDevice is a character device (LPT1, COM1, CON, etc.).
+   --  */
+   --
+   --  int WINAPI QueryIsTTY( HANDLE hFile );
+   --  /*
+   --   Returns 1 if the file handle hFile refers to a TTY (character) device.
+   --  */
+   --
+   --  int WINAPI ChangeDirectory( LPTSTR pszDir );
+   --  /*
+   --   Change to the directory pszDir.  (Includes kludges for various bugs in
+   --     other apps, and saves new current directory in the environment.)
+   --  */
+   --
+   --  LPTSTR WINAPI GetTempDirectory( LPTSTR pszDir );
+   --  /*
+   --   Returns the TMP / TEMP value defined in the environment, if any.
+   --   Otherwise, returns the system default temporary directory.
+   --  */
+   --
+   --  LPTSTR WINAPI QueryCurrentDirectory( LPTSTR, LPTSTR, int );
+   --  /*
+   --   Return the current directory for the specified drive
+   --  */
+   --
+   --  LPTSTR WINAPI QueryFileOwner( LPTSTR pszFilename );
+   --  /*
+   --   Return a pointer to a string containing the owner name (if any).  The
+   --   caller is responsible for calling free() on the returned pointer.
+   --
+   --  */
+   --
+   --  int WINAPI QueryIsFile( LPTSTR pszFileName );
+   --  /*
+   --   Returns 1 if "pszFileName" exists; 0 if it doesn't exist
+   --  */
+   --
+   --  int WINAPI QueryIsFileOrDirectory( LPTSTR pszName );
+   --  /*
+   --   Returns 1 if "pszName" is a file or directory; 0 if it doesn't exist
+   --  */
+   --
+   --  int WINAPI QueryIsDirectory( LPTSTR pszDirectory );
+   --  /*
+   --   Returns 1 if "pszDirectory" is a directory; 0 if it isn't or doesn't
+   --     exist.
+   --  */
+   --
+   --  int WINAPI QueryIsJunction( LPTSTR pszJunction );
+   --  /*
+   --   Returns 1 if "pszJunction" is a junction, 0 if it isn't or doesn't
+   --     exist.
+   --  */
+   --
+   --  LPTSTR WINAPI SearchPaths( LPTSTR pszFile, LPTSTR pszSearchPath, int
+   --  fSearchCurrentDir, int *pfEExt, LPTSTR pszAllPaths );
+   --  /*
+   --   Search the PATH variable (or the path in pszSearchPath) for an
+   --  executable file.
+   --           pszFile - File to search for
+   --           pszSearchPath - if NULL, use PATH; otherwise search this path
+   --           fSearchCurrentDir - if = 0, don't search the current directory
+   --           pfEExt - reserved, must be NULL
+   --           pszAllPaths - if != NULL, keep searching all paths to get all
+   --  matches.
+   --
+   --   Returns the matching file(s) in pszFile
+   --  */
+   --
+   --  int WINAPI ExtractFileSummary( LPTSTR pszFileName, LPTSTR pszProperty,
+   --  LPTSTR lpszValue );
+   --  /*
+   --   Returns the file summary information (in pszValue) for pszFileName.
+   --   pszProperty is the desired field (which may not exist for
+   --     pszFileName):
+   --           Title
+   --           Subject
+   --           Author
+   --           Keywords
+   --           Comments
+   --           Template
+   --           LastAuthor
+   --           Revision Number
+   --           Edit Time
+   --           Last printed
+   --           Created
+   --           Last Saved
+   --           Page Count
+   --           Word Count
+   --           Char Count
+   --           AppName
+   --  */
+   --
+   --  INT WINAPI GetExeType( LPTSTR pszFilename );
+   --  /*
+   --   Returns an integer specifying the type of executable:
+   --
+   --
+   --           0       // Error, or not an EXE file
+   --           1       // Just plain old MS-DOS
+   --           2       // DOS app with a PIF file
+   --           3       // Windows 3.x
+   --           4       // Windows 3.x VxD
+   --           5       // OS/2 2.x
+   --           6       // Windows NT, 2000, XP, or 2003 GUI
+   --           7       // Windows NT, 2000, XP, or 2003 console mode
+   --           8       // Windows NT, 2000, XP, or 2003 Posix
+   --  */
+   --
+   --  int WINAPI MyFindExecutable( LPTSTR pszFileName, LPTSTR pszArguments );
+   --  /*
+   --   Find the association for the specified file extension and insert
+   --     it into pszFileName
+   --  */
+   --
+   --  int WINAPI MakeFolder( LPTSTR pszDirectory, int fUpdateFuzzy );
+   --  /*
+   --   Create a directory and if fUpdateFuzzy!=0, update JPSTREE.IDX
+   --  */
+   --
+   --  int WINAPI DestroyFolder( LPTSTR pszDirectory, int );
+   --  /*
+   --   Delete a directory and if fUpdateFuzzy != 0, update JPSTREE.IDX
+   --  */
+   --
+   --  void WINAPI GetFuzzyDir( LPTSTR pszDir );
+   --  /*
+   --   Returns the full pathname of JPSTREE.IDX
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * GUI (Take Command) functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  // GuiRoutines.cpp
+   --  void WINAPI SetTransparency( HWND hWnd, unsigned int uTransparency );
+   --  /*
+   --   Set the window transparency level (0=invisible, 1=opaque)
+   --   (Note that this will not work on console windows -- MS bug?)
+   --  */
+   --
+   --  void WINAPI SetScrColor( int nRows, int nColumns, int nColor );
+   --  /*
+   --   Change the screen colors
+   --  */
+   --
+   --  void WINAPI tty_setbusy( void );
+   --  /*
+   --   Shows the hourglass cursor and puts the Take Command into a modal
+   --     condition.
+   --  */
+   --
+   --  void WINAPI tty_resetbusy( void );
+   --  /*
+   --   Set the cursor back to normal
+   --  */
+   --
+   --  void WINAPI HideCaretTTY( void );
+   --  /*
+   --   Hide the Take Command caret
+   --  */
+   --
+   --  void WINAPI ShowCaretTTY( void );
+   --  /*
+   --   Show the Take Command caret
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Command history functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  void WINAPI AddToHistory( LPTSTR pszLine );
+   --  /*
+   --   Add pszLine to the command history
+   --  */
+   --
+   --  LPTSTR WINAPI PreviousHistoryEntry( LPTSTR pszLine );
+   --  /*
+   --   Starting at pszLine, return the previous command history entry.
+   --  */
+   --
+   --  LPTSTR WINAPI NextHistoryEntry( LPTSTR pszLine );
+   --  /*
+   --   Starting at pszLine, return the next command history entry.
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Internet functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI QueryIsURL( LPTSTR pszURL );
+   --  /*
+   --   Return != 0 if pszURL is an internet URL:
+   --           1 - HTTP
+   --           2 = HTTPS
+   --           3 = FTP
+   --           4 = IFTP
+   --           5 = TFTP
+   --           6 = FTPS
+   --           7 = IFTPS
+   --           8 = other Internet URLS (gopher, mailto, etc.)
+   --  */
+   --
+   --  BOOL WINAPI GotoURL( LPTSTR pszURL, int nShow );
+   --  /*
+   --   Connect to the specified URL (via shell\open\command
+   --  */
+   --
+   --  int WINAPI IPAddress( LPTSTR pszHost, LPTSTR pszBuffer );
+   --  /*
+   --   Return the IP address (in pszBuffer) for pszHost.
+   --  */
+   --
+   --  int WINAPI IPName( LPTSTR pszAddress, LPTSTR pszBuffer );
+   --  /*
+   --   Return the host name (in pszBuffer) for the IP address in pszAddress.
+   --  */
+   --
+   --  int WINAPI PingPing(  LPTSTR pszHost, int nTimeout, int nPacketSize );
+   --  /*
+   --   Ping pszHost with the specified Timeout and packet size
+   --   The return values are:
+   --           >= 0 - ping time
+   --           -1 - timeout
+   --           -2 - unreachable
+   --           -3 - unknown host
+   --  */
+   --
+   --  int WINAPI NetworkClock( LPTSTR pszTimeServer );
+   --  /*
+   --   Set the time from an Internet time server
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * String formatting functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  BOOL _cdecl FmtMsgBox(BOOL fConfirm, LPTSTR pszCaption, LPCTSTR
+   --  pszFormat, ...);
+   --  /*
+   --   Pops up a message box with the formatted string
+   --   if fConfirm != 0, use MB_OKCANCEL; otherwise use MD_OK
+   --   pszCaption - Window title to display
+   --   pszFormat - printf-style format
+   --  */
+   --
+   --  int _cdecl Sscanf( LPCTSTR pszSource, LPCTSTR pszFormat, ...);
+   --  /*
+   --   Like the RTL sscanf()
+   --  */
+   --
+   --  int _cdecl Sprintf( LPTSTR pszTarget, LPCTSTR pszFormat, ...);
+   --  /*
+   --   Like the RTL sprintf()
+   --  */
+   --
+   --  LPTSTR WINAPI stristr( LPTSTR pszStr1, LPTSTR pszStr2 );
+   --  /*
+   --   Does a case-insensitive strstr()
+   --  */
+   --
+   --  LPTSTR WINAPI strins( LPTSTR pszTarget, LPTSTR pszInsert );
+   --  /*
+   --   Inserts the string pszInsert at pszTarget
+   --  */
+   --
+   --  LPTSTR strend( LPTSTR pszString );
+   --  /*
+   --   Returns a pointer to the end (null byte) of pszString
+   --  */
+   --
+   --  LPTSTR strlast( LPTSTR pszString );
+   --  /*
+   --   Returns a pointer to the last character in pszString
+   --  */
+   --
+   --  int WINAPI OffOn( LPTSTR pszOffOrOn );
+   --  /*
+   --   Returns 1 if pszOffOrOn = "ON"
+   --  */
+   --
+   --  void WINAPI ASCIIToUnicode( char * pszASCII, LPWSTR pszUnicode, int
+   --  nLength );
+   --  /*
+   --   Convert an ASCII string to Unicode
+   --   nLength = maximum length of pszUnicode
+   --  */
+   --
+   --  void WINAPI UnicodeToASCII( LPWSTR pszUnicode, char * pszASCII, int
+   --  nLength );
+   --  /*
+   --   Convert a Unicode string to ASCII
+   --   nLength = maximum length of pszASCII
+   --  */
+   --
+   --  void WINAPI StripEnclosingQuotes( LPTSTR pszName );
+   --  /*
+   --   Remove any double quotes at the beginning & end of pszName
+   --  */
+   --
+   --  int WINAPI AddQuotes( LPTSTR pszName );
+   --  /*
+   --   Add double quotes around pszName if it contains any special characters
+   --     (spaces, redirection symbols, etc.)
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Output functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI egets( LPTSTR pszStr, int nMaxLength, int fFlags  );
+   --  /*
+   --   Edit a string, with the full command line editing features (cursor
+   --  keys,
+   --   insert, etc.)
+   --   fFlags - must be :
+   --           2 - normal input
+   --           8 - echo pszStr value first and get input
+   --  */
+   --
+   --  void WINAPI ClearEditLine( LPTSTR pszStr );
+   --  /*
+   --   Clear the current edit line, starting at pszStr
+   --   (This can be called from keystroke plugins, which receive the current
+   --     position in the line.)
+   --  */
+   --
+   --  int WINAPI QueryInputChar( LPTSTR pszPrompt, LPTSTR pszMask );
+   --  /*
+   --   Returns a single character matching the input mask
+   --   pszPrompt - prompt to display before getting the character
+   --   pszMask - string of allowable characters.  If the new
+   --     character doesn't match, the function will beep, backspace,
+   --     and wait for another character.
+   --  */
+   --
+   --  int _cdecl Qprintf( HANDLE hFile, LPCTSTR pszFormat, ...);
+   --  /*
+   --   Like the RTL printf(), writes to the hFile handle, and
+   --     with some additional format options:
+   --
+   --           q : 64-bit integer
+   --           X : 64-bit hex integer
+   --
+   --   hFile - file handle
+   --  */
+   --
+   --  int _cdecl Printf( LPCTSTR pszFormat, ... );
+   --  /*
+   --   Like the RTL printf(), but with some additional format options:
+   --
+   --           q : 64-bit integer
+   --           X : 64-bit hex integer
+   --  */
+   --
+   --  int _cdecl ColorPrintf( int nColor, LPCTSTR pszFormat, ...);
+   --  /*
+   --   Like the RTL printf(), but prints in color, and with some
+   --     additional options:
+   --
+   --           q : 64-bit integer
+   --           X : 64-bit hex integer
+   --  */
+
+   ------------------------------------------------------------------------
+   --  int WINAPI QPuts( LPTSTR pszString );
+   --
+   --   Displays pszString
+   --
+   procedure QPuts (pszString : in Win32.PCWSTR);
+
+   pragma Import (Convention => Stdcall, Entity => QPuts, External_Name => "QPuts");
+
+   procedure Q_Put_String (Text_To_Display : in Win32.WCHAR_Array);
+
+   pragma Inline (Q_Put_String);
+
+   procedure Q_Put_String (Text_To_Display : in Interfaces.C.wchar_array);
+
+   pragma Inline (Q_Put_String);
+
+   procedure Q_Put_String (Text_To_Display : in Wide_String);
+
+   pragma Inline (Q_Put_String);
+
+   procedure Q_Put_String (Text_To_Display : in Win32.CHAR_Array);
+
+   pragma Inline (Q_Put_String);
+
+   procedure Q_Put_String (Text_To_Display : in Interfaces.C.char_array);
+
+   pragma Inline (Q_Put_String);
+
+   procedure Q_Put_String (Text_To_Display : in String);
+
+   pragma Inline (Q_Put_String);
+
+   ------------------------------------------------------------------------
+   --  void WINAPI CrLf( void );
+   --
+   --   Writes a CR/LF pair to the display
+   --
+   procedure CrLf;
+
+   pragma Import (Convention => Stdcall, Entity => CrLf, External_Name => "CrLf");
+
+   --
+   --  void  WINAPI QPutc( HANDLE hFile, TCHAR cChar );
+   --  /*
+   --   Write a single character to a file
+   --  */
+   --
+   --  int WINAPI wwriteXP( HANDLE hFile, LPTSTR pszString, int nLength );
+   --  /*
+   --   If the handle hFile points to the console, write
+   --   the string to the display.  Otherwise, write it to
+   --   a file.
+   --
+   --   Console handles are GetStdHandle( STD_OUTPUT_HANDLE ) and
+   --   GetStdHandle( STD_ERROR_HANDLE )
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Keyboard functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI QueryMouseClickWaiting( void );
+   --  /*
+   --   Returns 1 if a mouse click is waiting.
+   --  */
+   --
+   --  int WINAPI QueryKeyWaiting( void );
+   --  /*
+   --   Returns 1 if a keystroke is waiting
+   --  */
+   --
+   --  void WINAPI EatKeystrokes( void );
+   --  /*
+   --   Flush the keyboard buffer
+   --  */
+   --
+   --  void WINAPI MouseCursorOn( void );
+   --  /*
+   --   Enable the mouse cursor (console mode only)
+   --  */
+   --
+   --  void WINAPI MouseCursorOff( void );
+   --  /*
+   --   Disable the mouse cursor (console mode only)
+   --  */
+   --
+   --  void WINAPI GetMousePosition( int *pnRow, int *pnColumn, int *pnButton
+   --  );
+   --  /*
+   --   Get the mouse position
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * KEYSTACK functions
+   --   *
+   --   ********************************************************************/
+   --  int WINAPI SendKeys( LPCTSTR pszKeys );
+   --  /*
+   --   Send keystrokes to the active window
+   --  */
+   --
+   --  VOID WINAPI PauseKeys( BOOL bPause );
+   --  /*
+   --   Pause (bPause = 1) or resume (bPause = 0) sending keystrokes
+   --  */
+   --
+   --  VOID WINAPI QuitSendKeys( void );
+   --  /*
+   --   Cancel any remaining keystrokes in the KEYSTACK buffer
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Link functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI CreateLink( LPTSTR pszPathObj, LPTSTR pszArgs, LPTSTR
+   --  pszWorkingDir, LPTSTR pszDesc, LPTSTR pszPathLink, LPTSTR pszIcon,
+   --  UINT nIconOffset, UINT uShow, WORD wHotKey );
+   --  /*
+   --   Create a shortcut using the shell's IShellLink and IPersistFile
+   --     interfaces  to create and store a shortcut to the specified object.
+   --   Returns the result of calling the member functions of the interfaces. pszPathObj -
+   --   address of a buffer containing the path of the object. pszArgs - command line arguments
+   --   pszWorkingDir - working directory pszDesc - address of a buffer containing the
+   --   description of the shell link. pszPathLink - address of a buffer containing the path
+   --   where the
+   --     shell link is to be stored.
+   --   pszIcon - icon file display
+   --   nIconOffset - offset in pszIcon for desired icon
+   --   uShow - how to display the object
+   --   wHotKey - hotkey to invoke the link
+   --  */
+   --
+   --  int WINAPI ResolveLink( HWND hDesktop, LPTSTR lpszLinkFile,
+   --      LPTSTR lpszPathObj, LPTSTR lpszArgs, LPTSTR lpszWorkingDir,
+   --     LPTSTR lpszDesc, LPTSTR lpszIcon, PINT puShow, PWORD pwHotKey,
+   --      PINT puError );
+   --  /*
+   --   Retrieves the values for the specified link file.
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Locale functions
+   --   *
+   --   ********************************************************************/
+   --  int WINAPI QueryCodePage( void );
+   --  /*
+   --   Returns the current code page
+   --  */
+   --
+   --  int WINAPI SetCodePage( int nCodePage );
+   --  /*
+   --   Set the current code page
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Memory functions
+   --   *
+   --   ********************************************************************/
+   --  ULONG_PTR WINAPI QueryMemSize( LPVOID lpMemory );
+   --  /*
+   --   Returns the size (in bytes) of lpMemory.
+   --  */
+   --
+   --  void WINAPI FreeMem( LPVOID lpMemory );
+   --  /*
+   --   Free the memory allocated in AllocMem or ReallocMem
+   --  */
+   --
+   --  LPVOID WINAPI AllocMem( unsigned int * puSize );
+   --  /*
+   --   Allocate (using VirtualAlloc) a memory block of puSize
+   --  */
+   --
+   --  LPVOID WINAPI ReallocMem( LPVOID lpMemory, ULONG_PTR uSize );
+   --  /*
+   --   Realloc (using VirtualAlloc) a memory block of uSize
+   --  */
+   --
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * .INI functions
+   --   *
+   --   ********************************************************************/
+
+   ------------------------------------------------------------------------
+   --
+   --  int WINAPI QueryOptionValue( LPTSTR pszOption, LPTSTR pszValue );
+   --
+   --  Return the value of the .INI parameter pszOption as a string in pszValue
+   --
+   function QueryOptionValue
+     (pszOption : in Win32.PCWSTR;
+      pszValue  : access Function_Buffer)
+      return      Interfaces.C.int;
+
+   pragma Import
+     (Convention => Stdcall,
+      Entity => QueryOptionValue,
+      External_Name => "QueryOptionValue");
+
+   --  /********************************************************************
+   --   *
+   --   * Window functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  void WINAPI SetSessionTitle( LPTSTR pszTitle );
+   --  /*
+   --   Set the 4NT or Take Command window title
+   --  */
+   --
+   --  void WINAPI CenterWindow( HWND hWnd );
+   --  /*
+   --   Center a window in the 4NT / Take Command window
+   --  */
+   --
+   --  HWND WINAPI FuzzyFindWindow( LPTSTR pszTitle, LPTSTR pszClass ); /*
+   --    Find a window handle with the specified title (which may include
+   --      wildcards) or class.
+   --    Either pszTitle or pszClass (but not both!) can be NULL
+   --  */
+   --
+   --  int WINAPI CallHtmlHelp( LPTSTR pszTopic );
+   --  /*
+   --   Call the 4NT / Take Command online help for pszTopic
+   --  */
+   --
+   --  /********************************************************************
+   --   *
+   --   * Numeric functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI Evaluate( LPTSTR pszExpression );
+   --  /*
+   --   Evaluate pszExpression (via @EVAL) and return the result in
+   --     pszExpression
+   --  */
+   --
+   --  double WINAPI AsciiToDouble( LPTSTR pszNumber );
+   --  /*
+   --   Return pszNumber converted to a double
+   --  */
+   --
+   --  int WINAPI QueryIsNumeric( LPTSTR pszNumber );
+   --  /*
+   --   Return 1 if pszNumber is all numeric characters
+   --  */
+   --
+
+   ------------------------------------------------------------------------
+   --
+   --  void WINAPI AddCommas(LPTSTR pszNumber );
+   --
+   --  Insert thousands separators in pszNumber
+   --
+   procedure AddCommas (pszNumber : in Win32.PCWSTR);
+
+   pragma Import (Convention => Stdcall, Entity => AddCommas, External_Name => "AddCommas");
+
+   --
+   --  long WINAPI GetRandom( long nStart, long nEnd);
+   --  /*
+   --   Return a random number between nStart and nEnd (inclusive)
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Regular Expression functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI RegularExpression( LPTSTR lpszExpression, LPBYTE
+   --  lpszString, LPBYTE *lppStart, LPBYTE *lppRange, PUINT uRegions, INT
+   --  nOptions, INT fUnicode, INT fNoError );
+   --  /*
+   --   lpszExpression is the Regular Expression
+   --   lpszString is the text to test
+   --   lppStart - pointer to beginning of matching string
+   --   lppRange - pointer to end of matching string
+   --   nRegions - (in) region to return  (out) number of matching regions
+   --   nOptions - Oniguruma options (can be 0)
+   --   fUnicode = 1 for a Unicode string
+   --   fNoError - don't display error message
+   --   Return != 0 for an error, but 0 can be either a match or not -- test
+   --     lppStart and lppRange to check for a match
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * OpenAFS functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  BOOL WINAPI IsAFSServerInstalled( void );
+   --  /*
+   --   Returns 1 if OpenAFS is installed
+   --  */
+   --
+   --  BOOL WINAPI IsAFSServiceRunning( void );
+   --  /*
+   --   Returns 1 if the OpenAFS service is running
+   --  */
+   --
+   --  LPTSTR WINAPI QueryAFSMountPath( void );
+   --  /*
+   --   Returns the OpenAFS mount path
+   --  */
+   --
+   --  BOOL WINAPI IsPathInAFS( LPTSTR pszPath );
+   --  /*
+   --   Returns 1 if pszPath is in the OpenAFS namespace
+   --  */
+   --
+   --  BOOL WINAPI WhichCell( LPTSTR lpszPath, LPTSTR lpszCell, int nLen );
+   --  /*
+   --   Returns the cell name in lpszCell for the OpenAFS path lpszPath
+   --   nLen = maximum buffer length for lpszCell
+   --  */
+   --
+   --  // BOOL WINAPI QueryAFSDiskInfo( LPTSTR lpszPath, QDISKINFO *
+   --  DiskInfo, int fNoErrors );
+   --  /*
+   --   Returns the disk information for the specified OpenAFS path
+   --  */
+   --
+   --  BOOL WINAPI WorkstationCell( LPTSTR lpszCell, int nLen );
+   --  /*
+   --   Returns the workstation cell name in lpszCell
+   --   nLen = maximum buffer length for lpszCell
+   --  */
+   --
+   --  BOOL WINAPI WhichVolume( LPTSTR lpszPath, DWORD * pdwVolID, LPTSTR
+   --  lpszVolname, int nLen );
+   --  /*
+   --   Returns volume name in lpszVolume for the OpenAFS path lpszPath
+   --  */
+   --
+   --  BOOL WINAPI IsSymlink( LPTSTR lpszDir, LPTSTR lpszEntry );
+   --  /*
+   --   Returns 1 if lpszDir / lpszEntry is a symbolic link
+   --  */
+   --
+   --  BOOL WINAPI GetSymlink( LPTSTR lpszDir, LPTSTR lpszEntry, LPTSTR
+   --  lpszDest, int nLen );
+   --  /*
+   --   Returns the symbolic link for lpszDir / lpszEntry in lpszDest
+   --   nLen = maximum size of lpszDest
+   --  */
+   --
+   --  BOOL WINAPI IsMountPoint( LPTSTR lpszDir, LPTSTR lpszEntry );
+   --  /*
+   --   Returns 1 if lpszDir / lpszEntry is a mount point
+   --  */
+   --
+   --  BOOL WINAPI GetMountPoint( LPTSTR lpszDir, LPTSTR lpszEntry, LPTSTR
+   --  lpszDest, int nLen );
+   --  /*
+   --   Returns the mount point for lpszDir / lpszEntry in lpszDest
+   --   nLen = maximum size of lpszDest
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Perl, REXX, and Ruby functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  void WINAPI PerlArgvLine( int *Argc, unsigned char *Argv[], unsigned
+   --  char * pszCmdName, unsigned char * pszLine );
+   --  /*
+   --   Parse the line pszLine into Argc, Argv format
+   --  */
+   --
+   --  int WINAPI Perl( LPTSTR pszPerlFile, LPTSTR pszLine );
+   --  /*
+   --   Execute the Perl file pszPerlFile, with the arguments pszLine.
+   --
+   --  */
+   --
+   --  int WINAPI PerlString( LPTSTR pszCommand, int *pnStatus );
+   --  /*
+   --   Execute the Perl command in pszCommand
+   --   Returns the Perl result in pnStatus
+   --  */
+   --
+   --  int WINAPI ProcessRexxFile(  LPTSTR pszCommand, LPTSTR pszLine, int
+   --  fRexx  );
+   --  /*
+   --   Check if a .CMD file is a REXX file; if yes, call the REXX interpreter
+   --   If no, check if .CMD file requests an external processor
+   --   If fRexx != 0 , force REXX to execute the file without checking
+   --  */
+   --
+   --  int WINAPI CallRexxSubroutine( LPTSTR lpCmd, LPTSTR lpInstoreBuf, int
+   --  fReturn  );
+   --  /*
+   --   Execute the REXX command in lpCmd, and the arguments in lpInstoreBuf
+   --   If fReturn != 0, return the result in lpInstoreBuf
+   --  */
+   --
+   --  int WINAPI Ruby( LPTSTR pszRubyFile, LPTSTR pszLine );
+   --  /*
+   --   Execute the Ruby file pszRubyFile, with the arguments pszLine.
+   --  */
+   --
+   --  int WINAPI RubyString( LPTSTR pszCommand, int *pnStatus );
+   --  /*
+   --   Execute the Ruby command in pszCommand
+   --   Returns the Ruby result in pnStatus
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Date & Time functions
+   --   *
+   --   ********************************************************************/
+   --  LPTSTR WINAPI FormatDate(  LPTSTR pszDate, int nMonth, int nDay, int
+   --  nYear, int nFormat  );
+   --  /*
+   --   Return the date as a string in pszDate
+   --
+   --   nFormat is the format to use. (If nFormat | 0x100, use 4-digit year)
+   --           0 - default
+   --           1 - US (mm/dd/yy)
+   --           2 - European (dd/mm/yy)
+   --           3 - yy/mm/dd
+   --           4 - yyyy/mm/dd
+   --
+   --  */
+   --
+   --  LPTSTR WINAPI FormatTime(  LPTSTR psTime, int nHours, int nMinutes,
+   --  int nSeconds );
+   --  /*
+   --   Return the time as a string in pszTime
+   --  */
+   --
+   --  LPTSTR WINAPI QueryCurrentDate(  LPTSTR pszDate, int nDateFormat );
+   --  /*
+   --   Return the current date as a string in pszDate
+   --   nDateFormat is the format to use:
+   --           0 : "Mon  Jan 1, 1999"
+   --           1 : " 1/01/99"
+   --           2 : "Mon 1/01/1999"
+   --  */
+   --
+   --  LPTSTR WINAPI QueryCurrentTime( LPTSTR pszTime, int nTimeFormat );
+   --  /*
+   --   Return the current time as a string in pszTime
+   --   nTimeFormat is the format to use:
+   --           0 : am/pm
+   --           1 : 24-hour
+   --           2 : default
+   --  */
+   --
+   --  void WINAPI SysWait( unsigned long ulSeconds, int fFlags );
+   --  /*
+   --   Waits for ulSeconds
+   --   If fFlags == 2, wait is in milliseconds (ulSeconds * 1000)
+   --  */
+   --
+   --  int WINAPI SysBeep( unsigned int uFrequency, unsigned int uDuration );
+   --  /*
+   --   Beep for the specified frequency (in Hz) and duration (in ms)
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Token / argument extraction functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI GetToken( LPTSTR pszLine, LPTSTR pszDelims, int nStart, int
+   --  nEnd );
+   --  /*
+   --   Return a string starting at token # nStart and ending at tken # nEnd
+   --     (without quote processing)
+   --
+   --   pszDelims - token delimiter characters
+   --  */
+   --
+   --  LPTSTR WINAPI NextArgument( LPTSTR pszLine, int nArgument );
+   --  /*
+   --   Removes all the arguments up to the "nArgument" argument(s)
+   --   Returns the new beginning of the line
+   --  */
+   --
+   --  LPTSTR WINAPI LastArgument( LPTSTR pszLine, int *pnLast, LPTSTR
+   --  lpszBuffer, TCHAR **ppNthPtr );
+   --  /*
+   --   Returns a pointer to the last argument on the line
+   --   pnLast returns is the index of the last argument
+   --   The argument is saved into lpszBuffer (can be NULL)
+   --   ppNthPtr is a pointer to the last argument (can be NULL)
+   --  */
+   --
+   --  LPTSTR WINAPI NthArgument( LPTSTR pszLine, int nIndex, LPTSTR
+   --  lpszBuffer, TCHAR **ppNthPtr );
+   --  /*
+   --   Returns the a pointer to the "nth" argument in the command line
+   --     or NULL if no nth argument exists
+   --   nIndex is the 0-based argument to return The argument is saved into lpszBuffer (can be
+   --   NULL) ppNthPtr is a pointer to the last argument (can be NULL)
+   --
+   --   The default delimiters are space, comma, tab, and switch character. The single
+   --     back quote and double quotes will override enclosed delimiters.
+   --  You can modify
+   --     the delimiters by OR'ing the nIndex argument:
+   --
+   --           0x8000 - don't interpret a commas as a delimiter
+   --           0x4000 - interpret ( and ) as quoting characters
+   --           0x2000 - interpret [ and ] as quoting characters
+   --           0x1000 - disable the back quote quoting character
+   --           0x800 - don't interpret a switch character as a delimiter
+   --  */
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Disk / volume functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int WINAPI QueryCurrentDrive( LPTSTR pszDrive );
+   --  /*
+   --   Return the drive in pszDrive as 1=A, 2=B, etc.
+   --   If pszDrive == NULL, returns the default drive
+   --  */
+   --
+   --  int WINAPI QueryIsNetworkDrive( LPTSTR pszDrive );
+   --  /*
+   --   Returns 1 if pszDrive is a UNC name (i.e. \\server\share\...)
+   --  */
+   --
+   --  int WINAPI QueryIsCDROM( LPTSTR lpszDrive );
+   --  /*
+   --   Returns 1 if pszDrive is a CD-ROM or DVD
+   --  */
+   --
+   --  int WINAPI QueryDriveExists( int nDrive );
+   --  /*
+   --   Returns 1 if nDrive (1=A, 3=C, etc.) exists
+   --  */
+   --
+   --  int WINAPI QueryDriveRemovable( int nDrive );
+   --  /*
+   --   Returns 1 if nDrive (1=A, 3=C, etc.) is removable
+   --  */
+   --
+   --  int WINAPI QueryDriveRemote( int nDrive );
+   --  /*
+   --   Returns 1 if nDrive (1=A, 3=C, etc.) is remote
+   --  */
+   --
+   --  int WINAPI QueryDriveReady( int nDrive );
+   --  /*
+   --   Returns 1 if nDrive (1=A, 3=C, etc.) is ready
+   --  */
+   --
+   --  LPTSTR WINAPI QueryVolumeInfo( LPTSTR lpszDrive, LPTSTR
+   --  lpszVolumeName, unsigned long *pulSerialNumber );
+   --  /*
+   --   Returns the volume name and serial number for pszDrive
+   --  */
+   --
+   --  int WINAPI QueryIFSType( LPTSTR lpszDrive );
+   --  /*
+   --   Return the file system type for lpszDrive (or default drive
+   --     if lpszDrive == NULL)
+   --           0 - non-LFN FAT or non-LFN LAN
+   --           1 - HPFS
+   --           2 - NTFS
+   --           3 - FAT LFN
+   --           4 - FAT32 LFN
+   --           5 - other (usually LAN)
+   --  */
+   --
+   --  int WINAPI QueryDiskLabel( LPTSTR lpszVolume );
+   --  /*
+   --   Return the disk label in lpszVolume
+   --  */
+   --
+   --
+   --
+   --  /********************************************************************
+   --   *
+   --   * Miscellaneous system functions
+   --   *
+   --   ********************************************************************/
+   --
+   --  int GetParentProcessName( LPTSTR lpszParent );
+   --  /*
+   --   Return the parent process name in lpszParent.  If the function is
+   --     successful, the return value is 1.
+   --  */
+   --
+   --  DWORD GetParentPID( DWORD dwPID );
+   --  /*
+   --   Return the PID of the parent process of the specified PID,
+   --            or 0xFFFFFFFF on an error.
+   --  */
+   --
+   --  int WINAPI CpuUsage( void );
+   --  /*
+   --   Return the current CPU usage, as a number between 0 and 100
+   --  */
+   --
+   --  int WINAPI QueryIsVirtualPC( void );
+   --  /*
+   --   Return 1 if the process is running inside Virtual PC.
+   --  */
+   --
+   --  int WINAPI QueryIsVMWare( void );
+   --  /*
+   --   Return 1 if the process is running inside VMWare.
+   --  */
+   --
+   --  int WINAPI GetDriveTypeEx( LPTSTR pszArg );
+   --  /*
+   --   Like the Windows API GetDriveType(), but returns two additional
+   --     values:
+   --       7 - DVD
+   --       8 - Tape
+   --  */
+   --
+   --
+   --
+   --  keys values for the keystroke plugins. A normal Unicode character has a value from
+   --  0-0xFFFF An extended key (Alt keys, function keys, etc.) adds 0x10000 (i.e., "FBIT") to
+   --  the scan code value (If you prefer, you can get the keyboard state to get the VK_* value
+   --  from Windows)
+
+   FBIT : constant Interfaces.C.int := 16#10000#;
+   --  #define SHIFT_TAB        15+FBIT
+   --  #define ALT_TAB          165+FBIT
+   --  #define CTL_TAB          148+FBIT
+   --
+   --  #define F1               59+FBIT         // function keys
+   --  #define F2               60+FBIT
+   --  #define F3               61+FBIT
+   --  #define F4               62+FBIT
+   --  #define F5               63+FBIT
+   --  #define F6               64+FBIT
+   --  #define F7               65+FBIT
+   --  #define F8               66+FBIT
+   --  #define F9               67+FBIT
+   --  #define F10              68+FBIT
+   --  #define F11     0x85+FBIT
+   --  #define F12     0x86+FBIT
+   --  #define SHFT_F1          84+FBIT
+   --  #define SHFT_F2          85+FBIT
+   --  #define SHFT_F3          86+FBIT
+   --  #define SHFT_F4          87+FBIT
+   --  #define SHFT_F5          88+FBIT
+   --  #define SHFT_F6          89+FBIT
+   --  #define SHFT_F7          90+FBIT
+   --  #define SHFT_F8          91+FBIT
+   --  #define SHFT_F9          92+FBIT
+   --  #define SHFT_F10 93+FBIT
+   --  #define SHFT_F11 0x87+FBIT
+   --  #define SHFT_F12 0x88+FBIT
+   --  #define CTL_F1           94+FBIT
+   --  #define CTL_F2           95+FBIT
+   --  #define CTL_F3           96+FBIT
+   --  #define CTL_F4           97+FBIT
+   --  #define CTL_F5           98+FBIT
+   --  #define CTL_F6           99+FBIT
+   --  #define CTL_F7           100+FBIT
+   --  #define CTL_F8           101+FBIT
+   --  #define CTL_F9           102+FBIT
+   --  #define CTL_F10          103+FBIT
+   --  #define CTL_F11          0x89+FBIT
+   --  #define CTL_F12          0x8A+FBIT
+   --  #define ALT_F1           104+FBIT
+   --  #define ALT_F2           105+FBIT
+   --  #define ALT_F3           106+FBIT
+   --  #define ALT_F4           107+FBIT
+   --  #define ALT_F5           108+FBIT
+   --  #define ALT_F6           109+FBIT
+   --  #define ALT_F7           110+FBIT
+   --  #define ALT_F8           111+FBIT
+   --  #define ALT_F9           112+FBIT
+   --  #define ALT_F10          113+FBIT
+   --  #define ALT_F11          0x8B+FBIT
+   --  #define ALT_F12          0x8C+FBIT
+   --  #define HOME             71+FBIT
+   --  #define CUR_UP           72+FBIT
+   --  #define PgUp             73+FBIT
+   --  #define CUR_LEFT 75+FBIT
+   --  #define CUR_RIGHT        77+FBIT
+   --  #define END              79+FBIT
+   --  #define CUR_DOWN 80+FBIT
+   --  #define PgDn             81+FBIT
+   --  #define INS              82+FBIT
+   --  #define DEL              83+FBIT
+   --  #define CTL_LEFT 115+FBIT
+   --  #define CTL_RIGHT        116+FBIT
+   --  #define CTL_END          117+FBIT
+   --  #define CTL_PgDn 118+FBIT
+   --  #define CTL_HOME 119+FBIT
+   --  #define CTL_PgUp 132+FBIT
+   --  #define CTL_UP           141+FBIT
+   --  #define CTL_DOWN 145+FBIT
+   --  #if _NT
+   --  #define ALT_LEFT 0xF4+FBIT       // dummy values for 4NT scrolling
+   --  #define ALT_RIGHT        0xF6+FBIT
+   --  #define ALT_END          0xF2+FBIT
+   --  #define ALT_PgDn 0xF1+FBIT
+   --  #define ALT_HOME 0xF3+FBIT
+   --  #define ALT_PgUp 0xF0+FBIT
+   --  #define ALT_UP           0xF5+FBIT
+   --  #define ALT_DOWN 0xF7+FBIT
+   --  #endif
+   --  #define SHIFT_LEFT      200+FBIT // dummy values for line editing
+   --  #define SHIFT_RIGHT     201+FBIT
+   --  #define SHIFT_HOME      202+FBIT
+   --  #define SHIFT_END       203+FBIT
+   --  #define CTL_SHIFT_LEFT  204+FBIT
+   --  #define CTL_SHIFT_RIGHT 205+FBIT
+   --
+   --  #define LEFT_MOUSE_BUTTON 250+FBIT #define RIGHT_MOUSE_BUTTON 251+FBIT #define
+   --  MIDDLE_MOUSE_BUTTON 252+FBIT
+
+private
+
+end TakeCmd;
+
+----------------------------------------------------------------------------
+--  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
+--  vim: set textwidth=96 filetype=ada foldmethod=expr spell spelllang=en_GB:
