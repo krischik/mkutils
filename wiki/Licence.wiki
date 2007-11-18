@@ -9,13 +9,6 @@ MK_Utils and Ada_Demo is distributed in the hope that it will be useful, but WIT
 
 You should have received a copy of the GNU General Public License along with MK_Utils  or Ada_Demo . If not, see http://www.gnu.org/licenses/.
 
-== Special Exception ==
-
-As a special exception, MK_Utils and Ada_Demo may be linked to 4NT or Take Command from JPSoft by the means of the programms plugin mechanism without the the resulting  executable to be covered by the GNU General Public License. 
-
-This exception does not however invalidate any other reasons why the executable might be covered by the  GNU Public License.
-
-
 == GNU GENERAL PUBLIC LICENSE Version 3, 29 June 2007 ==
 
 Copyright (C) 2007 Free Software Foundation, Inc. http://fsf.org/ Everyone is permitted to copy and distribute verbatim copies of this license document, but changing it is not allowed.
