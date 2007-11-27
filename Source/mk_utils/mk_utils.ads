@@ -117,6 +117,19 @@ package MK_Utils is
 
    ---------------------------------------------------------------------------
    --
+   --  Get Filename for a Temporary File
+   --
+   function F_Temp_File (Arguments : in TakeCmd.Plugin.Buffer) return Interfaces.C.int;
+
+   X_Temp_File : aliased constant Win32.WCHAR_Array := "MKTEMPFILE";
+
+   pragma Export
+     (Convention => Stdcall,
+      Entity => F_Temp_File,
+      External_Name => "f_MKTEMPFILE");
+
+   ---------------------------------------------------------------------------
+   --
    --  Write Help for Commandline Options parsed from Trace
    --
    function C_Help (Arguments : in Win32.PCWSTR) return Interfaces.C.int;

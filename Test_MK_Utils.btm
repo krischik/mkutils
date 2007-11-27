@@ -51,12 +51,14 @@ SETLOCAL
     PLUGIN /L pentium4-Release\lib\mk_utils\mk_utils.dll
     PLUGIN /I MK_Utils
 
-    MKHELP
-    MKSHOWOWNER     *.btm
-    MKSHOWGROUP     %_cwd\*.btm
-    MKSHOWOWNER     %_cwd
-    MKSHOWOWNER
-    MKSHOWOWNER     XXXX
+    MkHelp
+    MkShowOwner     *.btm
+    MkShowGroup     %_cwd\*.btm
+    MkShowOwner     %_cwd
+    MkShowOwner
+    MkShowOwner     XXXX
+
+    echo Temp File %@MkTempFile[Test]
 
     ::  MKCHANGEOWNER   Test_MK_Utils.btm %[USERNAME]
 

@@ -18,8 +18,8 @@
 --  This file is part of MK_Utils.
 --
 --  MK_Utils is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  MK_Utils is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -44,7 +44,10 @@ function C_Change_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    pragma Unreferenced (Trace);
 
    Buffer : aliased constant TakeCmd.Plugin.Buffer :=
-      TakeCmd.Strings.To_Win (Arguments => Arguments, To_Upper => False, Trim_Spaces => True);
+      TakeCmd.Strings.To_Win
+        (Arguments   => Arguments,
+         To_Upper    => False,
+         Trim_Spaces => True);
 begin
    TakeCmd.Trace.Write (Arguments);
    TakeCmd.Trace.Write (Buffer);

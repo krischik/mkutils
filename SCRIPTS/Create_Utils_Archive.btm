@@ -34,7 +34,7 @@ ECHO ON
 
 SETLOCAL
     SET Module=MK_Utils-pentium4
-    SET Version=1.2.0
+    SET Version=1.3.0
     SET Project_Dir=%@TRUENAME[%@PATH[%[_BATCHNAME]]\..]
 
     ON Error GOTO Catch

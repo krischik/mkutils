@@ -19,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -42,8 +42,8 @@
 --        int WINAPI HeadCmd( LPTSTR pszArguments )
 --
 --  which means that the function "Head_Cmd" is called using the "WINAPI" calling convention
---  (equivalent to "stdcall") and is passed a pointer to a null terminated string containing the
---  command's arguments, and the command returns an integer value on completion.
+--  (equivalent to "stdcall") and is passed a pointer to a null terminated string containing
+--  the command's arguments, and the command returns an integer value on completion.
 --
 --  To use the above command from within your Ada plugin you would make the following
 --  declaration:
@@ -54,8 +54,9 @@
 --       Entity        => HeadCmd,
 --       External_Name => "HeadCmd");
 --
---  If the declaration in TakeCmd.h begins with "void" it means there is no return value, which
---  is equivalent to a "Procedure" declaration in Ada. For example, the TakeCmd.h declaration:
+--  If the declaration in TakeCmd.h begins with "void" it means there is no return value,
+--  which is equivalent to a "Procedure" declaration in Ada. For example, the TakeCmd.h
+--  declaration:
 --
 --    void WINAPI CrLf( void );
 --
@@ -69,10 +70,11 @@
 --
 --  This plugin contains an example of calling TakeCmd.dll functions in the command "Remark".
 --
---  Some functions in TakeCmd.dll manipulate the string that you pass to them within the buffer
---  in which the string resides. Therefore, if the TakeCmd.dll function can return a longer
---  string than is passed to it, you must make sure that you pass the string in a buffer that is
---  large enough to provide working space and to hold the returned string if appropriate.
+--  Some functions in TakeCmd.dll manipulate the string that you pass to them within the
+--  buffer in which the string resides. Therefore, if the TakeCmd.dll function can return a
+--  longer string than is passed to it, you must make sure that you pass the string in a
+--  buffer that is large enough to provide working space and to hold the returned string if
+--  appropriate.
 --
 --  An example of such a function is:
 --
@@ -87,11 +89,11 @@
 --       Entity        => AddCommas,
 --       External_Name => "AddCommas");
 --
---  When this procedure adds in the thousands separator the resulting string will be longer than
---  the string that you started with, and so you must allow room for that expansion. The size of
---  the buffer that you need cannot be precisely defined, and you may need to experiment.
---  However, as a guideline I would suggest a buffer of at least three times the length of the
---  string that you are passing to the function.
+--  When this procedure adds in the thousands separator the resulting string will be longer
+--  than the string that you started with, and so you must allow room for that expansion. The
+--  size of the buffer that you need cannot be precisely defined, and you may need to
+--  experiment. However, as a guideline I would suggest a buffer of at least three times the
+--  length of the string that you are passing to the function.
 --
 --  A working example of calling this kind of function is included in the "usebuffer" function
 --  below.
@@ -100,8 +102,8 @@
 --
 --     int WINAPI Command( LPTSTR pszLine, int nReserved );
 --
---  which calls the parser to expand and execute the supplied command then the buffer should be
---  at least 2K and preferably 8K to 16K to allow for variable and alias expansion.
+--  which calls the parser to expand and execute the supplied command then the buffer should
+--  be at least 2K and preferably 8K to 16K to allow for variable and alias expansion.
 --
 
 pragma License (Gpl);
@@ -116,6 +118,16 @@ package TakeCmd is
 
    Win32_Error : exception;
    Name_Error : exception;
+
+   ----------------------------------------------------------------------------
+   --
+   --  Maximum sizes for 4NT / TakeCommand 9.0
+   --
+   Max_Command_Line_Size     : constant := 65_535;
+   Max_Command_Size          : constant := 32_767;
+   Maximum_Argument_Size     : constant := 8_191;
+   Max_Filename_Size         : constant := 4_095;
+   Maximum_Command_Arguments : constant := 4_096;
 
    subtype Function_Buffer is Win32.WCHAR_Array (1 .. 2 ** 11);
    subtype File_Name is Win32.WCHAR_Array (1 .. Win32.Advapi.UNAMEMAXSIZE);
@@ -586,7 +598,10 @@ package TakeCmd is
 
    function GetScrCols return  Interfaces.C.int;
 
-   pragma Import (Convention => Stdcall, Entity => GetScrCols, External_Name => "GetScrCols");
+   pragma Import
+     (Convention => Stdcall,
+      Entity => GetScrCols,
+      External_Name => "GetScrCols");
 
    --
    --
@@ -795,15 +810,18 @@ package TakeCmd is
 
    function PathLength (pszPath : in Win32.WCHAR_Array) return Interfaces.C.int;
 
-   pragma Import (Convention => Stdcall, Entity => PathLength, External_Name => "PathLength");
+   pragma Import
+     (Convention => Stdcall,
+      Entity => PathLength,
+      External_Name => "PathLength");
 
    ------------------------------------------------------------------------
    --
    --  LPTSTR WINAPI FilenamePart( LPTSTR pszName, LPTSTR pszFilenamePart );
    --
    --  Saves the filename part (no path) of pszName into pszFilenamePart. Returns
-   --  pszFilenamePart for success or NULL for failure. If pszFilenamePart == NULL, just returns
-   --  pointer in pszName to beginning of filename part.
+   --  pszFilenamePart for success or NULL for failure. If pszFilenamePart == NULL, just
+   --  returns pointer in pszName to beginning of filename part.
    --
    function FilenamePart
      (pszName         : in Win32.WCHAR_Array;
@@ -917,7 +935,8 @@ package TakeCmd is
 
    procedure Wildcard_Search
      (Directory_Pattern : in Win32.WCHAR_Array;
-      Process           : not null access procedure (Directory_Entry : in Win32.WCHAR_Array));
+      Process           : not null access procedure
+     (Directory_Entry : in Win32.WCHAR_Array));
 
    --  /********************************************************************
    --   *
@@ -1500,10 +1519,10 @@ package TakeCmd is
    --   Create a shortcut using the shell's IShellLink and IPersistFile
    --     interfaces  to create and store a shortcut to the specified object.
    --   Returns the result of calling the member functions of the interfaces. pszPathObj -
-   --   address of a buffer containing the path of the object. pszArgs - command line arguments
-   --   pszWorkingDir - working directory pszDesc - address of a buffer containing the
-   --   description of the shell link. pszPathLink - address of a buffer containing the path
-   --   where the
+   --   address of a buffer containing the path of the object. pszArgs - command line
+   --   arguments pszWorkingDir - working directory pszDesc - address of a buffer containing
+   --   the description of the shell link. pszPathLink - address of a buffer containing the
+   --   path where the
    --     shell link is to be stored.
    --   pszIcon - icon file display
    --   nIconOffset - offset in pszIcon for desired icon
@@ -2019,8 +2038,8 @@ package TakeCmd is
    --
    --  keys values for the keystroke plugins. A normal Unicode character has a value from
    --  0-0xFFFF An extended key (Alt keys, function keys, etc.) adds 0x10000 (i.e., "FBIT") to
-   --  the scan code value (If you prefer, you can get the keyboard state to get the VK_* value
-   --  from Windows)
+   --  the scan code value (If you prefer, you can get the keyboard state to get the VK_*
+   --  value from Windows)
 
    FBIT : constant Interfaces.C.int := 16#10000#;
    --  #define SHIFT_TAB        15+FBIT

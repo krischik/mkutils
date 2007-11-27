@@ -30,7 +30,7 @@
 ::  along with Ada_Demo.  If not, see <http://www.gnu.org/licenses/>.
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: }}}1 ::::::::::
 
-ECHO OFF
+ECHO ON
 
 SETLOCAL
     PLUGIN /U MK_Utils
@@ -39,6 +39,10 @@ SETLOCAL
 
     SET Project_Dir=%@TRUENAME[%@PATH[%[_BATCHNAME]]\..]
 	SET      JP_Dir=%@PATH[%[_cmdspec]]
+
+	PUSHD %[Project_Dir]
+        gnat make -P MK_Utils.gpr -XStyle=Release -XTarget=pentium4
+	POPD
 
 	COPY /U															^
 	    %[GNAT_GPL_HOME]\bin\libgcc_s.dll							^
@@ -65,7 +69,6 @@ CANCEL 0
     ECHO %_?, %_SYSERR
     CANCEL %_?
 ENDLOCAL
-
 
 ::::::::::::::::::::::::::::::::::::::::::::::::::::::::::::: {{{1 ::::::::::
 :: vim: textwidth=0 nowrap tabstop=4 shiftwidth=4 softtabstop=4 noexpandtab
