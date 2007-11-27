@@ -51,13 +51,17 @@ begin
      ("   " & X_Change_Owner & "            (Filename)     change owner of a file");
    TakeCmd.CrLf;
    TakeCmd.Q_Put_String
-     ("   " & X_Show_Owner & "              (Filename)     display owner of a file.");
+     ("   " & X_Show_Owner & "              (Filepattern)  display owner files.");
    TakeCmd.CrLf;
    TakeCmd.CrLf;
    TakeCmd.Q_Put_String (Win32.WCHAR_Array'("MK_Utils internal variables:"));
    TakeCmd.CrLf;
    TakeCmd.CrLf;
    TakeCmd.Q_Put_String (Win32.WCHAR_Array'("MK_Utils internal functions:"));
+   TakeCmd.CrLf;
+   TakeCmd.CrLf;
+   TakeCmd.Q_Put_String
+     ("  @" & X_Temp_File & "               (Prefix)       generate temporary file name");
    TakeCmd.CrLf;
    TakeCmd.CrLf;
    return 0;

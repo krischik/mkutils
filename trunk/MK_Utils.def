@@ -1,14 +1,14 @@
 LIBRARY MK_Utils
 DESCRIPTION "Utilities for 4NT and Take Command."
-VERSION 1.2
+VERSION 1.3
 
 EXPORTS
 	GetPluginInfo
 	InitializePlugin
 	MKCHANGEOWNER
 	MKHELP
-	MKSHOWOWNER
 	MKSHOWGROUP
+	MKSHOWOWNER
 	ShutdownPlugin
 	TRACEENABLE
 	TRACEFILE
@@ -24,6 +24,7 @@ EXPORTS
 	_TRACEVERBOSE
 	_TRACEWRITELINENUMBER
 	_TRACEWRITEPREFIX
+        f_MKTEMPFILE
 
 ;vim: set nowrap tabstop=8 shiftwidth=4 softtabstop=4 expandtab :
 ;vim: set textwidth=0 filetype=def foldmethod=marker nospell :

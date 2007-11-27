@@ -65,6 +65,8 @@ package body MK_Utils is
       X_Show_Owner &
       "," &
       X_Show_Group &
+      ",@" &
+      X_Temp_File &
       "," &
       TakeCmd.Trace.X_Enable &
       "," &
@@ -121,6 +123,15 @@ package body MK_Utils is
    --
    function C_Show_Group (Arguments : in Win32.PCWSTR) return Interfaces.C.int is separate;
 
+   -------------------------------------------------------------------------
+   --
+   --  Get Filename for a Temporary File
+   --
+   function F_Temp_File
+     (Arguments : in TakeCmd.Plugin.Buffer)
+      return      Interfaces.C.int
+   is separate;
+
    ---------------------------------------------------------------------------
    --
    --  Called by 4NT/TC (after the call to "InitializePlugin") to get information from the
@@ -141,7 +152,7 @@ package body MK_Utils is
             pszDescription => Win32.Addr (Description),
             pszFunctions   => Win32.Addr (Implements),
             nMajor         => 1,
-            nMinor         => 2,
+            nMinor         => 3,
             nBuild         => 0,
             hModule        => 0,
             pszModule      => null);
