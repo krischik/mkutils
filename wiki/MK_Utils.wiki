@@ -1,0 +1,4 @@
+#summary MK_Utils plug-in
+#labels Redirect
+
+MK_Utils is described in detail on the [http://www.jpsoftwiki.com/wiki/index.php?title=MkUtils_%28plugin%29 JP-Soft Wiki].
