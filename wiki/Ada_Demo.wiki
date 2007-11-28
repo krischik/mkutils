@@ -1,4 +1,4 @@
 #summary Demo plug-in written in Ada
 #labels Redirect
 
-Ada_Demo is described in detail on the JP-Soft Wiki: http://www.jpsoftwiki.com/wiki/index.php?title=MkUtils_%28plugin%29
+Ada_Demo is described in detail on the [http://www.jpsoftwiki.com/wiki/index.php?title=MkUtils_%28plugin%29 JP-Soft Wiki].
