@@ -1,7 +1,6 @@
 ----------------------------------------------------------------------------
 --  Description: Options setable by the Ada plugin
---          $Id: takecmd-plugin.ads 16 2007-10-31 17:08:47Z
---  krischik@users.sourceforge.net $
+--          $Id$
 --    Copyright: Copyright (C) 2007 Martin Krischik
 --      Licence: GNU General Public License
 --   Maintainer: Martin Krischik
@@ -21,8 +20,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -44,9 +43,9 @@ package TakeCmd.Plugin is
 
    ---------------------------------------------------------------------------
    --  PluginInfo structure - returned by plugin in response to GetPluginInfo() call from
-   --  command processor Note that the strings should all be Unicode; if your PlugIn is compiled
-   --  for ASCII you'll need to use the MultiByteToWideChar API to convert the strings before
-   --  passing them back to 4NT / TC (Not the case in Ada)
+   --  command processor Note that the strings should all be Unicode; if your PlugIn is
+   --  compiled for ASCII you'll need to use the MultiByteToWideChar API to convert the
+   --  strings before passing them back to 4NT / TC (Not the case in Ada)
    --
    type Plugin_Info is record
       pszDll         : Win32.PCWSTR;         --  name of the DLL
@@ -56,9 +55,9 @@ package TakeCmd.Plugin is
       pszDescription : Win32.PCWSTR;         --  (brief) description of plugin
       pszFunctions   : Win32.PCWSTR;         --  comma-delimited list of
                                              --  functions in the plugin
-                                             --  (leading _ for internal vars, @ for var funcs,
-                                             --  * for keystroke function, otherwise it's a
-                                             --  command
+                                             --  (leading _ for internal vars, @ for var
+                                             --  funcs, * for keystroke function, otherwise
+                                             --  it's a command
       nMajor         : Interfaces.C.int;     --  plugin's major version #
       nMinor         : Interfaces.C.int;     --  plugin's minor version #
       nBuild         : Interfaces.C.int;     --  plugin's build #
@@ -76,9 +75,9 @@ package TakeCmd.Plugin is
    --  named anything, but must prefix a * to its name in the function list (pszFunctions,
    --  above). (Supported in version 8 only)
    --
-   --  If the keystroke plugin handled the keystroke and doesn't want pass it back to 4NT / TC,
-   --  it should set nKey = 0 The command processor will call the keystroke function with all
-   --  parameters set to 0 just before accepting input for each new command line.
+   --  If the keystroke plugin handled the keystroke and doesn't want pass it back to 4NT /
+   --  TC, it should set nKey = 0 The command processor will call the keystroke function with
+   --  all parameters set to 0 just before accepting input for each new command line.
    --
    --  The string pointers are Unicode
    --
@@ -98,9 +97,9 @@ package TakeCmd.Plugin is
    ---------------------------------------------------------------------------
    --  Returning from the PlugIn:
    --
-   --  For internal variables and variable functions, copy the result string over pszArguments.
-   --  The maximum string length for internal variables and variable functions is 2K (2047
-   --  characters + null byte).
+   --  For internal variables and variable functions, copy the result string over
+   --  pszArguments. The maximum string length for internal variables and variable functions
+   --  is 2K (2047 characters + null byte).
    --
    subtype Buffer is Win32.WCHAR_Array (1 .. 2 ** 11);
 

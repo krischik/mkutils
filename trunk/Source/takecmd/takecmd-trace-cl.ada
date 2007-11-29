@@ -20,8 +20,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -152,12 +152,15 @@ protected body Cl is
       use type Win32.WCHAR_Array;
       use type Interfaces.C.unsigned_long;
 
+      pragma Warnings (Off, """Buffer"" is not modified, could be declared constant");
+      pragma Warnings (Off, "variable ""Dummy"" is assigned but never read");
+
       Buffer : aliased TakeCmd.Plugin.Buffer := (others => Win32.Wide_Nul);
       Result : Interfaces.C.unsigned_long;
       Dummy  : Interfaces.C.int;
 
-      pragma Warnings (Off, Dummy);
-      pragma Warnings (Off, Buffer);
+      pragma Warnings (On, """Buffer"" is not modified, could be declared constant");
+      pragma Warnings (On, "variable ""Dummy"" is assigned but never read");
    begin
       Result :=
          Win32.Winbase.GetEnvironmentVariableW
@@ -399,4 +402,4 @@ end Cl;
 
 ----------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
---  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:
+--  vim: set textwidth=96 filetype=ada foldmethod=expr spell spelllang=en_GB:

@@ -9,8 +9,7 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL:
---  https://mkutils.googlecode.com/svn/trunk/Source/mk_utils/mk_utils-c_change_owner.ada $
+--     $HeadURL$
 --      History: 30.10.2007 MK Initial Release
 ------------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
@@ -51,6 +50,25 @@ function C_Change_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
 begin
    TakeCmd.Trace.Write (Arguments);
    TakeCmd.Trace.Write (Buffer);
+
+   Win32.Winbase.LookupAccountNameW
+     (lpSystemName           => null,
+      lpAccountName          : Win32.LPCWSTR;
+      Sid                    : Win32.Winnt.PSID;
+      cbSid                  : Win32.LPDWORD;
+      ReferencedDomainName   : Win32.LPWSTR;
+      cbReferencedDomainName : Win32.LPDWORD;
+      peUse                  : Win32.Winnt.PSID_NAME_USE)
+      return                   Win32.BOOL;
+   Win32.Winbase.LookupAccountNameW (
+                      NULL,
+                        user_name,
+                                    sid,
+                                        &cbSid,
+                    ReferencedDomainName,
+                                        &cbReferencedDomainName,
+                    &peUse);
+
    return Win32.Winerror.NO_ERROR;
 exception
    when An_Exception : others =>

@@ -236,13 +236,15 @@ package body Ada_Demo is
       Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
       pragma Unreferenced (Trace);
 
+      pragma Warnings (Off, "variable ""Dummy"" is never read and never assigned");
+
       Arguments_Length : constant Natural                                               :=
          Natural (Win32.Winbase.lstrlenW (Arguments));
       Buffer           : Wide_String (1 .. Arguments_Length + Arguments_Length / 3 + 1) :=
         (others => ' ');
       Dummy            : Win32.PWSTR;
 
-      pragma Warnings (Off, Dummy);
+      pragma Warnings (On, "variable ""Dummy"" is never read and never assigned");
    begin
       TakeCmd.Trace.Write (Arguments);
 
@@ -426,18 +428,23 @@ package body Ada_Demo is
       Trace : TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
       pragma Unreferenced (Trace);
 
+      pragma Warnings (Off, "variable ""Dummy"" is assigned but never read");
+
       Response : aliased constant Wide_String :=
          Remark_Value.Get_Remark & Ada.Characters.Wide_Latin_1.NUL;
       Dummy    : Win32.PWSTR;
 
-      pragma Warnings (Off, Dummy);
+      pragma Warnings (On, "variable ""Dummy"" is assigned but never read");
    begin
+      pragma Warnings (Off, "useless assignment to ""Dummy"", value never referenced");
+
       Dummy :=
          Win32.Winbase.lstrcpynW
            (lpString1  => Win32.Addr (Arguments.all),
             lpString2  => Win32.Addr (Response),
             iMaxLength => Arguments'Length);
 
+      pragma Warnings (On, "useless assignment to ""Dummy"", value never referenced");
       return 0;
    exception
       when An_Exception : others =>
@@ -459,4 +466,4 @@ end Ada_Demo;
 
 ------------------------------------------------------------- {{{1 ----------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
---  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:
+--  vim: set textwidth=96 filetype=ada foldmethod=expr spell spelllang=en_GB:

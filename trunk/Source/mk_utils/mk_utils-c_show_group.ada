@@ -9,8 +9,7 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL:
---  https://mkutils.googlecode.com/svn/trunk/Source/mk_utils/mk_utils-c_show_owner.ada $
+--     $HeadURL$
 --      History: 30.10.2007 MK Initial Release
 ------------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
@@ -18,8 +17,8 @@
 --  This file is part of MK_Utils.
 --
 --  MK_Utils is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  MK_Utils is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -59,7 +58,10 @@ function C_Show_Group (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    function Max is new Win32.Windef.Max (T => Integer, ">" => ">");
 
    Buffer       : aliased constant TakeCmd.Function_Buffer :=
-      TakeCmd.Strings.To_Win (Arguments => Arguments, To_Upper => False, Trim_Spaces => True);
+      TakeCmd.Strings.To_Win
+        (Arguments   => Arguments,
+         To_Upper    => False,
+         Trim_Spaces => True);
    Screen_Width : constant Integer                         := Integer (TakeCmd.GetScrCols);
 
    procedure Process (Directory_Entry : in Win32.WCHAR_Array) is
@@ -75,6 +77,8 @@ function C_Show_Group (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
          Domain_Length : access Win32.DWORD;
          Name_Use      : access Win32.Winnt.SID_NAME_USE);
 
+      pragma Warnings (Off, "variable ""Dummy_Handle"" is assigned but never read");
+
       Result              : Win32.DWORD;
       Group               : aliased Win32.Winnt.PSID := System.Null_Address;
       Group_Name          : aliased Win32.Advapi.UNAME;
@@ -84,6 +88,8 @@ function C_Show_Group (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
       Group_Type          : aliased Win32.Winnt.SID_NAME_USE;
       Security_Descriptor : aliased Win32.Winnt.PSECURITY_DESCRIPTOR;
       Dummy_Handle        : Win32.Windef.HLOCAL;
+
+      pragma Warnings (On, "variable ""Dummy_Handle"" is assigned but never read");
 
       procedure Lookup_Account_Sid
         (Sid           : in Win32.Winnt.PSID;
@@ -120,10 +126,6 @@ function C_Show_Group (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
 
          return;
       end Lookup_Account_Sid;
-
-      pragma Warnings (Off, Group_Name);
-      pragma Warnings (Off, Group_Domain);
-      pragma Warnings (Off, Dummy_Handle);
    begin
       TakeCmd.Trace.Write (Directory_Entry);
       Result :=
@@ -187,4 +189,4 @@ end C_Show_Group;
 
 ------------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
---  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:
+--  vim: set textwidth=96 filetype=ada foldmethod=expr spell spelllang=en_GB:
