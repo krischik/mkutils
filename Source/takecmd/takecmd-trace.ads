@@ -19,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -65,13 +65,13 @@ package TakeCmd.Trace is
    --
    --  Renamed to keep dependencies to GNAT specific libraries to a minimum.
    --
-   --  Return the name of the current subprogram, package, task, entry or protected subprogram.
-   --  The string is in exactly the form used for the declaration of the entity (casing and
-   --  encoding conventions), and is considered to be a static string constant.
+   --  Return the name of the current subprogram, package, task, entry or protected
+   --  subprogram. The string is in exactly the form used for the declaration of the entity
+   --  (casing and encoding conventions), and is considered to be a static string constant.
    --
    --  Note: if this function is used at the outer level of a generic package, the string
-   --  returned will be the name of the instance, not the generic package itself. This is useful
-   --  in identifying and logging information from within generic templates.
+   --  returned will be the name of the instance, not the generic package itself. This is
+   --  useful in identifying and logging information from within generic templates.
    --
    function Entity return String renames GNAT.Source_Info.Enclosing_Entity;
 
@@ -81,9 +81,9 @@ package TakeCmd.Trace is
    --
    --  Return a string literal of the form "name:line", where name is the current source file
    --  name without path information, and line is the current line number. In the event that
-   --  instantiations are involved, additional suffixes of the same form are appended after the
-   --  separating string " instantiated at ". The result is considered to be a static string
-   --  constant.
+   --  instantiations are involved, additional suffixes of the same form are appended after
+   --  the separating string " instantiated at ". The result is considered to be a static
+   --  string constant.
    --
    function Source return String renames GNAT.Source_Info.Source_Location;
 
@@ -91,8 +91,8 @@ package TakeCmd.Trace is
    --
    --  Functrace is not quite as usefull as the C++ version. The reason are the missing
    --  constructors and destructors in Ada. With Controlled types you can't limit to just one
-   --  call to Initialize and one to Finalize There are allways some extra Adjust with matching.
-   --  Finalize.
+   --  call to Initialize and one to Finalize There are allways some extra Adjust with
+   --  matching. Finalize.
    --
    --  Name of the function calls to be traced.
    --
@@ -105,8 +105,8 @@ package TakeCmd.Trace is
    --  Trace the given exeption details and then raise the exception.
    --
    --  Raising : Exeption which is raised Message : Free form Message Entity : Location
-   --  destriptor. Suggested content: AdaCL.Trace.Entity Source : Location destriptor. Suggested
-   --  content: AdaCL.Trace.Source
+   --  destriptor. Suggested content: AdaCL.Trace.Entity Source : Location destriptor.
+   --  Suggested content: AdaCL.Trace.Source
    --
    procedure Raise_Exception
      (Raising : in Ada.Exceptions.Exception_Id;
@@ -189,7 +189,10 @@ package TakeCmd.Trace is
    --  check is trace is Enabled
    --
    function V_Enable (Arguments : access TakeCmd.Plugin.Buffer) return Interfaces.C.int;
-   pragma Export (Convention => Stdcall, Entity => V_Enable, External_Name => "_TRACEENABLE");
+   pragma Export
+     (Convention => Stdcall,
+      Entity => V_Enable,
+      External_Name => "_TRACEENABLE");
 
    ---------------------------------------------------------------------------
    --
@@ -199,7 +202,10 @@ package TakeCmd.Trace is
 
    X_Verbose : aliased constant Win32.WCHAR_Array := "TRACEVERBOSE";
 
-   pragma Export (Convention => Stdcall, Entity => C_Verbose, External_Name => "TRACEVERBOSE");
+   pragma Export
+     (Convention => Stdcall,
+      Entity => C_Verbose,
+      External_Name => "TRACEVERBOSE");
 
    ---------------------------------------------------------------------------
    --
@@ -276,8 +282,8 @@ package TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Write an Wide_String using writeFormattedString after adding the appropriate padding for
-   --  indentation.
+   --  Write an Wide_String using writeFormattedString after adding the appropriate padding
+   --  for indentation.
    --
    --  A_String : String to be written
    --

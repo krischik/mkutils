@@ -9,8 +9,7 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL:
---  https://mkutils.googlecode.com/svn/trunk/Source/mk_utils/mk_utils-c_show_owner.ada $
+--     $HeadURL$
 --      History: 30.10.2007 MK Initial Release
 ------------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
@@ -54,6 +53,8 @@ function F_Temp_File (Arguments : in TakeCmd.Plugin.Buffer) return Interfaces.C.
    use type Interfaces.C.unsigned;
    use type Win32.DWORD;
 
+   pragma Warnings (Off, "variable ""Path"" is read but never assigned");
+
    Prefix      : aliased constant Wide_String :=
       TakeCmd.Strings.To_Ada
         (Arguments   => Arguments,
@@ -66,7 +67,8 @@ function F_Temp_File (Arguments : in TakeCmd.Plugin.Buffer) return Interfaces.C.
       Win32.Winbase.GetTempPathW
         (nBufferLength => Interfaces.C.unsigned_long (Max_Path),
          lpBuffer      => Win32.Addr (Path));
-   pragma Warnings (Off, Path);
+
+   pragma Warnings (On, "variable ""Path"" is read but never assigned");
 begin
    if Path_Length = 0 or else Path_Length > Win32.DWORD (Max_Path) then
       TakeCmd.Trace.Raise_Exception

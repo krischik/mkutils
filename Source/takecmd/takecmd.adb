@@ -77,10 +77,12 @@ package body TakeCmd is
    end Q_Put_String;
 
    procedure Q_Put_String (Text_To_Display : in Win32.CHAR_Array) is
+      pragma Warnings (Off, "variable ""Wide_Text"" is read but never assigned");
+
       Wide_Text : Win32.WCHAR_Array (1 .. Text_To_Display'Length + 1);
       Result    : Win32.INT;
 
-      pragma Warnings (Off, Wide_Text);
+      pragma Warnings (On, "variable ""Wide_Text"" is read but never assigned");
    begin
       Result :=
          Win32.Winnls.MultiByteToWideChar
@@ -123,21 +125,26 @@ package body TakeCmd is
       --  Trace : constant TakeCmd.Trace.Object := TakeCmd.Trace.Function_Trace
       --  (TakeCmd.Trace.Entity); pragma Unreferenced (Trace);
 
+      pragma Warnings (Off, "variable ""Directory"" is read but never assigned");
+
       Directory_Length : constant Interfaces.C.int := PathLength (Directory_Pattern);
       Directory        : aliased Win32.WCHAR_Array (1 .. Integer (Directory_Length) + 1);
       Pattern          : aliased File_Name;
       Dummy            : Win32.PWSTR;
       Files_Found      : Natural                   := 0;
 
+      pragma Warnings (On, "variable ""Directory"" is read but never assigned");
       pragma Warnings (Off, Dummy);
-      pragma Warnings (Off, Directory);
-      pragma Warnings (Off, Pattern);
    begin
+      pragma Warnings (Off, """Pattern"" may be referenced before it has a value");
+
       Dummy := PathPart (pszName => Directory_Pattern, pszPath => Win32.Addr (Directory));
       Dummy :=
          FilenamePart
            (pszName         => Directory_Pattern,
             pszFilenamePart => Win32.Addr (Pattern));
+
+      pragma Warnings (On, """Pattern"" may be referenced before it has a value");
 
       Fix_Pattern : declare
          Pattern_Length : constant Interfaces.C.int :=

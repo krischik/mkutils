@@ -19,8 +19,8 @@
 --  This file is part of Ada_Demo.
 --
 --  Ada_Demo is free software: you can redistribute it and/or modify it under the terms of the
---  GNU General Public License as published by the Free Software Foundation, either version 3 of
---  the License, or (at your option) any later version.
+--  GNU General Public License as published by the Free Software Foundation, either version 3
+--  of the License, or (at your option) any later version.
 --
 --  Ada_Demo is distributed in the hope that it will be useful, but WITHOUT ANY WARRANTY;
 --  without even the implied warranty of MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.
@@ -148,15 +148,19 @@ package body TakeCmd.Strings is
       Trim_Spaces : in Boolean := False)
       return        Wide_String
    is
-      Arguments_Length : constant Natural     := Natural (Win32.Winbase.lstrlenW (Arguments));
+      pragma Warnings (Off, """Buffer"" may be referenced before it has a value");
+
+      Arguments_Length : constant Natural     :=
+         Natural (Win32.Winbase.lstrlenW (Arguments));
       Buffer           : Wide_String (1 .. Arguments_Length + 1);
       Dummy            : constant Win32.PWSTR :=
          Win32.Winbase.lstrcpynW
            (lpString1  => Win32.Addr (Buffer),
             lpString2  => Arguments,
             iMaxLength => Buffer'Length);
+
+      pragma Warnings (On, """Buffer"" may be referenced before it has a value");
       pragma Unreferenced (Dummy);
-      pragma Warnings (Off, Buffer);
    begin
       if To_Upper then
          Ada.Strings.Wide_Fixed.Translate
@@ -189,6 +193,8 @@ package body TakeCmd.Strings is
       Trim_Spaces : in Boolean := False)
       return        Wide_String
    is
+      pragma Warnings (Off, """Buffer"" may be referenced before it has a value");
+
       Arguments_Length : constant Natural     :=
          Natural (Win32.Winbase.lstrlenW (Win32.Addr (Arguments)));
       Buffer           : Wide_String (1 .. Arguments_Length + 1);
@@ -197,8 +203,9 @@ package body TakeCmd.Strings is
            (lpString1  => Win32.Addr (Buffer),
             lpString2  => Win32.Addr (Arguments),
             iMaxLength => Buffer'Length);
+
+      pragma Warnings (On, """Buffer"" may be referenced before it has a value");
       pragma Unreferenced (Dummy);
-      pragma Warnings (Off, Buffer);
    begin
       if To_Upper then
          Ada.Strings.Wide_Fixed.Translate
@@ -231,14 +238,16 @@ package body TakeCmd.Strings is
       To_Upper    : in Boolean := False;
       Trim_Spaces : in Boolean := False)
    is
+      pragma Warnings (Off, """Buffer"" may be referenced before it has a value");
+
       Dummy : constant Win32.PWSTR :=
          Win32.Winbase.lstrcpynW
            (lpString1  => Win32.Addr (Buffer),
             lpString2  => Arguments,
             iMaxLength => Buffer'Length);
 
+      pragma Warnings (On, """Buffer"" may be referenced before it has a value");
       pragma Unreferenced (Dummy);
-      pragma Warnings (Off, Buffer);
    begin
       if not Keep_Null then
          Buffer (Buffer'Last) := Ada.Strings.Wide_Space;
@@ -265,18 +274,23 @@ package body TakeCmd.Strings is
    --  Arguments   : String to be converted
    --
    function To_Win (Arguments : in Wide_String) return TakeCmd.Plugin.Buffer is
+      pragma Warnings (Off, "variable ""Dummy"" is assigned but never read");
+
       Dummy : Win32.PWSTR;
 
-      pragma Warnings (Off, Dummy);
+      pragma Warnings (On, "variable ""Dummy"" is assigned but never read");
    begin
       return Result : aliased TakeCmd.Plugin.Buffer do
-         pragma Warnings (Off, Result);
+         pragma Warnings (Off, """Result"" may be referenced before it has a value");
+
          Dummy                         :=
             Win32.Winbase.lstrcpynW
               (lpString1  => Win32.Addr (Result),
                lpString2  => Win32.Addr (Arguments),
                iMaxLength => Arguments'Length + 1);
          Result (Arguments'Length + 1) := Win32.Wide_Nul;
+
+         pragma Warnings (On, """Result"" may be referenced before it has a value");
       end return;
    end To_Win;
 
@@ -307,4 +321,4 @@ end TakeCmd.Strings;
 
 ----------------------------------------------------------------------------
 --  vim: set nowrap tabstop=8 shiftwidth=3 softtabstop=3 expandtab          :
---  vim: set textwidth=78 filetype=ada foldmethod=expr spell spelllang=en_GB:
+--  vim: set textwidth=96 filetype=ada foldmethod=expr spell spelllang=en_GB:
