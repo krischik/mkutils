@@ -35,10 +35,19 @@ pragma Ada_05;
 
 with Ada.Strings.Wide_Unbounded;
 with Ada.Strings.Wide_Maps;
+with Ada.Containers.Indefinite_Vectors;
 
 with TakeCmd.Plugin;
 
 package TakeCmd.Strings is
+
+   type Command_Index is range 1 .. Maximum_Command_Arguments;
+
+   package String_Vectors is new Ada.Containers.Indefinite_Vectors (
+      Index_Type => Command_Index,
+      Element_Type => Wide_String,
+      "=" => "=");
+
    ---------------------------------------------------------------------------
    --
    --  Searches for all occurences of text "Search" and Inserts text "Insert" after the found
@@ -112,6 +121,16 @@ package TakeCmd.Strings is
       To_Upper    : in Boolean := False;
       Trim_Spaces : in Boolean := False)
       return        TakeCmd.Plugin.Buffer;
+
+   ---------------------------------------------------------------------------
+   --
+   --  Splits Commandline into parameter. the split takes place at space characterd - unless
+   --  spaces are enquoted with ", ' or `.
+   --
+   --  Arguments   : String to be converted.
+   --  Returns     : An Vector of Parameters.
+   --
+   function To_Parameter (Arguments : in Win32.PCWSTR) return String_Vectors.Vector;
 
 private
 

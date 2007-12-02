@@ -60,7 +60,8 @@ SETLOCAL
 
     echo Temp File %@MkTempFile[Test]
 
-    ::  MKCHANGEOWNER   Test_MK_Utils.btm %[USERNAME]
+    MKCHANGEOWNER %[USERNAME] Test_MK_Utils.btm 
+    MKCHANGEOWNER "%[USERNAME]" "Test MK Utils.btm"
 
     PLUGIN /U MK_Utils
 ENDLOCAL

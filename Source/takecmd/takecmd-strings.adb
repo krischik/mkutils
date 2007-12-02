@@ -269,6 +269,42 @@ package body TakeCmd.Strings is
 
    ---------------------------------------------------------------------------
    --
+   --  Splits Commandline into parameter. the split takes place at space characterd - unless
+   --  spaces are enquoted with ", ' or `.
+   --
+   --  Arguments   : String to be converted.
+   --  Returns     : An Vector of Parameters.
+   --
+   function To_Parameter (Arguments : in Win32.PCWSTR) return String_Vectors.Vector is
+      Buffer   : constant Wide_String :=
+         To_Ada
+           (Arguments   => Arguments,
+            Keep_Null   => False,
+            To_Upper    => False,
+            Trim_Spaces => True);
+      Start    : Natural              := Buffer'First;
+      In_Quote : Boolean              := False;
+   begin
+      return Retval : String_Vectors.Vector do
+         for I in Buffer'Range loop
+            if Buffer (I) = '"' then
+               In_Quote := not In_Quote;
+            end if;
+            if not In_Quote and then Buffer (I) = ' ' then
+               if I > Start then
+                  Retval.Append (Buffer (Start .. I - 1));
+               end if;
+               Start := I + 1;
+            end if;
+         end loop;
+         if Buffer'Last > Start then
+            Retval.Append (Buffer (Start .. Buffer'Last));
+         end if;
+      end return;
+   end To_Parameter;
+
+   ---------------------------------------------------------------------------
+   --
    --  Convert the string to Win 32.
    --
    --  Arguments   : String to be converted
