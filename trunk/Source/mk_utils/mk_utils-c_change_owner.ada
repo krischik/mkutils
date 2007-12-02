@@ -9,7 +9,8 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/mk_utils/mk_utils-c_change_owner.ada $
 --      History: 30.10.2007 MK Initial Release
 ------------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
@@ -42,32 +43,30 @@ function C_Change_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
       TakeCmd.Trace.Function_Trace (TakeCmd.Trace.Entity);
    pragma Unreferenced (Trace);
 
-   Buffer : aliased constant TakeCmd.Plugin.Buffer :=
-      TakeCmd.Strings.To_Win
-        (Arguments   => Arguments,
-         To_Upper    => False,
-         Trim_Spaces => True);
+   Parameter : constant TakeCmd.Strings.String_Vectors.Vector :=
+      TakeCmd.Strings.To_Parameter (Arguments);
 begin
    TakeCmd.Trace.Write (Arguments);
-   TakeCmd.Trace.Write (Buffer);
+   TakeCmd.Trace.Write (Parameter.Element (1));
+   TakeCmd.Trace.Write (Parameter.Element (2));
 
-   Win32.Winbase.LookupAccountNameW
-     (lpSystemName           => null,
-      lpAccountName          : Win32.LPCWSTR;
-      Sid                    : Win32.Winnt.PSID;
-      cbSid                  : Win32.LPDWORD;
-      ReferencedDomainName   : Win32.LPWSTR;
-      cbReferencedDomainName : Win32.LPDWORD;
-      peUse                  : Win32.Winnt.PSID_NAME_USE)
-      return                   Win32.BOOL;
-   Win32.Winbase.LookupAccountNameW (
-                      NULL,
-                        user_name,
-                                    sid,
-                                        &cbSid,
-                    ReferencedDomainName,
-                                        &cbReferencedDomainName,
-                    &peUse);
+   --     Win32.Winbase.LookupAccountNameW
+   --       (lpSystemName           => null,
+   --        lpAccountName          : Win32.LPCWSTR;
+   --        Sid                    : Win32.Winnt.PSID;
+   --        cbSid                  : Win32.LPDWORD;
+   --        ReferencedDomainName   : Win32.LPWSTR;
+   --        cbReferencedDomainName : Win32.LPDWORD;
+   --        peUse                  : Win32.Winnt.PSID_NAME_USE)
+   --        return                   Win32.BOOL;
+   --     Win32.Winbase.LookupAccountNameW (
+   --                        NULL,
+   --                          user_name,
+   --                                      sid,
+   --                                          &cbSid,
+   --                      ReferencedDomainName,
+   --                                          &cbReferencedDomainName,
+   --                      &peUse);
 
    return Win32.Winerror.NO_ERROR;
 exception
