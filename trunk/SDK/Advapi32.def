@@ -278,7 +278,7 @@ EXPORTS
 	LogonUserA
 	LogonUserW
 	LookupAccountNameA
-	LookupAccountNameW
+	LookupAccountNameW@28
 	LookupAccountSidA
 	LookupAccountSidW@28
 	LookupPrivilegeDisplayNameA

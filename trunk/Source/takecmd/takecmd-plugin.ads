@@ -55,8 +55,8 @@ package TakeCmd.Plugin is
       pszDescription : Win32.PCWSTR;         --  (brief) description of plugin
       pszFunctions   : Win32.PCWSTR;         --  comma-delimited list of
                                              --  functions in the plugin
-                                             --  (leading _ for internal vars, @ for var
-                                             --  funcs, * for keystroke function, otherwise
+                                             --  r internal vars, @ for var
+                                             --  s, * for keystroke function, otherwise
                                              --  it's a command
       nMajor         : Interfaces.C.int;     --  plugin's major version #
       nMinor         : Interfaces.C.int;     --  plugin's minor version #

@@ -63,8 +63,7 @@
 --
 --  Functions that are to be called by 4NT / TC need to be in the general format:
 --
---     function MyFunctionName (Arguments: Win32.PCWSTR)
---     return Interfaces.C.int;
+--     function MyFunctionName (Arguments: Win32.PCWSTR) return Interfaces.C.int;
 --
 --  Every plugin must implement and export the following three functions:
 --
