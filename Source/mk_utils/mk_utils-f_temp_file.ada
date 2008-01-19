@@ -9,7 +9,8 @@
 --        $Date$
 --      Version: 4.5
 --    $Revision$
---     $HeadURL$
+--     $HeadURL:
+--  https://mkutils.googlecode.com/svn/trunk/Source/mk_utils/mk_utils-f_temp_file.ada $
 --      History: 30.10.2007 MK Initial Release
 ------------------------------------------------------------------------------
 --  Copyright (C) 2007 Martin Krischik
@@ -51,7 +52,6 @@ function F_Temp_File (Arguments : in TakeCmd.Plugin.Buffer) return Interfaces.C.
    pragma Unreferenced (Trace);
 
    use type Interfaces.C.unsigned;
-   use type Win32.DWORD;
 
    pragma Warnings (Off, "variable ""Path"" is read but never assigned");
 

@@ -48,7 +48,7 @@ SETLOCAL
     SET            TRACEFILE=Test_MK_Utils.trace
 
     PLUGIN /U MK_Utils
-    PLUGIN /L pentium4-Release\lib\mk_utils\mk_utils.dll
+    PLUGIN /L pentium4-Release\lib\mk_utils\libmk_utils.dll
     PLUGIN /I MK_Utils
 
     MkHelp

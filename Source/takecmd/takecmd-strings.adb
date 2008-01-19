@@ -77,13 +77,13 @@ package body TakeCmd.Strings is
 
       Search_Next : loop
          --
-         --  Last Found Item was at the end of the String
+         --  em was at the end of the String
          --
          exit Search_Next when Len = 0 or else Offset >= Len;
 
          Next_Sub_String : declare
             --
-            --  We slice from the Offset on to the end. One might be suprised to learn that
+            --  the Offset on to the end. One might be suprised to learn that
             --  Sub_String'First might not be 1
             --
             Sub_String : constant Wide_String :=
@@ -103,7 +103,7 @@ package body TakeCmd.Strings is
             High : constant Natural := Low + Search'Length;
          begin
             --
-            --  Exit Loop when we havn't found anything
+            --  we havn't found anything
             --
             exit Search_Next when Low = 0;
 
@@ -111,7 +111,7 @@ package body TakeCmd.Strings is
               or else New_Item /= Sub_String (High .. High + New_Item'Length - 1)
             then
                --
-               --  We insert one character after the end of the found string when the new text
+               --  character after the end of the found string when the new text
                --  does not allready follow. This can of course only happen when there are
                --  enouch characters behind the found string to contain the new text.
                --
@@ -125,7 +125,7 @@ package body TakeCmd.Strings is
                Count := Natural'Succ (Count);
             end if;
             --
-            --  We set the offset to the end of the found string.
+            --  fset to the end of the found string.
             --
             Offset := Offset + High;
          end Next_Sub_String;
