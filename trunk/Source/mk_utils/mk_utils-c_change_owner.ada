@@ -32,6 +32,7 @@
 pragma License (Gpl);
 
 with Extensible;
+with System;
 with Win32.Winerror;
 with Win32.Winnt;
 with Win32.Winbase;
@@ -54,7 +55,7 @@ function C_Change_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
    package Extensible_SID is new Extensible (
       Fixed_Rec => Win32.Winnt.SID,
       Extensible_Elem => Win32.ULONG,
-      Position_Of_Extensible_Array => Sid.SubAuthority'Position / 8);
+      Position_Of_Extensible_Array => Sid.SubAuthority'Position / System.Storage_Unit);
 
    Parameter : constant TakeCmd.Strings.String_Vectors.Vector :=
       TakeCmd.Strings.To_Parameter (Arguments);
@@ -62,36 +63,71 @@ function C_Change_Owner (Arguments : in Win32.PCWSTR) return Interfaces.C.int is
       Parameter.Element (1) & Ada.Characters.Wide_Latin_1.NUL;
    File      : aliased constant Wide_String                   :=
       Parameter.Element (2) & Ada.Characters.Wide_Latin_1.NUL;
-   Sid_Size  : aliased Win32.ULONG                            := Sid'Size / 8;
+   Sid_Size  : aliased Win32.ULONG                            := 0;
    Name_Use  : aliased Win32.Winnt.SID_NAME_USE;
    Dummy     : aliased Win32.ULONG                            := 0;
+   Success   : Win32.BOOL;
+   Error     : Win32.DWORD;
 begin
    TakeCmd.Trace.Write (Arguments);
    TakeCmd.Trace.Write (Name);
    TakeCmd.Trace.Write (File);
-   TakeCmd.Trace.Write (Win32.ULONG'Image (Sid_Size));
    TakeCmd.Trace.Write (Integer'Image (Sid.SubAuthority'Position));
 
-   if Win32.Winbase.LookupAccountNameW
-         (lpSystemName           => null,
-          lpAccountName          => Win32.Addr (Name),
-          Sid                    => Sid'Address,
-          cbSid                  => Sid_Size'Unchecked_Access,
-          ReferencedDomainName   => null,
-          cbReferencedDomainName => Dummy'Unchecked_Access,
-          peUse                  => Name_Use'Unchecked_Access) =
-      Win32.TRUE
-   then
-      Real_Size
-      TakeCmd.Trace.Write (Wide_String'("Success"));
-      TakeCmd.Trace.Write_Dump (Address => Sid'Address, Size => Sid_Size'Size);
-   else
+   Success :=
+      Win32.Winbase.LookupAccountNameW
+        (lpSystemName           => null,
+         lpAccountName          => Win32.Addr (Name),
+         Sid                    => System.Null_Address,
+         cbSid                  => Sid_Size'Unchecked_Access,
+         ReferencedDomainName   => null,
+         cbReferencedDomainName => Dummy'Unchecked_Access,
+         peUse                  => Name_Use'Unchecked_Access);
+   Error   := Win32.Winbase.GetLastError;
+   if Error = Win32.Winerror.ERROR_INSUFFICIENT_BUFFER then
+      TakeCmd.Trace.Write (Wide_String'("Create real buffer"));
       TakeCmd.Trace.Write (Win32.ULONG'Image (Sid_Size));
+      With_Real_Size : declare
+         Extended_Sid : aliased Extensible_SID.Extended_Ptr :=
+            Extensible_SID.Allocate (Extensible_SID.Big_Range (Sid_Size));
+      begin
+         TakeCmd.Trace.Write (Wide_String'("Buffer created"));
+            TakeCmd.Trace.Write_Dump
+              (Address => Extensible_SID.Fixed_Part (Extended_Sid).all'Address,
+               Size    => Sid'Size);
+            TakeCmd.Trace.Write_Dump
+              (Address => Extensible_SID.Array_Part (Extended_Sid).all'Address,
+               Size    => Integer (Sid_Size * System.Storage_Unit));
+         if Win32.Winbase.LookupAccountNameW
+               (lpSystemName           => null,
+                lpAccountName          => Win32.Addr (Name),
+                Sid                    =>
+                   Extensible_SID.Fixed_Part (Extended_Sid).all'Address,
+                cbSid                  => Sid_Size'Unchecked_Access,
+                ReferencedDomainName   => null,
+                cbReferencedDomainName => Dummy'Unchecked_Access,
+                peUse                  => Name_Use'Unchecked_Access) =
+            Win32.TRUE
+         then
+            TakeCmd.Trace.Write (Wide_String'("Success"));
+            TakeCmd.Trace.Write_Dump
+              (Address => Extensible_SID.Fixed_Part (Extended_Sid).all'Address,
+               Size    => Integer (Sid_Size * System.Storage_Unit + Sid'Size));
+         else
+            TakeCmd.Trace.Raise_Exception
+              (Raising => TakeCmd.Win32_Error'Identity,
+               Message => "LookupAccountNameW: " &
+                          Win32.DWORD'Image (Win32.Winbase.GetLastError) &
+                          ".",
+               Entity  => TakeCmd.Trace.Entity,
+               Source  => TakeCmd.Trace.Source);
+
+         end if;
+      end With_Real_Size;
+   else
       TakeCmd.Trace.Raise_Exception
         (Raising => TakeCmd.Win32_Error'Identity,
-         Message => "LookupAccountNameW: " &
-                    Win32.DWORD'Image (Win32.Winbase.GetLastError) &
-                    ".",
+         Message => "LookupAccountNameW: " & Win32.DWORD'Image (Error) & ".",
          Entity  => TakeCmd.Trace.Entity,
          Source  => TakeCmd.Trace.Source);
 
