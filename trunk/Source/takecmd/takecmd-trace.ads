@@ -51,7 +51,7 @@ package TakeCmd.Trace is
    --
    --  Name_Length : Lenght of trace String
    --
-   type Object (<>) is tagged private;
+   type Object (<>) is tagged limited private;
 
    ---------------------------------------------------------------------------
    --
@@ -423,9 +423,8 @@ private
    --
    --  Name_Length : Lenght of trace String
    --
-   type Object (Name_Length : Positive) is new Inherited.Controlled with record
+   type Object (Name_Length : Positive) is new Inherited.Limited_Controlled with record
       Trace_Name : String (1 .. Name_Length);
-      Index      : Integer := 0;
    end record;
 
    ---------------------------------------------------------------------------
@@ -434,7 +433,7 @@ private
    --
    --  This : Object itself.
    --
-   procedure Adjust (This : in out Object);
+   --  procedure Adjust (This : in out Object);
 
    ---------------------------------------------------------------------------
    --

@@ -27,7 +27,7 @@ EXPORTS
 	AddAuditAccessObjectAce
 	AddUsersToEncryptedFile
 	AdjustTokenGroups
-	AdjustTokenPrivileges
+	AdjustTokenPrivileges@24
 	AllocateAndInitializeSid
 	AllocateLocallyUniqueId
 	AreAllAccessesGranted
@@ -285,7 +285,7 @@ EXPORTS
 	LookupPrivilegeDisplayNameW
 	LookupPrivilegeNameA
 	LookupPrivilegeNameW
-	LookupPrivilegeValueA
+	LookupPrivilegeValueA@12
 	LookupPrivilegeValueW
 	LookupSecurityDescriptorPartsA
 	LookupSecurityDescriptorPartsW
@@ -365,7 +365,7 @@ EXPORTS
 	OpenEncryptedFileRawW
 	OpenEventLogA
 	OpenEventLogW
-	OpenProcessToken
+	OpenProcessToken@12
 	OpenSCManagerA
 	OpenSCManagerW
 	OpenServiceA
@@ -471,7 +471,7 @@ EXPORTS
 	SetNamedSecurityInfoA
 	SetNamedSecurityInfoExA
 	SetNamedSecurityInfoExW
-	SetNamedSecurityInfoW
+	SetNamedSecurityInfoW@28
 	SetPrivateObjectSecurity
 	SetPrivateObjectSecurityEx
 	SetSecurityDescriptorControl

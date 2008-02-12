@@ -56,12 +56,10 @@ SETLOCAL
     MkShowGroup     %_cwd\*.btm
     MkShowOwner     %_cwd
     MkShowOwner
-    MkShowOwner     XXXX
 
     echo Temp File %@MkTempFile[Test]
 
     MKCHANGEOWNER %[USERNAME] Test_MK_Utils.btm 
-    MKCHANGEOWNER "%[USERNAME]" "Test MK Utils.btm"
 
     PLUGIN /U MK_Utils
 ENDLOCAL

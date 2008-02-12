@@ -86,12 +86,26 @@ package Win32.Advapi is
       ppSecurityDescriptor : access Win32.Winnt.PSECURITY_DESCRIPTOR)
       return                 Win32.DWORD;
 
+   function SetNamedSecurityInfoW
+     (pObjectName  : in Win32.PCWSTR;
+      ObjectType   : in SE_OBJECT_TYPE;
+      SecurityInfo : in Win32.Winnt.SECURITY_INFORMATION;
+      psidOwner    : in Win32.Winnt.PSID;
+      psidGroup    : in Win32.Winnt.PSID;
+      pDacl        : in Win32.Winnt.PACL;
+      pSacl        : in Win32.Winnt.PACL)
+      return         Win32.DWORD;
+
 private
 
    pragma Import
      (Convention => Stdcall,
       Entity => GetNamedSecurityInfoW,
       External_Name => "GetNamedSecurityInfoW");
+   pragma Import
+     (Convention => Stdcall,
+      Entity => SetNamedSecurityInfoW,
+      External_Name => "SetNamedSecurityInfoW");
 
 end Win32.Advapi;
 
