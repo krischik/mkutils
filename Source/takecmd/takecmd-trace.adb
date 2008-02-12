@@ -324,18 +324,6 @@ package body TakeCmd.Trace is
 
    ---------------------------------------------------------------------------
    --
-   --  Copy Instanz.
-   --
-   --  This :  Object itself.
-   --
-   procedure Adjust (This : in out Object) is
-   begin
-      This.Index := Integer'Succ (This.Index);
-      return;
-   end Adjust;
-
-   ---------------------------------------------------------------------------
-   --
    --  Assert a Condition. If the condition is not true create a trace entry describing the
    --  assertion and then raise an exception.
    --
@@ -567,11 +555,9 @@ package body TakeCmd.Trace is
    --
    procedure Finalize (This : in out Object) is
    begin
-      if This.Index = 2 and then Cl.Get_On then
-         Cl.Write_Formatted_String
-           (Text   => Ada.Characters.Conversions.To_Wide_String (This.Trace_Name),
-            Marker => Marker_Outdent);
-      end if;
+      Cl.Write_Formatted_String
+        (Text   => Ada.Characters.Conversions.To_Wide_String (This.Trace_Name),
+         Marker => Marker_Outdent);
 
       return;
    end Finalize;
@@ -586,22 +572,17 @@ package body TakeCmd.Trace is
    --  Name : Name of the function calls to be traced.
    --
    function Function_Trace (Name : String) return Object is
-      Retval : constant Object (Name'Length) :=
-        (Inherited.Controlled with
-         Name_Length => Name'Length,
-         Trace_Name  => Name,
-         Index       => 0);
    begin
       --
-      --  The Initialize method is not realy a replacement for a proper contructor.
+      --  Initialize method is not realy a replacement for a proper contructor.
       --
       if Cl.Get_On then
          Cl.Write_Formatted_String
-           (Text   => Ada.Characters.Conversions.To_Wide_String (Retval.Trace_Name),
+           (Text   => Ada.Characters.Conversions.To_Wide_String (Name),
             Marker => Marker_Indent);
       end if;
-
-      return Retval;
+      return Object'(Inherited.Limited_Controlled with Name_Length => Name'Length, 
+         Trace_Name => Name);
    end Function_Trace;
 
    ------------------------------------------------------------------------
