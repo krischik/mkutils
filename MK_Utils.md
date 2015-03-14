@@ -1,0 +1,1 @@
+MK\_Utils is described in detail on the [JP-Soft Wiki](http://www.jpsoftwiki.com/wiki/index.php?title=MkUtils_%28plugin%29).
